@@ -2,7 +2,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 SET search_path TO extensions, public;
 
-SELECT plan(39);
+SELECT plan(49);
 
 -- Existence
 SELECT has_table('events');
@@ -72,6 +72,28 @@ SELECT throws_ok(
   '23514',
   NULL,
   'rejects significance > 5'
+);
+
+-- Indexes
+SELECT has_index('events', 'idx_events_feed');
+SELECT has_index('events', 'idx_events_significance');
+SELECT has_index('events', 'idx_events_source_type');
+SELECT has_index('events', 'idx_events_country_code');
+SELECT has_index('events', 'idx_events_category');
+SELECT has_index('events', 'idx_events_disease');
+SELECT has_index('events', 'idx_events_tags');
+SELECT has_index('events', 'idx_events_source_url_hash');
+
+-- Dedup: same URL twice rejected
+SELECT lives_ok(
+  $$INSERT INTO events (title, summary, source_type, category, source_url) VALUES ('a','b','x','case_report','https://example.com/x')$$,
+  'first insert with URL succeeds'
+);
+SELECT throws_ok(
+  $$INSERT INTO events (title, summary, source_type, category, source_url) VALUES ('c','d','x','case_report','https://example.com/x')$$,
+  '23505',
+  NULL,
+  'second insert with same URL rejected (unique violation on source_url_hash)'
 );
 
 SELECT * FROM finish();

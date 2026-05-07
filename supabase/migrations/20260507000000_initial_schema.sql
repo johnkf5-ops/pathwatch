@@ -32,3 +32,14 @@ CREATE TABLE events (
   duplicate_of UUID REFERENCES events(id),
   disease TEXT DEFAULT 'hantavirus' NOT NULL
 );
+
+-- events indexes
+CREATE INDEX idx_events_feed ON events (created_at DESC) WHERE duplicate_of IS NULL;
+CREATE INDEX idx_events_significance ON events (significance DESC);
+CREATE INDEX idx_events_source_type ON events (source_type);
+CREATE INDEX idx_events_country_code ON events (country_code);
+CREATE INDEX idx_events_category ON events (category);
+CREATE INDEX idx_events_disease ON events (disease);
+CREATE INDEX idx_events_tags ON events USING GIN (tags);
+CREATE UNIQUE INDEX idx_events_source_url_hash
+  ON events (source_url_hash) WHERE source_url_hash IS NOT NULL;

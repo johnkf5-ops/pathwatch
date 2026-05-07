@@ -1,0 +1,31 @@
+-- Pathwatch initial schema
+-- Sub-project 1 of 4: events, snapshots, country_stats, scrape_log + RLS + realtime
+
+-- ============================================================
+-- events
+-- ============================================================
+CREATE TABLE events (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+  occurred_at TIMESTAMPTZ,
+  title TEXT NOT NULL,
+  summary TEXT NOT NULL,
+  raw_content TEXT,
+  source_type TEXT NOT NULL,
+  source_url TEXT,
+  source_url_hash TEXT GENERATED ALWAYS AS (md5(source_url)) STORED,
+  source_author TEXT,
+  significance INTEGER NOT NULL DEFAULT 1,
+  category TEXT NOT NULL,
+  country_code TEXT,
+  region TEXT,
+  location_name TEXT,
+  latitude DOUBLE PRECISION,
+  longitude DOUBLE PRECISION,
+  case_count INTEGER,
+  death_count INTEGER,
+  is_verified BOOLEAN DEFAULT false NOT NULL,
+  tags TEXT[],
+  duplicate_of UUID REFERENCES events(id),
+  disease TEXT DEFAULT 'hantavirus' NOT NULL
+);

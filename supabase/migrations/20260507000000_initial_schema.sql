@@ -65,3 +65,25 @@ CREATE TABLE snapshots (
 
 CREATE INDEX idx_snapshots_created_at ON snapshots (created_at DESC);
 CREATE INDEX idx_snapshots_disease ON snapshots (disease);
+
+-- ============================================================
+-- country_stats
+-- ============================================================
+CREATE TABLE country_stats (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+  disease TEXT DEFAULT 'hantavirus' NOT NULL,
+  country_code TEXT NOT NULL,
+  country_name TEXT NOT NULL,
+  cases INTEGER DEFAULT 0 NOT NULL,
+  deaths INTEGER DEFAULT 0 NOT NULL,
+  first_case_date DATE,
+  latest_case_date DATE,
+  status TEXT CHECK (status IN ('active','contained','monitoring','clear')),
+  travel_advisory TEXT,
+  notes TEXT,
+  UNIQUE (disease, country_code)
+);
+
+CREATE INDEX idx_country_stats_country ON country_stats (country_code);
+CREATE INDEX idx_country_stats_disease ON country_stats (disease);

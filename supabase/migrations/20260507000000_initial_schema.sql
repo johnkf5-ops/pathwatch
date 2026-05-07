@@ -105,3 +105,18 @@ CREATE TABLE scrape_log (
 
 CREATE INDEX idx_scrape_log_created_at ON scrape_log (created_at DESC);
 CREATE INDEX idx_scrape_log_source_type ON scrape_log (source_type);
+
+-- ============================================================
+-- Row-Level Security
+-- ============================================================
+ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+CREATE POLICY events_public_read ON events FOR SELECT USING (true);
+
+ALTER TABLE snapshots ENABLE ROW LEVEL SECURITY;
+CREATE POLICY snapshots_public_read ON snapshots FOR SELECT USING (true);
+
+ALTER TABLE country_stats ENABLE ROW LEVEL SECURITY;
+CREATE POLICY country_stats_public_read ON country_stats FOR SELECT USING (true);
+
+ALTER TABLE scrape_log ENABLE ROW LEVEL SECURITY;
+-- No SELECT policy: anon gets zero rows back, all writes fail.

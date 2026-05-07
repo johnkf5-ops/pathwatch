@@ -87,3 +87,21 @@ CREATE TABLE country_stats (
 
 CREATE INDEX idx_country_stats_country ON country_stats (country_code);
 CREATE INDEX idx_country_stats_disease ON country_stats (disease);
+
+-- ============================================================
+-- scrape_log (pipeline observability; not exposed to dashboard)
+-- ============================================================
+CREATE TABLE scrape_log (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+  source_type TEXT NOT NULL,
+  query TEXT,
+  results_found INTEGER DEFAULT 0,
+  events_created INTEGER DEFAULT 0,
+  duplicates_skipped INTEGER DEFAULT 0,
+  error TEXT,
+  duration_ms INTEGER
+);
+
+CREATE INDEX idx_scrape_log_created_at ON scrape_log (created_at DESC);
+CREATE INDEX idx_scrape_log_source_type ON scrape_log (source_type);

@@ -2,7 +2,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 SET search_path TO extensions, public;
 
-SELECT plan(33);
+SELECT plan(39);
 
 -- Existence
 SELECT has_table('events');
@@ -44,6 +44,35 @@ SELECT col_not_null('events', 'disease');
 
 -- Primary key
 SELECT col_is_pk('events', 'id');
+
+-- CHECK constraints
+SELECT col_has_check('events', 'source_type');
+SELECT col_has_check('events', 'category');
+SELECT col_has_check('events', 'significance');
+
+-- Reject unknown source_type
+SELECT throws_ok(
+  $$INSERT INTO events (title, summary, source_type, category) VALUES ('t','s','tiktok','case_report')$$,
+  '23514',
+  NULL,
+  'rejects unknown source_type'
+);
+
+-- Reject unknown category
+SELECT throws_ok(
+  $$INSERT INTO events (title, summary, source_type, category) VALUES ('t','s','x','memes')$$,
+  '23514',
+  NULL,
+  'rejects unknown category'
+);
+
+-- Reject out-of-range significance
+SELECT throws_ok(
+  $$INSERT INTO events (title, summary, source_type, category, significance) VALUES ('t','s','x','case_report',9)$$,
+  '23514',
+  NULL,
+  'rejects significance > 5'
+);
 
 SELECT * FROM finish();
 ROLLBACK;

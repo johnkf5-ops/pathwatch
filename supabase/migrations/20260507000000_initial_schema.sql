@@ -11,12 +11,15 @@ CREATE TABLE events (
   title TEXT NOT NULL,
   summary TEXT NOT NULL,
   raw_content TEXT,
-  source_type TEXT NOT NULL,
+  source_type TEXT NOT NULL
+    CHECK (source_type IN ('x','cdc','who','google_news','reddit','bluesky','ecdc','africa_cdc','wikipedia')),
   source_url TEXT,
   source_url_hash TEXT GENERATED ALWAYS AS (md5(source_url)) STORED,
   source_author TEXT,
-  significance INTEGER NOT NULL DEFAULT 1,
-  category TEXT NOT NULL,
+  significance INTEGER NOT NULL DEFAULT 1
+    CHECK (significance BETWEEN 1 AND 5),
+  category TEXT NOT NULL
+    CHECK (category IN ('case_report','policy','research','travel_advisory','mutation','death','containment','speculation')),
   country_code TEXT,
   region TEXT,
   location_name TEXT,

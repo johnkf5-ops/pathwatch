@@ -120,3 +120,10 @@ CREATE POLICY country_stats_public_read ON country_stats FOR SELECT USING (true)
 
 ALTER TABLE scrape_log ENABLE ROW LEVEL SECURITY;
 -- No SELECT policy: anon gets zero rows back, all writes fail.
+
+-- ============================================================
+-- Realtime publication
+-- ============================================================
+ALTER PUBLICATION supabase_realtime ADD TABLE events;
+ALTER PUBLICATION supabase_realtime ADD TABLE snapshots;
+ALTER PUBLICATION supabase_realtime ADD TABLE country_stats;

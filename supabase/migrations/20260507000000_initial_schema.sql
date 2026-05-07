@@ -43,3 +43,25 @@ CREATE INDEX idx_events_disease ON events (disease);
 CREATE INDEX idx_events_tags ON events USING GIN (tags);
 CREATE UNIQUE INDEX idx_events_source_url_hash
   ON events (source_url_hash) WHERE source_url_hash IS NOT NULL;
+
+-- ============================================================
+-- snapshots
+-- ============================================================
+CREATE TABLE snapshots (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+  disease TEXT DEFAULT 'hantavirus' NOT NULL,
+  total_cases INTEGER,
+  total_deaths INTEGER,
+  countries_affected INTEGER,
+  countries_list TEXT[],
+  fatality_rate DOUBLE PRECISION,
+  trend TEXT CHECK (trend IN ('accelerating','stable','declining')),
+  trend_description TEXT,
+  risk_level TEXT CHECK (risk_level IN ('low','moderate','high','critical')),
+  key_developments TEXT[],
+  ai_analysis TEXT
+);
+
+CREATE INDEX idx_snapshots_created_at ON snapshots (created_at DESC);
+CREATE INDEX idx_snapshots_disease ON snapshots (disease);

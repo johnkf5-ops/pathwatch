@@ -5,5 +5,21 @@ supabase/.temp/
 # OS
 .DS_Store
 
-# Node (will appear later when frontend is added)
+# Node
 node_modules/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# Env
+.env*.local
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Claude local settings
+.claude/

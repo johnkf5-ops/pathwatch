@@ -9,6 +9,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
+    "test:smoke": "./scripts/reset-db.sh && playwright test",
     "db:reset": "./scripts/reset-db.sh"
   },
   "dependencies": {

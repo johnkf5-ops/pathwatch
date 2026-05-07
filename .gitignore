@@ -1,0 +1,9 @@
+# Supabase local
+supabase/.branches/
+supabase/.temp/
+
+# OS
+.DS_Store
+
+# Node (will appear later when frontend is added)
+node_modules/

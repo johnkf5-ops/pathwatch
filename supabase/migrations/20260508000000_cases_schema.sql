@@ -35,3 +35,23 @@ CREATE INDEX idx_cases_status ON cases (status);
 CREATE INDEX idx_cases_current_country ON cases (current_country);
 CREATE INDEX idx_cases_exposure_country ON cases (exposure_country);
 CREATE INDEX idx_cases_index ON cases (is_index_case) WHERE is_index_case = true;
+
+-- ============================================================
+-- case_locations
+-- ============================================================
+CREATE TABLE case_locations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  case_id UUID NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
+  country_code TEXT NOT NULL,
+  region TEXT,
+  location_name TEXT,
+  latitude DOUBLE PRECISION,
+  longitude DOUBLE PRECISION,
+  arrived_at TIMESTAMPTZ NOT NULL,
+  departed_at TIMESTAMPTZ,
+  context TEXT,
+  is_exposure_site BOOLEAN DEFAULT false NOT NULL
+);
+
+CREATE INDEX idx_case_locations_case ON case_locations (case_id, arrived_at);
+CREATE INDEX idx_case_locations_country ON case_locations (country_code);

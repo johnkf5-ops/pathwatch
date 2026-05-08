@@ -1,28 +1,24 @@
 'use client';
 import { useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
-import type { Event, Significance, SourceType, Category } from '@/lib/types';
+import { AlertTriangle } from 'lucide-react';
+import type { Event } from '@/lib/types';
 import { SectionHeader } from '@/components/ops/SectionHeader';
-import { FilterBar } from './FilterBar';
+import { EVENT_TAB_BY_ID, isEventTabId, type EventTabId } from '@/lib/event-tabs';
+import { EventTabBar } from './EventTabBar';
 import { EventCard } from './EventCard';
 
 export function EventFeed({ events }: { events: Event[] }) {
   const searchParams = useSearchParams();
-  const sig = searchParams.get('sig');
-  const source = searchParams.get('source') as SourceType | null;
-  const category = searchParams.get('category') as Category | null;
+  const tabParam = searchParams.get('tab');
+  const active: EventTabId = isEventTabId(tabParam) ? tabParam : 'all';
 
   const filtered = useMemo(() => {
-    const sigNum = sig ? (Number(sig) as Significance) : null;
+    const predicate = EVENT_TAB_BY_ID[active].predicate;
     return events
-      .filter((e) => {
-        if (sigNum && e.significance < sigNum) return false;
-        if (source && e.source_type !== source) return false;
-        if (category && e.category !== category) return false;
-        return true;
-      })
+      .filter(predicate)
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [events, sig, source, category]);
+  }, [events, active]);
 
   return (
     <section className="border-t border-border px-4 py-4">
@@ -33,11 +29,22 @@ export function EventFeed({ events }: { events: Event[] }) {
             {filtered.length} OF {events.length}
           </span>
         </SectionHeader>
-        <FilterBar />
+        <EventTabBar events={events} active={active} />
       </div>
+
+      {active === 'signal' && (
+        <div className="mb-3 flex items-center gap-2 border border-amber/40 bg-amber/5 px-3 py-2 font-mono text-[11px] text-amber">
+          <AlertTriangle size={12} />
+          <span className="uppercase tracking-[0.12em]">UNVERIFIED SOCIAL MEDIA SIGNAL</span>
+          <span className="ml-1 normal-case tracking-normal text-text-secondary">
+            — speculation and rumor; corroborate before acting.
+          </span>
+        </div>
+      )}
+
       {filtered.length === 0 ? (
         <p className="border border-dashed border-border p-6 text-center text-sm text-text-muted">
-          No events match these filters.
+          No events in this view.
         </p>
       ) : (
         <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">

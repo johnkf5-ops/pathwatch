@@ -2,7 +2,7 @@ import { unstable_noStore as noStore } from 'next/cache';
 import { createServerClient } from '@/lib/supabase-server';
 import { DashboardClient } from './DashboardClient';
 import type {
-  Event, Snapshot, CountryStat, Case, CaseLocation, ThreatAssessment,
+  Event, Snapshot, CountryStat, Case, CaseLocation, ThreatAssessment, Fact,
 } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -19,6 +19,7 @@ export default async function Home() {
     casesRes,
     locationsRes,
     threatRes,
+    factsRes,
   ] = await Promise.all([
     supabase
       .from('snapshots')
@@ -50,6 +51,12 @@ export default async function Home() {
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from('facts')
+      .select('*')
+      .eq('disease', 'hantavirus')
+      .neq('verification_status', 'retracted')
+      .order('confidence', { ascending: false }),
   ]);
 
   return (
@@ -61,6 +68,7 @@ export default async function Home() {
       initialCases={(casesRes.data as Case[] | null) ?? []}
       initialCaseLocations={(locationsRes.data as CaseLocation[] | null) ?? []}
       initialThreat={(threatRes.data as ThreatAssessment | null) ?? null}
+      initialFacts={(factsRes.data as Fact[] | null) ?? []}
     />
   );
 }

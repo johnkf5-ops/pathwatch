@@ -41,16 +41,32 @@ test('event detail page renders', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 });
 
-test('intelligence feed renders below the sit-rep grid', async ({ page }) => {
+test('intelligence feed renders with 6 tabs and signal warning', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByText('INTELLIGENCE FEED')).toBeVisible();
-  // Filter bar controls
-  await expect(page.getByRole('button', { name: 'CRITICAL' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'HIGH+' })).toBeVisible();
-  // At least one event card visible (seed has 20 events)
+  // 6 tabs
+  for (const label of ['ALL', 'CASES', 'OFFICIAL', 'RESPONSE', 'SCIENCE', 'SIGNAL']) {
+    await expect(page.getByRole('button', { name: new RegExp(`^${label}\\b`) })).toBeVisible();
+  }
+  // Default tab = ALL: at least one card visible
   const eventLinks = page.locator('a[href^="/event/"]');
   await expect(eventLinks.first()).toBeVisible();
-  expect(await eventLinks.count()).toBeGreaterThan(0);
+  // Signal tab activates the warning banner
+  await page.getByRole('button', { name: /^SIGNAL\b/ }).click();
+  await expect(page.getByText('UNVERIFIED SOCIAL MEDIA SIGNAL')).toBeVisible();
+});
+
+test('virus profile card renders compact stats and expands', async ({ page }) => {
+  await page.goto('/');
+  // Compact card always visible — at minimum the heading and one key stat label
+  await page.getByText('VIRUS PROFILE').scrollIntoViewIfNeeded();
+  await expect(page.getByText('VIRUS PROFILE')).toBeVisible();
+  await expect(page.getByText('TRANSMISSION', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('CASE FATALITY', { exact: true })).toBeVisible();
+  await expect(page.getByText('INCUBATION', { exact: true })).toBeVisible();
+  // Expand reveals categorized list
+  await page.getByRole('button', { name: /EXPAND/i }).last().click();
+  await expect(page.getByRole('heading', { name: /PATHOGEN/ })).toBeVisible();
 });
 
 test('/facts renders the knowledge base', async ({ page }) => {

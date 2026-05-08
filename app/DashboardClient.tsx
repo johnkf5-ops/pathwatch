@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type {
-  Event, Snapshot, CountryStat, Case, CaseLocation, ThreatAssessment,
+  Event, Snapshot, CountryStat, Case, CaseLocation, ThreatAssessment, Fact,
 } from '@/lib/types';
 import { getBrowserClient } from '@/lib/supabase-browser';
 import { TopBar } from '@/components/ops/TopBar';
@@ -17,6 +17,7 @@ import { DossierDrawer } from '@/components/ops/DossierDrawer';
 import { MonitoringCohort } from '@/components/ops/MonitoringCohort';
 import { EventFeed } from '@/components/feed/EventFeed';
 import { ThreatBanner } from '@/components/threat/ThreatBanner';
+import { VirusProfile } from '@/components/profile/VirusProfile';
 
 interface Props {
   initialSnapshot: Snapshot | null;
@@ -26,6 +27,7 @@ interface Props {
   initialCases: Case[];
   initialCaseLocations: CaseLocation[];
   initialThreat: ThreatAssessment | null;
+  initialFacts: Fact[];
 }
 
 export function DashboardClient({
@@ -36,6 +38,7 @@ export function DashboardClient({
   initialCases,
   initialCaseLocations,
   initialThreat,
+  initialFacts,
 }: Props) {
   const searchParams = useSearchParams();
   const caseCode = searchParams.get('case');
@@ -48,6 +51,7 @@ export function DashboardClient({
   const [cases, setCases] = useState(initialCases);
   const [caseLocations, setCaseLocations] = useState(initialCaseLocations);
   const [threat, setThreat] = useState(initialThreat);
+  const [facts, setFacts] = useState(initialFacts);
   const [activeTab, setActiveTab] = useState<'map' | 'country'>('map');
 
   useEffect(() => { setSnapshot(initialSnapshot); }, [initialSnapshot]);
@@ -57,6 +61,7 @@ export function DashboardClient({
   useEffect(() => { setCases(initialCases); }, [initialCases]);
   useEffect(() => { setCaseLocations(initialCaseLocations); }, [initialCaseLocations]);
   useEffect(() => { setThreat(initialThreat); }, [initialThreat]);
+  useEffect(() => { setFacts(initialFacts); }, [initialFacts]);
 
   useEffect(() => {
     const supabase = getBrowserClient();
@@ -176,9 +181,9 @@ export function DashboardClient({
         </div>
 
         {/* Workspace (right) */}
-        <div className="relative flex flex-col overflow-hidden">
+        <div className="relative flex flex-col overflow-y-auto">
           <TabStrip tabs={tabs} active={activeTab} onChange={(id) => setActiveTab(id as 'map' | 'country')} />
-          <div className="relative flex-1">
+          <div className="relative min-h-[60vh] flex-shrink-0">
             {activeTab === 'map' && (
               <>
                 <MapPane
@@ -199,6 +204,7 @@ export function DashboardClient({
             )}
             {activeTab === 'country' && <ByCountryPane rows={countries} />}
           </div>
+          <VirusProfile facts={facts} />
         </div>
       </div>
 

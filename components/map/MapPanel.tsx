@@ -160,14 +160,19 @@ export function MapPanel({ countries, cases, caseLocations, selectedCaseId }: Pr
       for (const m of caseMarkers) {
         const el = document.createElement('div');
         const isSelected = selectedCaseId === m.case.id;
+        const isMonitoring = m.case.status === 'monitoring';
         const color = STATUS_COLOR[m.case.status];
-        const size = isSelected ? 18 : 12;
+        const size = isSelected ? 18 : isMonitoring ? 9 : 12;
         const pulse =
           m.case.status === 'critical' || isSelected ? 'animation:pathwatchPulse 1.6s infinite;' : '';
         const indexBorder = m.case.is_index_case ? 'border:1px solid #d6dae6;' : '';
-        el.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:${color};box-shadow:0 0 0 ${
-          isSelected ? '5' : '3'
-        }px ${color}33;cursor:pointer;${pulse}${indexBorder}`;
+        // Monitoring markers: hollow dashed ring, no halo — visually subordinate to active cases.
+        const fill = isMonitoring ? 'transparent' : color;
+        const border = isMonitoring ? `border:1.5px dashed ${color};` : indexBorder;
+        const halo = isMonitoring
+          ? ''
+          : `box-shadow:0 0 0 ${isSelected ? '5' : '3'}px ${color}33;`;
+        el.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:${fill};${halo}cursor:pointer;${pulse}${border}`;
         el.title = `${m.case.case_code} · ${m.case.status.toUpperCase()}`;
         const marker = new maplibregl.Marker({ element: el })
           .setLngLat([m.lon, m.lat])

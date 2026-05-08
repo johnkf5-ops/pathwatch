@@ -1,6 +1,7 @@
 import type { Case, CaseLocation, CaseStatus } from './types';
 
 export const STATUS_COLOR: Record<CaseStatus, string> = {
+  monitoring: '#4cd6ff',
   suspected: '#8a93a8',
   confirmed: '#f5b041',
   critical: '#ff7f3f',
@@ -18,12 +19,52 @@ export function statusRgb(status: CaseStatus): [number, number, number] {
 }
 
 export const STATUS_LABEL: Record<CaseStatus, string> = {
+  monitoring: 'MONITORING',
   suspected: 'SUSPECTED',
   confirmed: 'CONFIRMED',
   critical: 'CRITICAL',
   deceased: 'DECEASED',
   recovered: 'RECOVERED',
 };
+
+const ACTIVE_STATUSES: CaseStatus[] = ['suspected', 'confirmed', 'critical', 'deceased', 'recovered'];
+
+export function isMonitoringCase(c: { status: CaseStatus }): boolean {
+  return c.status === 'monitoring';
+}
+
+export function isActiveCase(c: { status: CaseStatus }): boolean {
+  return ACTIVE_STATUSES.includes(c.status);
+}
+
+export interface ClearanceState {
+  daysRemaining: number;          // negative if cleared
+  totalWindowDays: number | null; // null when exposure_date is missing
+  cleared: boolean;
+  tone: 'green' | 'amber' | 'orange' | 'red' | 'cleared';
+}
+
+export function clearanceFor(
+  clearanceDate: string | null,
+  exposureDate: string | null,
+  today: Date = new Date(),
+): ClearanceState | null {
+  if (!clearanceDate) return null;
+  const t0 = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+  const c = new Date(clearanceDate + 'T00:00:00Z');
+  const daysRemaining = Math.ceil((c.getTime() - t0) / 86_400_000);
+  const cleared = daysRemaining <= 0;
+  const totalWindowDays = exposureDate
+    ? Math.round((c.getTime() - new Date(exposureDate + 'T00:00:00Z').getTime()) / 86_400_000)
+    : null;
+  let tone: ClearanceState['tone'];
+  if (cleared) tone = 'cleared';
+  else if (daysRemaining > 30) tone = 'green';
+  else if (daysRemaining >= 7)  tone = 'amber';
+  else if (daysRemaining >= 1)  tone = 'orange';
+  else tone = 'red';
+  return { daysRemaining, totalWindowDays, cleared, tone };
+}
 
 export function caseLocationsFor(caseId: string, all: CaseLocation[]): CaseLocation[] {
   return all

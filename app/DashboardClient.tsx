@@ -14,6 +14,7 @@ import { TabStrip, type Tab } from '@/components/ops/TabStrip';
 import { MapPane } from '@/components/ops/MapPane';
 import { ByCountryPane } from '@/components/ops/ByCountryPane';
 import { DossierDrawer } from '@/components/ops/DossierDrawer';
+import { MonitoringCohort } from '@/components/ops/MonitoringCohort';
 import { EventFeed } from '@/components/feed/EventFeed';
 import { ThreatBanner } from '@/components/threat/ThreatBanner';
 
@@ -152,8 +153,11 @@ export function DashboardClient({
   const prevSnapshot = snapshotHistory.length >= 2 ? snapshotHistory[snapshotHistory.length - 2] : null;
   const selectedCaseId = caseCode ? cases.find((c) => c.case_code === caseCode)?.id ?? null : null;
 
+  const activeCases = cases.filter((c) => c.status !== 'monitoring');
+  const monitoringCases = cases.filter((c) => c.status === 'monitoring');
+
   const tabs: Tab[] = [
-    { id: 'map', label: 'MAP', count: cases.length },
+    { id: 'map', label: 'MAP', count: activeCases.length },
     { id: 'country', label: 'BY COUNTRY', count: countries.length },
   ];
 
@@ -168,6 +172,7 @@ export function DashboardClient({
           <KpiGrid snapshot={snapshot} prevSnapshot={prevSnapshot} />
           <PostureMatrix countries={countries} />
           <Watchlist events={events} />
+          <MonitoringCohort cases={monitoringCases} />
         </div>
 
         {/* Workspace (right) */}

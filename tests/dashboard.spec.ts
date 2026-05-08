@@ -62,6 +62,18 @@ test('/facts renders the knowledge base', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'pathogen' })).toBeVisible();
 });
 
+test('monitoring cohort renders with countdown chips', async ({ page }) => {
+  await page.goto('/');
+  // Cohort is below the fold in the sit-rep column — scroll first.
+  await page.getByText('NJ-MON-001').scrollIntoViewIfNeeded();
+  await expect(page.getByText('NJ-MON-001')).toBeVisible();
+  await expect(page.getByText('NJ-MON-002')).toBeVisible();
+  await expect(page.getByText('KL592-MON-001')).toBeVisible();
+  await expect(page.getByText('KL592-MON-002')).toBeVisible();
+  await expect(page.getByText(/4 TOTAL/)).toBeVisible();
+  await expect(page.getByText(/^[0-9]+D$/).first()).toBeVisible();
+});
+
 test('threat banner renders + expands', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByText('PANDEMIC PROBABILITY')).toBeVisible();

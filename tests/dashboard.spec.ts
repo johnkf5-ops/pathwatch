@@ -62,6 +62,20 @@ test('/facts renders the knowledge base', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'pathogen' })).toBeVisible();
 });
 
+test('threat banner renders + expands', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByText('PANDEMIC PROBABILITY')).toBeVisible();
+  await expect(page.getByText(/vs MARKET/i)).toBeVisible();
+  // Threat-level chip from seed: LOW
+  await expect(page.locator('button[aria-expanded="false"]').filter({ hasText: 'PANDEMIC PROBABILITY' }).getByText('LOW', { exact: true })).toBeVisible();
+  // Expand
+  const expandButton = page.locator('button[aria-expanded="false"]').filter({ hasText: 'PANDEMIC PROBABILITY' });
+  await expandButton.click();
+  await expect(page.getByText('TRIGGERS', { exact: true })).toBeVisible();
+  await expect(page.getByText(/WATCHING ·/).first()).toBeVisible();
+  await expect(page.getByText('POLYMARKET', { exact: true })).toBeVisible();
+});
+
 test('OG image generates', async ({ request }) => {
   const res = await request.get('/opengraph-image');
   expect(res.status()).toBe(200);

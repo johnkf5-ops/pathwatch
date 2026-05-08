@@ -14,8 +14,11 @@ out/
 next-env.d.ts
 tsconfig.tsbuildinfo
 
-# Env
-.env*.local
+# Env (everything except the .example templates)
+.env
+.env.*
+!.env.example
+!.env.production.example
 
 # Playwright
 test-results/

@@ -9,7 +9,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
-    "test:smoke": "./scripts/reset-db.sh && playwright test",
+    "test:smoke": "./scripts/reset-db.sh && (lsof -ti :3000 | xargs kill -9 2>/dev/null || true) && rm -rf .next && playwright test",
     "db:reset": "./scripts/reset-db.sh"
   },
   "dependencies": {

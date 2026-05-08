@@ -18,13 +18,23 @@ test('dashboard renders MV Hondius outbreak data', async ({ page }) => {
 
 test('map and charts render', async ({ page }) => {
   await page.goto('/');
-
-  // MapLibre attribution control is the most reliable map presence assertion
   await expect(page.locator('.maplibregl-ctrl-attrib')).toBeVisible({ timeout: 10_000 });
-
-  // Source activity chart renders (data-testid on the wrapper card)
   await expect(page.getByTestId('source-activity-chart')).toBeVisible();
-
-  // Single-snapshot seed → trend empty state
   await expect(page.getByText(/Need at least 2 snapshots/i)).toBeVisible();
+});
+
+test('event detail page renders', async ({ page }) => {
+  await page.goto('/');
+  // Click the first event-card link whose text contains "MV Hondius"
+  // (avoids matching the AI analysis paragraph that mentions "MV Hondius cluster").
+  await page.getByRole('link').filter({ hasText: /MV Hondius/i }).first().click();
+  await expect(page).toHaveURL(/\/event\/[0-9a-f-]+/);
+  await expect(page.getByRole('heading', { level: 1, name: /MV Hondius/i })).toBeVisible();
+  await expect(page.getByText(/Back to dashboard/i).first()).toBeVisible();
+});
+
+test('OG image generates', async ({ request }) => {
+  const res = await request.get('/opengraph-image');
+  expect(res.status()).toBe(200);
+  expect(res.headers()['content-type']).toContain('image/png');
 });

@@ -55,3 +55,12 @@ CREATE TABLE case_locations (
 
 CREATE INDEX idx_case_locations_case ON case_locations (case_id, arrived_at);
 CREATE INDEX idx_case_locations_country ON case_locations (country_code);
+
+-- ============================================================
+-- Row-Level Security
+-- ============================================================
+ALTER TABLE cases ENABLE ROW LEVEL SECURITY;
+CREATE POLICY cases_public_read ON cases FOR SELECT USING (true);
+
+ALTER TABLE case_locations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY case_locations_public_read ON case_locations FOR SELECT USING (true);

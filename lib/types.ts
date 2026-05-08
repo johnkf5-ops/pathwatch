@@ -141,3 +141,35 @@ export interface Fact {
   superseded_by: string | null;
   tags: string[] | null;
 }
+
+export type ThreatLevel = 'minimal' | 'low' | 'moderate' | 'elevated' | 'high' | 'critical';
+export type MutationStatus = 'none_detected' | 'monitoring' | 'concerning' | 'critical';
+export type ContainmentEffectiveness = 'effective' | 'partially_effective' | 'failing' | 'unknown';
+
+export interface ThreatAssessment {
+  id: string;
+  created_at: string;
+  disease: string;
+  model: string;
+  pipeline_session_id: string | null;
+  pandemic_probability: number;
+  threat_level: ThreatLevel;
+  summary: string;
+  reasoning: string;
+  r0_estimate: number | null;
+  r0_assessment: string | null;
+  mutation_status: MutationStatus | null;
+  mutation_notes: string | null;
+  secondary_attack_rate: number | null;
+  secondary_attack_notes: string | null;
+  case_doubling_days: number | null;
+  containment_effectiveness: ContainmentEffectiveness | null;
+  polymarket_pandemic_odds: number | null;
+  polymarket_us_case_odds: number | null;
+  polymarket_vaccine_odds: number | null;
+  polymarket_lab_leak_odds: number | null;
+  polymarket_fetched_at: string | null;
+  ai_vs_market_note: string | null;
+  triggers_watching: string[];
+  triggers_tripped: string[];
+}

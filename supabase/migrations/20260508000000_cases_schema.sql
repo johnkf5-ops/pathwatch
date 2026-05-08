@@ -64,3 +64,9 @@ CREATE POLICY cases_public_read ON cases FOR SELECT USING (true);
 
 ALTER TABLE case_locations ENABLE ROW LEVEL SECURITY;
 CREATE POLICY case_locations_public_read ON case_locations FOR SELECT USING (true);
+
+-- ============================================================
+-- Realtime publication
+-- ============================================================
+ALTER PUBLICATION supabase_realtime ADD TABLE cases;
+ALTER PUBLICATION supabase_realtime ADD TABLE case_locations;

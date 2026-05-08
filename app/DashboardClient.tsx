@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import type { Event, Snapshot, CountryStat, FilterState } from '@/lib/types';
 import { eventMatchesFilter } from '@/lib/filters';
 import { getBrowserClient } from '@/lib/supabase-browser';
@@ -7,9 +8,21 @@ import { SituationOverview } from '@/components/overview/SituationOverview';
 import { FilterBar } from '@/components/feed/FilterBar';
 import { EventFeed } from '@/components/feed/EventFeed';
 import { CountryBreakdown } from '@/components/country/CountryBreakdown';
+import { TrendChart } from '@/components/charts/TrendChart';
+import { SourceActivityChart } from '@/components/charts/SourceActivityChart';
+import { Skeleton } from '@/components/ui/Skeleton';
+
+const MapPanel = dynamic(
+  () => import('@/components/map/MapPanel').then((m) => m.MapPanel),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-[280px] w-full rounded-xl" />,
+  },
+);
 
 interface Props {
   initialSnapshot: Snapshot | null;
+  initialSnapshotHistory: Snapshot[];
   initialEvents: Event[];
   initialCountries: CountryStat[];
   initialFilters: FilterState;
@@ -17,16 +30,19 @@ interface Props {
 
 export function DashboardClient({
   initialSnapshot,
+  initialSnapshotHistory,
   initialEvents,
   initialCountries,
   initialFilters,
 }: Props) {
   const [snapshot, setSnapshot] = useState(initialSnapshot);
+  const [snapshotHistory, setSnapshotHistory] = useState(initialSnapshotHistory);
   const [events, setEvents] = useState(initialEvents);
   const [countries, setCountries] = useState(initialCountries);
   const [connected, setConnected] = useState(true);
 
   useEffect(() => { setSnapshot(initialSnapshot); }, [initialSnapshot]);
+  useEffect(() => { setSnapshotHistory(initialSnapshotHistory); }, [initialSnapshotHistory]);
   useEffect(() => { setEvents(initialEvents); }, [initialEvents]);
   useEffect(() => { setCountries(initialCountries); }, [initialCountries]);
 
@@ -52,7 +68,13 @@ export function DashboardClient({
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'snapshots', filter: 'disease=eq.hantavirus' },
-        (payload) => setSnapshot(payload.new as Snapshot),
+        (payload) => {
+          const s = payload.new as Snapshot;
+          setSnapshot(s);
+          setSnapshotHistory((prev) =>
+            prev.find((p) => p.id === s.id) ? prev : [...prev, s].slice(-30),
+          );
+        },
       )
       .subscribe();
 
@@ -92,10 +114,10 @@ export function DashboardClient({
           <FilterBar filters={initialFilters} />
           <EventFeed events={events} />
         </div>
-        <aside>
-          <div className="flex h-full min-h-[280px] items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-sm text-text-muted">
-            Map and charts arrive in sub-project 2b.
-          </div>
+        <aside className="flex flex-col gap-4">
+          <MapPanel countries={countries} events={events} />
+          <TrendChart snapshots={snapshotHistory} />
+          <SourceActivityChart events={events} />
         </aside>
       </div>
       <CountryBreakdown rows={countries} />

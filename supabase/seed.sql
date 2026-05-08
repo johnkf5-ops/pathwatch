@@ -124,3 +124,121 @@ INSERT INTO snapshots (disease, total_cases, total_deaths, countries_affected, c
       'Andes orthohantavirus confirmed; no atypical mutations vs. reference strain'
     ],
     'The MV Hondius cluster is unusual in vector (maritime cruise ship) but consistent in pathogen (Andes orthohantavirus, the only hantavirus with documented human-to-human transmission via close contact). Eight confirmed cases including three deaths give a current CFR of ~37%, which aligns with historical ANDV CFR of 35-40%. The dispersion of ~600 passengers across 23 nationalities creates a broad surveillance challenge but the close-contact transmission mode means broad community spread is unlikely. Risk level moderate reflects multi-country dispersion offset by limited transmission radius. Watch for: new secondary cases in returnees'' households, sequencing results for any mutation signal, cruise industry policy changes.');
+
+-- ============================================================
+-- cases (real MV Hondius cohort, anonymized via case_code)
+-- ============================================================
+INSERT INTO cases (case_code, status, is_index_case, role, exposure_type, age_range, sex,
+                   exposure_country, exposure_date, onset_date, confirmed_date, outcome_date,
+                   current_country, dossier, notes, source_event_id) VALUES
+  ('MVH-001', 'deceased', true,  'passenger', 'rodent_contact',     '60-69', 'F', 'AR',
+   '2026-04-01','2026-04-15','2026-04-18','2026-04-22','NL',
+   'Dutch retiree, mid-60s, infectious-disease researcher emerita. Visited Argentina and Chile in late March 2026 on a private birdwatching expedition focused on Andean condors and rufous-collared sparrows. Stayed in a rustic cabin near Ushuaia 2026-03-29 to 2026-04-02 where rodent contact is the suspected exposure event. Returned to Amsterdam 2026-04-08, presented to Erasmus MC with hantavirus pulmonary syndrome 2026-04-15, deceased 2026-04-22 of acute respiratory distress and cardiogenic shock. ANDV confirmed via RT-PCR. The familial cohort with MVH-002 triggered the entire MV Hondius cascade.',
+   'Index case for the outbreak. Family requested media privacy.',
+   (SELECT id FROM events WHERE title LIKE 'Dutch index couple obituary%' LIMIT 1)),
+
+  ('MVH-002', 'deceased', true,  'passenger', 'person_to_person',   '60-69', 'M', 'AR',
+   '2026-04-01','2026-04-17','2026-04-19','2026-04-25','NL',
+   'Dutch retiree, mid-60s, partner of MVH-001. Same Patagonia birdwatching itinerary; close-contact exposure to symptomatic partner before either knew they were ill. Onset 2026-04-17, two days after MVH-001. Hospitalized at Erasmus MC; deceased 2026-04-25 from progressive respiratory failure. ANDV confirmed via RT-PCR with sequence identity to MVH-001 (no mutation between hosts). Together they form the index dyad for the MV Hondius cluster.',
+   'Confirms ANDV person-to-person transmission within the index dyad.',
+   (SELECT id FROM events WHERE title LIKE 'Dutch index couple obituary%' LIMIT 1)),
+
+  ('MVH-003', 'confirmed', false, 'passenger', 'person_to_person',  '40-49', 'F', 'AR',
+   '2026-04-04','2026-04-25','2026-04-27', NULL, 'CV',
+   'German national, MV Hondius passenger who shared a guided shore excursion with the Dutch index couple in Ushuaia 2026-04-01. Boarded MV Hondius 2026-04-02. Onset 2026-04-25 mid-voyage. Currently receiving care aboard the ship while it remains anchored off Praia, Cape Verde. Stable, mild presentation.',
+   'Earliest confirmed onboard case after the index dyad.',
+   (SELECT id FROM events WHERE title LIKE 'WHO confirms hantavirus%' LIMIT 1)),
+
+  ('MVH-004', 'confirmed', false, 'crew',      'person_to_person',  '30-39', 'M', 'AR',
+   '2026-04-05','2026-04-28','2026-04-30', NULL, 'CV',
+   'Filipino-national cabin steward assigned to the deck the index couple occupied. Likely exposure via contaminated linens and prolonged close contact during cleaning. Onset 2026-04-28; isolated to crew quarters; transferred to onshore Praia hospital 2026-05-04 with critical respiratory symptoms but downgraded to stable 2026-05-06.',
+   'First crew case. Triggered onboard quarantine of the affected deck.',
+   (SELECT id FROM events WHERE title LIKE 'WHO confirms hantavirus%' LIMIT 1)),
+
+  ('MVH-005', 'suspected', false, 'passenger', 'unknown',           '50-59', 'F', NULL,
+   NULL, NULL, NULL, NULL, 'US',
+   'US national, California resident. Disembarked MV Hondius at intermediate port before the cluster was identified. CDC contact tracing found her among the manifest; under voluntary home isolation in CA. Asymptomatic at last check 2026-05-06; PCR pending.',
+   'Part of the US monitoring cohort across CA, GA, AZ.',
+   (SELECT id FROM events WHERE title LIKE 'CDC: Risk to American%' LIMIT 1)),
+
+  ('MVH-006', 'suspected', false, 'passenger', 'unknown',           '60-69', 'M', NULL,
+   NULL, NULL, NULL, NULL, 'US',
+   'US national, Georgia resident, MV Hondius passenger. Disembarked early. Asymptomatic; under voluntary home isolation. PCR pending.',
+   'Same monitoring cohort as MVH-005.',
+   (SELECT id FROM events WHERE title LIKE 'CDC: Risk to American%' LIMIT 1)),
+
+  ('MVH-007', 'suspected', false, 'passenger', 'unknown',           '40-49', 'F', NULL,
+   NULL, NULL, NULL, NULL, 'US',
+   'US national, Arizona resident. MV Hondius passenger. Asymptomatic; voluntary home isolation. PCR pending.',
+   'Same monitoring cohort as MVH-005 / MVH-006.',
+   (SELECT id FROM events WHERE title LIKE 'CDC: Risk to American%' LIMIT 1)),
+
+  ('MVH-008', 'critical',  false, 'passenger', 'person_to_person',  '70-79', 'M', 'AR',
+   '2026-04-04','2026-04-22','2026-04-24', NULL, 'CV',
+   'Italian national, eldest confirmed MV Hondius case. Pre-existing COPD aggravates respiratory presentation. Mechanical ventilation since 2026-05-02 at the Praia hospital. Prognosis guarded.',
+   'Most clinically severe active case as of 2026-05-07.',
+   (SELECT id FROM events WHERE title LIKE 'WHO confirms hantavirus%' LIMIT 1)),
+
+  ('MVH-009', 'suspected', false, 'passenger', 'unknown',           '30-39', 'M', NULL,
+   NULL, NULL, NULL, NULL, 'CH',
+   'Swiss national, MV Hondius passenger who disembarked at Praia 2026-04-30 and flew home to Zurich 2026-05-01. Cohabitating partner CH-001 became symptomatic 2026-05-04. MVH-009 himself remains asymptomatic; in voluntary isolation. PCR pending.',
+   'Linked to the first known secondary case (CH-001).',
+   (SELECT id FROM events WHERE title LIKE 'Switzerland confirms first secondary%' LIMIT 1)),
+
+  ('CH-001',  'confirmed', false, 'contact',   'person_to_person',  '30-39', 'F', 'CH',
+   '2026-05-02','2026-05-04','2026-05-06', NULL, 'CH',
+   'Swiss national, intimate partner of MVH-009. First confirmed secondary (non-cruise) ANDV case in this outbreak. Hospitalized at Universitätsspital Zürich 2026-05-06; clinically stable, oxygen support but not ventilated.',
+   'Validates the close-contact transmission risk MVH-009 represented.',
+   (SELECT id FROM events WHERE title LIKE 'Switzerland confirms first secondary%' LIMIT 1));
+
+-- ============================================================
+-- case_locations (ordered timeline; stops sorted by arrived_at)
+-- ============================================================
+INSERT INTO case_locations (case_id, country_code, region, location_name, latitude, longitude, arrived_at, departed_at, context, is_exposure_site) VALUES
+  -- MVH-001 (5 stops)
+  ((SELECT id FROM cases WHERE case_code = 'MVH-001'),'NL','North Holland','Amsterdam',52.37,4.90,'2026-03-25 09:00+00','2026-03-28 12:00+00','pre-trip departure',false),
+  ((SELECT id FROM cases WHERE case_code = 'MVH-001'),'AR','Tierra del Fuego','Ushuaia, Argentina',-54.81,-68.30,'2026-03-29 18:00+00','2026-04-02 10:00+00','birdwatching expedition (rustic cabin)',true),
+  ((SELECT id FROM cases WHERE case_code = 'MVH-001'),'CL','Aysén','Aysén, Chile',-45.40,-72.72,'2026-04-02 18:00+00','2026-04-05 09:00+00','onward birdwatching itinerary',false),
+  ((SELECT id FROM cases WHERE case_code = 'MVH-001'),'AR','Buenos Aires','Buenos Aires, Argentina',-34.60,-58.40,'2026-04-05 14:00+00','2026-04-08 06:00+00','transit; flight home',false),
+  ((SELECT id FROM cases WHERE case_code = 'MVH-001'),'NL','North Holland','Amsterdam (Erasmus MC)',52.37,4.90,'2026-04-08 18:00+00',NULL,'home -> hospital admission -> deceased 2026-04-22',false),
+
+  -- MVH-002 (4 stops)
+  ((SELECT id FROM cases WHERE case_code = 'MVH-002'),'NL','North Holland','Amsterdam',52.37,4.90,'2026-03-25 09:00+00','2026-03-28 12:00+00','pre-trip departure',false),
+  ((SELECT id FROM cases WHERE case_code = 'MVH-002'),'AR','Tierra del Fuego','Ushuaia, Argentina',-54.81,-68.30,'2026-03-29 18:00+00','2026-04-02 10:00+00','birdwatching expedition (rustic cabin)',true),
+  ((SELECT id FROM cases WHERE case_code = 'MVH-002'),'CL','Aysén','Aysén, Chile',-45.40,-72.72,'2026-04-02 18:00+00','2026-04-05 09:00+00','onward birdwatching itinerary',false),
+  ((SELECT id FROM cases WHERE case_code = 'MVH-002'),'NL','North Holland','Amsterdam (Erasmus MC)',52.37,4.90,'2026-04-08 18:00+00',NULL,'home -> hospital admission -> deceased 2026-04-25',false),
+
+  -- MVH-003 (3 stops)
+  ((SELECT id FROM cases WHERE case_code = 'MVH-003'),'AR','Tierra del Fuego','Ushuaia, Argentina',-54.81,-68.30,'2026-04-01 10:00+00','2026-04-02 09:00+00','shared shore excursion with index couple',true),
+  ((SELECT id FROM cases WHERE case_code = 'MVH-003'),'CV','Atlantic','MV Hondius (Atlantic transit)',-15.0,-20.0,'2026-04-02 12:00+00','2026-04-29 09:00+00','MV Hondius passenger',false),
+  ((SELECT id FROM cases WHERE case_code = 'MVH-003'),'CV','Praia','MV Hondius (off Praia)',14.93,-23.51,'2026-04-29 09:00+00',NULL,'ship anchored offshore; passenger remains aboard',false),
+
+  -- MVH-004 (3 stops)
+  ((SELECT id FROM cases WHERE case_code = 'MVH-004'),'AR','Tierra del Fuego','MV Hondius docked Ushuaia',-54.81,-68.30,'2026-03-30 06:00+00','2026-04-02 06:00+00','cabin steward assigned to deck of index dyad',true),
+  ((SELECT id FROM cases WHERE case_code = 'MVH-004'),'CV','Praia','MV Hondius (off Praia)',14.93,-23.51,'2026-04-29 09:00+00','2026-05-04 12:00+00','onboard isolation',false),
+  ((SELECT id FROM cases WHERE case_code = 'MVH-004'),'CV','Praia','Hospital Agostinho Neto, Praia',14.92,-23.51,'2026-05-04 14:00+00',NULL,'transferred for critical care',false),
+
+  -- MVH-005 (2 stops)
+  ((SELECT id FROM cases WHERE case_code = 'MVH-005'),'CV','Atlantic','MV Hondius (passage)',-15.0,-20.0,'2026-04-02 12:00+00','2026-04-25 12:00+00','MV Hondius passenger',false),
+  ((SELECT id FROM cases WHERE case_code = 'MVH-005'),'US','California','Los Angeles, CA',34.05,-118.24,'2026-04-26 04:00+00',NULL,'voluntary home isolation; CDC monitoring',false),
+
+  -- MVH-006 (2 stops)
+  ((SELECT id FROM cases WHERE case_code = 'MVH-006'),'CV','Atlantic','MV Hondius (passage)',-15.0,-20.0,'2026-04-02 12:00+00','2026-04-25 12:00+00','MV Hondius passenger',false),
+  ((SELECT id FROM cases WHERE case_code = 'MVH-006'),'US','Georgia','Atlanta, GA',33.75,-84.39,'2026-04-26 04:00+00',NULL,'voluntary home isolation; CDC monitoring',false),
+
+  -- MVH-007 (2 stops)
+  ((SELECT id FROM cases WHERE case_code = 'MVH-007'),'CV','Atlantic','MV Hondius (passage)',-15.0,-20.0,'2026-04-02 12:00+00','2026-04-25 12:00+00','MV Hondius passenger',false),
+  ((SELECT id FROM cases WHERE case_code = 'MVH-007'),'US','Arizona','Phoenix, AZ',33.45,-112.07,'2026-04-26 04:00+00',NULL,'voluntary home isolation; CDC monitoring',false),
+
+  -- MVH-008 (3 stops)
+  ((SELECT id FROM cases WHERE case_code = 'MVH-008'),'AR','Tierra del Fuego','Ushuaia, Argentina',-54.81,-68.30,'2026-04-01 10:00+00','2026-04-02 09:00+00','shore excursion with index couple',true),
+  ((SELECT id FROM cases WHERE case_code = 'MVH-008'),'CV','Praia','MV Hondius (off Praia)',14.93,-23.51,'2026-04-29 09:00+00','2026-05-02 09:00+00','onboard isolation',false),
+  ((SELECT id FROM cases WHERE case_code = 'MVH-008'),'CV','Praia','Hospital Agostinho Neto, Praia (ICU)',14.92,-23.51,'2026-05-02 11:00+00',NULL,'mechanical ventilation; critical',false),
+
+  -- MVH-009 (2 stops)
+  ((SELECT id FROM cases WHERE case_code = 'MVH-009'),'CV','Praia','MV Hondius (off Praia)',14.93,-23.51,'2026-04-29 09:00+00','2026-04-30 18:00+00','disembarked at Praia',false),
+  ((SELECT id FROM cases WHERE case_code = 'MVH-009'),'CH','Zurich','Zurich, Switzerland',47.37,8.55,'2026-05-01 16:00+00',NULL,'voluntary home isolation; PCR pending',false),
+
+  -- CH-001 (2 stops)
+  ((SELECT id FROM cases WHERE case_code = 'CH-001'),'CH','Zurich','Zurich (residence)',47.37,8.55,'2026-05-01 16:00+00','2026-05-06 08:00+00','intimate partner of MVH-009; close contact exposure',true),
+  ((SELECT id FROM cases WHERE case_code = 'CH-001'),'CH','Zurich','Universitätsspital Zürich',47.38,8.55,'2026-05-06 09:00+00',NULL,'hospital admission; oxygen support',false);

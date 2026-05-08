@@ -10,6 +10,13 @@ const mono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', displ
 export const metadata: Metadata = {
   title: 'Pathwatch — Real-Time Disease Outbreak Tracker',
   description: 'AI-powered real-time tracking of emerging disease outbreaks.',
+  openGraph: {
+    title: 'Pathwatch — Real-Time Disease Outbreak Tracker',
+    description: 'AI-powered real-time tracking of emerging disease outbreaks.',
+    type: 'website',
+    locale: 'en_US',
+  },
+  twitter: { card: 'summary_large_image' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

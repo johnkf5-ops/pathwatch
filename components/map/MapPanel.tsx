@@ -166,7 +166,7 @@ export function MapPanel({ countries, events }: Props) {
 
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-surface">
-      <div ref={containerRef} className="h-[280px] w-full" />
+      <div ref={containerRef} className="h-[220px] w-full sm:h-[280px]" />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { unstable_noStore as noStore } from 'next/cache';
 import { createServerClient } from '@/lib/supabase-server';
 import { CaseDossier } from '@/components/case/CaseDossier';
 import type { Case, CaseLocation, Event } from '@/lib/types';
+import { caseLabel } from '@/lib/case-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,9 +44,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { case_ } = await fetchCase(params.case_code);
   if (!case_) return { title: 'Case not found — Pathwatch' };
+  const label = caseLabel(case_);
   return {
-    title: `${case_.case_code} — Pathwatch`,
-    description: case_.dossier?.slice(0, 200) ?? `Case dossier for ${case_.case_code}`,
+    title: `${label} — Pathwatch`,
+    description: case_.dossier?.slice(0, 200) ?? `Case dossier for ${label}`,
   };
 }
 

@@ -102,6 +102,7 @@ export interface Case {
   notes: string | null;
   source_event_id: string | null;
   clearance_date: string | null;
+  display_name: string | null;
 }
 
 export interface CaseLocation {

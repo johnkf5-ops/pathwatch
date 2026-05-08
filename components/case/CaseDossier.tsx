@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Case, CaseLocation, Event } from '@/lib/types';
-import { caseLocationsFor } from '@/lib/case-helpers';
+import { caseLocationsFor, caseLabel } from '@/lib/case-helpers';
 import { CaseStatusPill } from './CaseStatusPill';
 import { TravelTimeline } from './TravelTimeline';
 import { SectionHeader } from '@/components/ops/SectionHeader';
@@ -26,10 +26,15 @@ export function CaseDossier({
       <header className="flex flex-col gap-2">
         <div className="flex items-start justify-between gap-3">
           <h1 className="font-mono text-[22px] font-bold leading-tight tracking-[-0.01em] text-text">
-            {case_.case_code}
+            {caseLabel(case_)}
           </h1>
           <CaseStatusPill status={case_.status} />
         </div>
+        {case_.display_name && (
+          <div className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-text-muted">
+            {case_.case_code}
+          </div>
+        )}
         {meta && (
           <div className="font-mono text-[10.5px] uppercase tracking-[0.1em] text-text-muted">
             {meta}{case_.is_index_case ? ' · INDEX CASE' : ''}

@@ -2,7 +2,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 SET search_path TO extensions, public;
 
-SELECT plan(41);
+SELECT plan(42);
 
 -- Existence
 SELECT has_table('cases');
@@ -29,6 +29,7 @@ SELECT has_column('cases', 'dossier');
 SELECT has_column('cases', 'notes');
 SELECT has_column('cases', 'source_event_id');
 SELECT has_column('cases', 'clearance_date');
+SELECT has_column('cases', 'display_name');
 
 -- NOT NULL where required
 SELECT col_not_null('cases', 'created_at');

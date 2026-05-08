@@ -7,7 +7,7 @@ import { CountryFlag } from '@/components/ui/CountryFlag';
 import { CaseStatusPill } from '@/components/case/CaseStatusPill';
 import { CaseDossier } from '@/components/case/CaseDossier';
 import { SectionHeader } from './SectionHeader';
-import { casesByCountry } from '@/lib/case-helpers';
+import { casesByCountry, caseLabel } from '@/lib/case-helpers';
 
 export function DossierDrawer({
   cases,
@@ -86,7 +86,7 @@ export function DossierDrawer({
                     replace
                     className="flex items-center justify-between border-b border-border-soft py-2 last:border-0 hover:bg-surface-2"
                   >
-                    <span className="font-mono text-[11.5px] text-text">{c.case_code}</span>
+                    <span className="font-mono text-[11.5px] text-text">{caseLabel(c)}</span>
                     <CaseStatusPill status={c.status} />
                   </Link>
                 </li>

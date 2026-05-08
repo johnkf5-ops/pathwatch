@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import type { Case } from '@/lib/types';
-import { clearanceFor } from '@/lib/case-helpers';
+import { clearanceFor, caseLabel } from '@/lib/case-helpers';
 import { SectionHeader } from './SectionHeader';
 
 const TONE_CLS: Record<string, string> = {
@@ -55,7 +55,7 @@ export function MonitoringCohort({ cases }: { cases: Case[] }) {
                 className="flex items-center gap-2 border border-border bg-surface px-2 py-1.5 hover:bg-surface-2"
                 scroll={false}
               >
-                <span className="font-mono text-[11px] text-text">{c.case_code}</span>
+                <span className="truncate font-mono text-[11px] text-text">{caseLabel(c)}</span>
                 <span className="truncate text-[11px] text-text-secondary">
                   {c.role ? c.role.replace('_', ' ').toUpperCase() : 'CONTACT'} {where}
                 </span>

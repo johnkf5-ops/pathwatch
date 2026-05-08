@@ -1,0 +1,41 @@
+INSERT INTO threat_assessments (
+  disease, model, pipeline_session_id,
+  pandemic_probability, threat_level, summary, reasoning,
+  r0_estimate, r0_assessment,
+  mutation_status, mutation_notes,
+  secondary_attack_rate, secondary_attack_notes,
+  case_doubling_days, containment_effectiveness,
+  polymarket_pandemic_odds, polymarket_us_case_odds, polymarket_vaccine_odds, polymarket_lab_leak_odds,
+  polymarket_fetched_at, ai_vs_market_note,
+  triggers_watching, triggers_tripped
+) VALUES (
+  'hantavirus',
+  'claude-opus-4-7',
+  'seed',
+  0.035,
+  'low',
+  'Contained cruise ship cluster with R0 below 1. Person-to-person transmission confirmed but requires prolonged close contact. No evidence of airborne spread. No concerning mutations. Probability of pandemic: very low.',
+  'Based on 9 cases (6 confirmed, 3 suspected) and 3 deaths across a single cruise ship cluster with limited secondary spread (1 confirmed non-ship case in Switzerland). Key factors keeping probability low: (1) R0 < 1 means chains burn out without sustained contact, (2) KL592 flight attendant negative result confirms brief contact insufficient, (3) no mutations in sequenced isolates, (4) WHO/CDC/ECDC all assess risk as LOW, (5) historical ANDV outbreaks (El Bolson 1996: 18 cases, Epuyen 2018: 36 cases) all self-limited. The 42-day surveillance window for ~600 passengers across 23 nationalities creates uncertainty — new cases may emerge — but the transmission biology constrains spread. Polymarket pandemic odds at 9% reflect media-driven fear premium over epidemiological reality.',
+  0.7,
+  'Below 1. Estimated from MV Hondius data: ~9 cases from ~150 people in prolonged close-quarters exposure over 3+ weeks. Secondary attack rate in household contacts (CH-001) is 1/2 (partner infected, wife not).',
+  'none_detected',
+  'Preliminary sequencing shows no atypical mutations vs reference Patagonian ANDV strain. Sequence identity between MVH-001 and MVH-002 confirms no inter-host mutation.',
+  0.02,
+  '1 confirmed secondary case (CH-001) out of hundreds of contacts traced across 12+ countries. KL592 flight attendant negative. Very low.',
+  NULL,
+  'effective',
+  0.091, 0.295, 0.115, 0.028,
+  now(),
+  'Our assessment (3.5%) is ~5.6 percentage points below Polymarket consensus (9.1%). The delta likely reflects media-driven fear premium. Market participants may be overweighting the novel cruise-ship vector and underweighting the R0 < 1 constraint and KL592 negative result.',
+  ARRAY[
+    'airborne_transmission',
+    'r0_above_one',
+    'doubling_48h',
+    'spike_mutation',
+    'no_known_exposure',
+    'who_above_low',
+    'cdc_above_level3',
+    'community_transmission'
+  ],
+  ARRAY[]::TEXT[]
+);

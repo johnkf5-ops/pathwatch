@@ -1,7 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import type { Event, Snapshot, CountryStat, Case, CaseLocation } from '@/lib/types';
+import type {
+  Event, Snapshot, CountryStat, Case, CaseLocation, ThreatAssessment,
+} from '@/lib/types';
 import { getBrowserClient } from '@/lib/supabase-browser';
 import { TopBar } from '@/components/ops/TopBar';
 import { SituationBrief } from '@/components/ops/SituationBrief';
@@ -13,6 +15,7 @@ import { MapPane } from '@/components/ops/MapPane';
 import { ByCountryPane } from '@/components/ops/ByCountryPane';
 import { DossierDrawer } from '@/components/ops/DossierDrawer';
 import { EventFeed } from '@/components/feed/EventFeed';
+import { ThreatBanner } from '@/components/threat/ThreatBanner';
 
 interface Props {
   initialSnapshot: Snapshot | null;
@@ -21,6 +24,7 @@ interface Props {
   initialCountries: CountryStat[];
   initialCases: Case[];
   initialCaseLocations: CaseLocation[];
+  initialThreat: ThreatAssessment | null;
 }
 
 export function DashboardClient({
@@ -30,6 +34,7 @@ export function DashboardClient({
   initialCountries,
   initialCases,
   initialCaseLocations,
+  initialThreat,
 }: Props) {
   const searchParams = useSearchParams();
   const caseCode = searchParams.get('case');
@@ -41,6 +46,7 @@ export function DashboardClient({
   const [countries, setCountries] = useState(initialCountries);
   const [cases, setCases] = useState(initialCases);
   const [caseLocations, setCaseLocations] = useState(initialCaseLocations);
+  const [threat, setThreat] = useState(initialThreat);
   const [activeTab, setActiveTab] = useState<'map' | 'country'>('map');
 
   useEffect(() => { setSnapshot(initialSnapshot); }, [initialSnapshot]);
@@ -49,6 +55,7 @@ export function DashboardClient({
   useEffect(() => { setCountries(initialCountries); }, [initialCountries]);
   useEffect(() => { setCases(initialCases); }, [initialCases]);
   useEffect(() => { setCaseLocations(initialCaseLocations); }, [initialCaseLocations]);
+  useEffect(() => { setThreat(initialThreat); }, [initialThreat]);
 
   useEffect(() => {
     const supabase = getBrowserClient();
@@ -123,12 +130,22 @@ export function DashboardClient({
       )
       .subscribe();
 
+    const ch6 = supabase
+      .channel('threat-rt')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'threat_assessments', filter: 'disease=eq.hantavirus' },
+        (p) => setThreat(p.new as ThreatAssessment),
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(ch1);
       supabase.removeChannel(ch2);
       supabase.removeChannel(ch3);
       supabase.removeChannel(ch4);
       supabase.removeChannel(ch5);
+      supabase.removeChannel(ch6);
     };
   }, []);
 
@@ -143,6 +160,7 @@ export function DashboardClient({
   return (
     <div className="flex min-h-screen flex-col">
       <TopBar snapshot={snapshot} />
+      {threat && <ThreatBanner assessment={threat} />}
       <div className="grid h-[calc(100vh-2rem)] lg:grid-cols-2">
         {/* Sit-rep (left) */}
         <div className="overflow-y-auto border-b border-border lg:border-b-0 lg:border-r">

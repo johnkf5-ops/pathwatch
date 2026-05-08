@@ -10,3 +10,26 @@ html, body {
 body {
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
+
+/* Map markers pulse */
+@keyframes pathwatchPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.6; transform: scale(1.18); }
+}
+
+/* MapLibre popup body — tighten to match the dashboard surface */
+.pathwatch-popup .maplibregl-popup-content {
+  background: #12121A;
+  color: #E8E8ED;
+  border: 1px solid #2A2A35;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.pathwatch-popup .maplibregl-popup-tip {
+  border-top-color: #12121A;
+}
+.pathwatch-popup .maplibregl-popup-close-button {
+  color: #8888A0;
+  font-size: 18px;
+}

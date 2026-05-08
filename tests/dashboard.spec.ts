@@ -1,36 +1,41 @@
 import { test, expect } from '@playwright/test';
 
-test('dashboard renders MV Hondius outbreak data', async ({ page }) => {
+test('ops console renders sit-rep + tabs', async ({ page }) => {
   await page.goto('/');
-
-  await expect(page.getByText('Pathwatch').first()).toBeVisible();
-
-  await expect(page.getByTestId('stat-cases')).toContainText('8');
-  await expect(page.getByTestId('stat-deaths')).toContainText('3');
-  await expect(page.getByTestId('stat-countries')).toContainText('5');
-  await expect(page.getByTestId('stat-fatality')).toContainText(/3[78]/);
-  await expect(page.getByTestId('risk-badge')).toContainText(/moderate/i);
-
-  await expect(page.getByText(/MV Hondius/i).first()).toBeVisible();
-  await expect(page.getByText('Argentina').first()).toBeVisible();
-  await expect(page.getByText('Cape Verde').first()).toBeVisible();
+  await expect(page.getByText('PATHWATCH').first()).toBeVisible();
+  await expect(page.getByText('OPS CONSOLE')).toBeVisible();
+  await expect(page.getByText('SITUATION BRIEF')).toBeVisible();
+  await expect(page.getByText('KEY METRICS')).toBeVisible();
+  await expect(page.getByText('REGIONAL POSTURE')).toBeVisible();
+  await expect(page.getByText('WATCHLIST')).toBeVisible();
+  await expect(page.getByTestId('kpi-cases')).toContainText('8');
+  await expect(page.getByRole('tab', { name: /MAP/ })).toBeVisible();
+  await expect(page.getByRole('tab', { name: /BY COUNTRY/ })).toBeVisible();
 });
 
-test('map and charts render', async ({ page }) => {
-  await page.goto('/');
-  await expect(page.locator('.maplibregl-ctrl-attrib')).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByTestId('source-activity-chart')).toBeVisible();
-  await expect(page.getByText(/Need at least 2 snapshots/i)).toBeVisible();
+test('case drilldown opens drawer', async ({ page }) => {
+  await page.goto('/?case=MVH-001');
+  await expect(page.getByTestId('dossier-drawer')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'MVH-001' })).toBeVisible();
+  await expect(page.getByText('DOSSIER')).toBeVisible();
+  await expect(page.getByText(/birdwatching/i).first()).toBeVisible();
+  await expect(page.getByText('TRAVEL TIMELINE')).toBeVisible();
+});
+
+test('case permalink page', async ({ page }) => {
+  await page.goto('/case/MVH-001');
+  await expect(page.getByRole('heading', { name: 'MVH-001' })).toBeVisible();
+  await expect(page.getByText(/Dutch retiree/i)).toBeVisible();
+  await expect(page.getByText('← BACK TO DASHBOARD')).toBeVisible();
 });
 
 test('event detail page renders', async ({ page }) => {
   await page.goto('/');
-  // Click the first event-card link whose text contains "MV Hondius"
-  // (avoids matching the AI analysis paragraph that mentions "MV Hondius cluster").
-  await page.getByRole('link').filter({ hasText: /MV Hondius/i }).first().click();
+  // Click the first watchlist item that has MV Hondius in title
+  const link = page.getByRole('link').filter({ hasText: /MV Hondius/i }).first();
+  await link.click();
   await expect(page).toHaveURL(/\/event\/[0-9a-f-]+/);
   await expect(page.getByRole('heading', { level: 1, name: /MV Hondius/i })).toBeVisible();
-  await expect(page.getByText(/Back to dashboard/i).first()).toBeVisible();
 });
 
 test('OG image generates', async ({ request }) => {

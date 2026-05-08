@@ -161,9 +161,13 @@ export function MapPanel({ countries, cases, caseLocations, selectedCaseId }: Pr
 
     const cleanup = () => {
       if (!map) return;
-      if (map.getLayer(POINTS_LAYER_ID)) map.removeLayer(POINTS_LAYER_ID);
-      if (map.getLayer(LINE_LAYER_ID)) map.removeLayer(LINE_LAYER_ID);
-      if (map.getSource(SOURCE_ID)) map.removeSource(SOURCE_ID);
+      try {
+        if (map.getLayer(POINTS_LAYER_ID)) map.removeLayer(POINTS_LAYER_ID);
+        if (map.getLayer(LINE_LAYER_ID)) map.removeLayer(LINE_LAYER_ID);
+        if (map.getSource(SOURCE_ID)) map.removeSource(SOURCE_ID);
+      } catch {
+        // map mid-teardown; ignore
+      }
     };
 
     if (!selectedCaseId) {

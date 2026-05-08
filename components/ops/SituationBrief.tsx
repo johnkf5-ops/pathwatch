@@ -19,7 +19,10 @@ export function SituationBrief({ snapshot }: { snapshot: Snapshot | null }) {
     <section className="border-b border-border px-4 py-4">
       <div className="flex items-start justify-between gap-4">
         <SectionHeader>SITUATION BRIEF</SectionHeader>
-        <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-green">
+        <span
+          className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-green"
+          suppressHydrationWarning
+        >
           <span className="dot-pulse inline-block h-1.5 w-1.5 rounded-full bg-green" />
           {fresh}
         </span>

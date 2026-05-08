@@ -27,7 +27,7 @@ export function WatchlistItem({ event }: { event: Event }) {
     <li>
       <Link href={`/event/${event.id}`} className="block border-b border-border-soft py-2 last:border-0 hover:bg-surface-2">
         <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.1em]">
-          <span className="text-text-muted">{age}</span>
+          <span className="text-text-muted" suppressHydrationWarning>{age}</span>
           <span className="text-text-secondary">{SOURCE_LABEL[event.source_type]}</span>
           {tag && <span className={`ml-auto border px-1.5 py-0.5 ${tag.cls}`}>{tag.text}</span>}
         </div>

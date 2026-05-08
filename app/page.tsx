@@ -23,7 +23,7 @@ export default async function Home({
   if (filters.category) eventsQuery = eventsQuery.eq('category', filters.category);
   eventsQuery = eventsQuery.order('created_at', { ascending: false }).range(0, filters.limit - 1);
 
-  const [snapshotRes, eventsRes, countriesRes] = await Promise.all([
+  const [snapshotRes, snapshotHistoryRes, eventsRes, countriesRes] = await Promise.all([
     supabase
       .from('snapshots')
       .select('*')
@@ -31,6 +31,12 @@ export default async function Home({
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from('snapshots')
+      .select('*')
+      .eq('disease', 'hantavirus')
+      .order('created_at', { ascending: true })
+      .limit(30),
     eventsQuery,
     supabase.from('country_stats').select('*').eq('disease', 'hantavirus'),
   ]);
@@ -38,6 +44,7 @@ export default async function Home({
   return (
     <DashboardClient
       initialSnapshot={(snapshotRes.data as Snapshot | null) ?? null}
+      initialSnapshotHistory={(snapshotHistoryRes.data as Snapshot[] | null) ?? []}
       initialEvents={(eventsRes.data as Event[] | null) ?? []}
       initialCountries={(countriesRes.data as CountryStat[] | null) ?? []}
       initialFilters={filters}

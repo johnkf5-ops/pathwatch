@@ -8,7 +8,7 @@ import { MapboxOverlay } from '@deck.gl/mapbox';
 import { ScatterplotLayer } from '@deck.gl/layers';
 import { TripsLayer } from '@deck.gl/geo-layers';
 import type { CountryStat, Case, CaseLocation } from '@/lib/types';
-import { caseBucket, BUCKET_COLOR } from '@/lib/map-colors';
+import { countryBucket, BUCKET_COLOR } from '@/lib/map-colors';
 import { STATUS_COLOR, statusRgb, caseLocationsFor, currentLocation, caseLabel } from '@/lib/case-helpers';
 
 const TILE_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
@@ -53,8 +53,8 @@ export function MapPanel({ countries, cases, caseLocations, selectedCaseId }: Pr
   const searchParams = useSearchParams();
 
   const iso2ToBucket = useMemo(() => {
-    const m = new Map<string, ReturnType<typeof caseBucket>>();
-    for (const c of countries) m.set(c.country_code, caseBucket(c.cases));
+    const m = new Map<string, ReturnType<typeof countryBucket>>();
+    for (const c of countries) m.set(c.country_code, countryBucket(c));
     return m;
   }, [countries]);
 
@@ -99,9 +99,15 @@ export function MapPanel({ countries, cases, caseLocations, selectedCaseId }: Pr
             'low', BUCKET_COLOR.low,
             'mid', BUCKET_COLOR.mid,
             'high', BUCKET_COLOR.high,
+            'monitoring', BUCKET_COLOR.monitoring,
             BUCKET_COLOR.none,
           ],
-          'fill-opacity': 0.45,
+          'fill-opacity': [
+            'match',
+            ['get', 'bucket'],
+            'monitoring', 0.55,
+            0.45,
+          ],
         },
       });
       map.on('click', 'countries-fill', (e) => {

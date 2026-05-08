@@ -21,7 +21,7 @@ INSERT INTO facts (category, title, content, verification_status, confidence, so
    ARRAY['https://www.cdc.gov/hantavirus/clinical-overview.html','https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(96)91194-3'],
    ARRAY['cdc','peer_reviewed'],
    NULL,'2026-05-07 13:00:00+00',
-   ARRAY['andes-virus','reservoir','oligoryzomys']),
+   ARRAY['andes-virus','reservoir','oligoryzomys','key:reservoir_host']),
 
   ('pathogen',
    'No atypical mutations identified in MV Hondius isolates vs reference strain',
@@ -49,7 +49,7 @@ INSERT INTO facts (category, title, content, verification_status, confidence, so
    ARRAY['https://www.who.int/news/item/07-05-2026-who-s-response-to-hantavirus-cases-linked-to-a-cruise-ship'],
    ARRAY['who'],
    '2026-05-07 13:00:00+00','2026-05-07 13:00:00+00',
-   ARRAY['andes-virus','transmission-mode','close-contact','not-airborne']),
+   ARRAY['andes-virus','transmission-mode','close-contact','not-airborne','key:transmission_mode']),
 
   ('transmission',
    'Rodent-to-human transmission via aerosolized urine, feces, or saliva in enclosed spaces',
@@ -68,7 +68,7 @@ INSERT INTO facts (category, title, content, verification_status, confidence, so
    ARRAY['https://www.cdc.gov/hantavirus/clinical-overview.html','https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON599'],
    ARRAY['cdc','who'],
    NULL,'2026-05-07 13:00:00+00',
-   ARRAY['andes-virus','cfr','clinical-outcome']),
+   ARRAY['andes-virus','cfr','clinical-outcome','key:cfr']),
 
   ('clinical',
    'Incubation period 7-39 days, median ~18 days',
@@ -77,7 +77,7 @@ INSERT INTO facts (category, title, content, verification_status, confidence, so
    ARRAY['https://www.cdc.gov/hantavirus/clinical-overview.html'],
    ARRAY['cdc'],
    NULL,'2026-05-07 13:00:00+00',
-   ARRAY['andes-virus','incubation','clinical']),
+   ARRAY['andes-virus','incubation','clinical','key:incubation']),
 
   ('clinical',
    'No specific antiviral; care is supportive including ECMO for severe cases',
@@ -86,7 +86,7 @@ INSERT INTO facts (category, title, content, verification_status, confidence, so
    ARRAY['https://www.cdc.gov/hantavirus/clinical-overview.html'],
    ARRAY['cdc'],
    NULL,'2026-05-07 13:00:00+00',
-   ARRAY['andes-virus','treatment','supportive-care','ecmo']),
+   ARRAY['andes-virus','treatment','supportive-care','ecmo','key:treatment']),
 
   ('clinical',
    'Diagnostic via RT-PCR on serum during acute phase; IgM/IgG serology after',
@@ -190,6 +190,24 @@ INSERT INTO facts (category, title, content, verification_status, confidence, so
    ARRAY['https://www.cdc.gov/media/releases/2026-hantavirus-confirmed-cruise-ship.html'],
    ARRAY['cdc'],
    '2026-05-04 09:00:00+00','2026-05-07 17:00:00+00',
-   ARRAY['travel-advisory','cdc-level-2','patagonia'])
+   ARRAY['travel-advisory','cdc-level-2','patagonia']),
+
+  ('clinical',
+   'No licensed hantavirus vaccine; ANDV candidates in early-stage trials',
+   'No FDA-, EMA-, or WHO-prequalified hantavirus vaccine exists. A small number of ANDV-targeted candidates (DNA-based and recombinant glycoprotein) are in phase I/II trials, primarily in Argentina and Chile. None are expected to reach licensure within the MV Hondius surveillance window.',
+   'confirmed', 0.92,
+   ARRAY['https://www.cdc.gov/hantavirus/clinical-overview.html','https://www.who.int/news/item/07-05-2026-who-s-response-to-hantavirus-cases-linked-to-a-cruise-ship'],
+   ARRAY['cdc','who'],
+   NULL,'2026-05-07 13:00:00+00',
+   ARRAY['andes-virus','vaccine','no-licensed-vaccine','key:vaccine_status']),
+
+  ('epidemiology',
+   'Estimated R0 below 1 for the MV Hondius cluster',
+   'Estimated reproduction number for the MV Hondius person-to-person chain is below 1 (~0.7), based on ~9 cases arising from ~150 close-contact-eligible passengers and crew over 3+ weeks of prolonged shared exposure. Secondary attack rate among household contacts (CH-001 dyad) is 1/2. R0 < 1 means transmission chains are expected to burn out without sustained close contact.',
+   'corroborated', 0.80,
+   ARRAY['https://www.who.int/news/item/07-05-2026-who-s-response-to-hantavirus-cases-linked-to-a-cruise-ship','https://www.ecdc.europa.eu/en/publications-data/hantavirus-associated-cluster-illness-cruise-ship-ecdc-assessment-and'],
+   ARRAY['who','ecdc'],
+   '2026-05-07 13:00:00+00','2026-05-07 13:00:00+00',
+   ARRAY['mv-hondius','r0','reproduction-number','key:r0'])
 
 ON CONFLICT (disease, title) DO NOTHING;

@@ -33,12 +33,6 @@ export function TopBar({ snapshot }: { snapshot: Snapshot | null }) {
         <span className="font-bold tracking-[0.16em] text-text">PATHWATCH</span>
       </Link>
       <span className="text-text-muted">OPS CONSOLE</span>
-      <Link
-        href="/facts"
-        className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-text-secondary hover:text-text"
-      >
-        FACTS
-      </Link>
       <span className="flex items-center gap-1.5 text-green">
         <span className="dot-pulse inline-block h-1.5 w-1.5 rounded-full bg-green" />
         LIVE

@@ -12,6 +12,7 @@ import { TabStrip, type Tab } from '@/components/ops/TabStrip';
 import { MapPane } from '@/components/ops/MapPane';
 import { ByCountryPane } from '@/components/ops/ByCountryPane';
 import { DossierDrawer } from '@/components/ops/DossierDrawer';
+import { EventFeed } from '@/components/feed/EventFeed';
 
 interface Props {
   initialSnapshot: Snapshot | null;
@@ -140,9 +141,9 @@ export function DashboardClient({
   ];
 
   return (
-    <div className="flex h-screen flex-col">
+    <div className="flex min-h-screen flex-col">
       <TopBar snapshot={snapshot} />
-      <div className="grid flex-1 overflow-hidden lg:grid-cols-2">
+      <div className="grid h-[calc(100vh-2rem)] lg:grid-cols-2">
         {/* Sit-rep (left) */}
         <div className="overflow-y-auto border-b border-border lg:border-b-0 lg:border-r">
           <SituationBrief snapshot={snapshot} />
@@ -177,6 +178,9 @@ export function DashboardClient({
           </div>
         </div>
       </div>
+
+      {/* Full-width intelligence feed below the grid */}
+      <EventFeed events={events} />
     </div>
   );
 }

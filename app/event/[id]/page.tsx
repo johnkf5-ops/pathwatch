@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { unstable_noStore as noStore } from 'next/cache';
 import { createServerClient } from '@/lib/supabase-server';
 import { EventDetail } from '@/components/event/EventDetail';
 import type { Event } from '@/lib/types';
@@ -7,6 +8,7 @@ import type { Event } from '@/lib/types';
 export const dynamic = 'force-dynamic';
 
 async function fetchEvent(id: string): Promise<Event | null> {
+  noStore();
   const supabase = createServerClient();
   const { data } = await supabase.from('events').select('*').eq('id', id).maybeSingle();
   return (data as Event | null) ?? null;

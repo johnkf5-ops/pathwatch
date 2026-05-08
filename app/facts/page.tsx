@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { unstable_noStore as noStore } from 'next/cache';
 import { createServerClient } from '@/lib/supabase-server';
 import { FactsClient } from '@/components/facts/FactsClient';
 import { TopBar } from '@/components/ops/TopBar';
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function FactsPage() {
+  noStore();
   const supabase = createServerClient();
   const [factsRes, snapshotRes] = await Promise.all([
     supabase

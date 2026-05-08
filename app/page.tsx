@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from 'next/cache';
 import { createServerClient } from '@/lib/supabase-server';
 import { DashboardClient } from './DashboardClient';
 import type { Event, Snapshot, CountryStat, Case, CaseLocation } from '@/lib/types';
@@ -5,6 +6,7 @@ import type { Event, Snapshot, CountryStat, Case, CaseLocation } from '@/lib/typ
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
+  noStore();
   const supabase = createServerClient();
 
   const [snapshotRes, snapshotHistoryRes, eventsRes, countriesRes, casesRes, locationsRes] =

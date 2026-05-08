@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { unstable_noStore as noStore } from 'next/cache';
 import { createServerClient } from '@/lib/supabase-server';
 import { CaseDossier } from '@/components/case/CaseDossier';
 import type { Case, CaseLocation, Event } from '@/lib/types';
@@ -12,6 +13,7 @@ async function fetchCase(case_code: string): Promise<{
   locations: CaseLocation[];
   sourceEvent: Event | null;
 }> {
+  noStore();
   const supabase = createServerClient();
   const { data: case_ } = await supabase
     .from('cases')

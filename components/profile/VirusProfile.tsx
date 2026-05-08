@@ -5,13 +5,14 @@ import type { Fact, FactCategory } from '@/lib/types';
 import { SectionHeader } from '@/components/ops/SectionHeader';
 
 const KEY_STATS: { tag: string; label: string }[] = [
-  { tag: 'key:transmission_mode', label: 'TRANSMISSION' },
-  { tag: 'key:cfr',                label: 'CASE FATALITY' },
-  { tag: 'key:incubation',         label: 'INCUBATION' },
-  { tag: 'key:r0',                 label: 'R0' },
-  { tag: 'key:treatment',          label: 'TREATMENT' },
-  { tag: 'key:vaccine_status',     label: 'VACCINE' },
-  { tag: 'key:reservoir_host',     label: 'RESERVOIR' },
+  { tag: 'key:strain',       label: 'STRAIN' },
+  { tag: 'key:transmission', label: 'TRANSMISSION' },
+  { tag: 'key:cfr',          label: 'CASE FATALITY' },
+  { tag: 'key:incubation',   label: 'INCUBATION' },
+  { tag: 'key:r0',           label: 'R0' },
+  { tag: 'key:treatment',    label: 'TREATMENT' },
+  { tag: 'key:vaccine',      label: 'VACCINE' },
+  { tag: 'key:reservoir',    label: 'RESERVOIR' },
 ];
 
 const CATEGORY_ORDER: FactCategory[] = [

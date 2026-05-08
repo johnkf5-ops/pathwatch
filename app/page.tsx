@@ -1,45 +1,38 @@
 import { createServerClient } from '@/lib/supabase-server';
-import { parseFilters } from '@/lib/filters';
 import { DashboardClient } from './DashboardClient';
-import type { Event, Snapshot, CountryStat } from '@/lib/types';
+import type { Event, Snapshot, CountryStat, Case, CaseLocation } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Record<string, string | string[] | undefined>;
-}) {
-  const filters = parseFilters(searchParams);
+export default async function Home() {
   const supabase = createServerClient();
 
-  let eventsQuery = supabase
-    .from('events')
-    .select('*')
-    .eq('disease', 'hantavirus')
-    .is('duplicate_of', null);
-  if (filters.significance) eventsQuery = eventsQuery.gte('significance', filters.significance);
-  if (filters.source) eventsQuery = eventsQuery.eq('source_type', filters.source);
-  if (filters.category) eventsQuery = eventsQuery.eq('category', filters.category);
-  eventsQuery = eventsQuery.order('created_at', { ascending: false }).range(0, filters.limit - 1);
-
-  const [snapshotRes, snapshotHistoryRes, eventsRes, countriesRes] = await Promise.all([
-    supabase
-      .from('snapshots')
-      .select('*')
-      .eq('disease', 'hantavirus')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from('snapshots')
-      .select('*')
-      .eq('disease', 'hantavirus')
-      .order('created_at', { ascending: true })
-      .limit(30),
-    eventsQuery,
-    supabase.from('country_stats').select('*').eq('disease', 'hantavirus'),
-  ]);
+  const [snapshotRes, snapshotHistoryRes, eventsRes, countriesRes, casesRes, locationsRes] =
+    await Promise.all([
+      supabase
+        .from('snapshots')
+        .select('*')
+        .eq('disease', 'hantavirus')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from('snapshots')
+        .select('*')
+        .eq('disease', 'hantavirus')
+        .order('created_at', { ascending: true })
+        .limit(30),
+      supabase
+        .from('events')
+        .select('*')
+        .eq('disease', 'hantavirus')
+        .is('duplicate_of', null)
+        .order('created_at', { ascending: false })
+        .limit(50),
+      supabase.from('country_stats').select('*').eq('disease', 'hantavirus'),
+      supabase.from('cases').select('*').eq('disease', 'hantavirus'),
+      supabase.from('case_locations').select('*'),
+    ]);
 
   return (
     <DashboardClient
@@ -47,7 +40,8 @@ export default async function Home({
       initialSnapshotHistory={(snapshotHistoryRes.data as Snapshot[] | null) ?? []}
       initialEvents={(eventsRes.data as Event[] | null) ?? []}
       initialCountries={(countriesRes.data as CountryStat[] | null) ?? []}
-      initialFilters={filters}
+      initialCases={(casesRes.data as Case[] | null) ?? []}
+      initialCaseLocations={(locationsRes.data as CaseLocation[] | null) ?? []}
     />
   );
 }

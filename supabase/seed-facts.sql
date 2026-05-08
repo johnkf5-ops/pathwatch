@@ -12,7 +12,7 @@ INSERT INTO facts (category, title, content, verification_status, confidence, so
    ARRAY['https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON599','https://www.cdc.gov/hantavirus/sequencing-update-2026.html'],
    ARRAY['who','cdc'],
    '2026-05-02 14:00:00+00','2026-05-07 13:00:00+00',
-   ARRAY['andes-virus','rt-pcr','sequencing']),
+   ARRAY['andes-virus','rt-pcr','sequencing','key:strain']),
 
   ('pathogen',
    'ANDV reservoir host is the long-tailed pygmy rice rat (Oligoryzomys longicaudatus)',
@@ -21,7 +21,7 @@ INSERT INTO facts (category, title, content, verification_status, confidence, so
    ARRAY['https://www.cdc.gov/hantavirus/clinical-overview.html','https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(96)91194-3'],
    ARRAY['cdc','peer_reviewed'],
    NULL,'2026-05-07 13:00:00+00',
-   ARRAY['andes-virus','reservoir','oligoryzomys','key:reservoir_host']),
+   ARRAY['andes-virus','reservoir','oligoryzomys','key:reservoir']),
 
   ('pathogen',
    'No atypical mutations identified in MV Hondius isolates vs reference strain',
@@ -49,7 +49,7 @@ INSERT INTO facts (category, title, content, verification_status, confidence, so
    ARRAY['https://www.who.int/news/item/07-05-2026-who-s-response-to-hantavirus-cases-linked-to-a-cruise-ship'],
    ARRAY['who'],
    '2026-05-07 13:00:00+00','2026-05-07 13:00:00+00',
-   ARRAY['andes-virus','transmission-mode','close-contact','not-airborne','key:transmission_mode']),
+   ARRAY['andes-virus','transmission-mode','close-contact','not-airborne','key:transmission']),
 
   ('transmission',
    'Rodent-to-human transmission via aerosolized urine, feces, or saliva in enclosed spaces',
@@ -199,7 +199,7 @@ INSERT INTO facts (category, title, content, verification_status, confidence, so
    ARRAY['https://www.cdc.gov/hantavirus/clinical-overview.html','https://www.who.int/news/item/07-05-2026-who-s-response-to-hantavirus-cases-linked-to-a-cruise-ship'],
    ARRAY['cdc','who'],
    NULL,'2026-05-07 13:00:00+00',
-   ARRAY['andes-virus','vaccine','no-licensed-vaccine','key:vaccine_status']),
+   ARRAY['andes-virus','vaccine','no-licensed-vaccine','key:vaccine']),
 
   ('epidemiology',
    'Estimated R0 below 1 for the MV Hondius cluster',

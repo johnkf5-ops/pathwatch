@@ -41,6 +41,18 @@ test('event detail page renders', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 });
 
+test('intelligence feed renders below the sit-rep grid', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByText('INTELLIGENCE FEED')).toBeVisible();
+  // Filter bar controls
+  await expect(page.getByRole('button', { name: 'CRITICAL' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'HIGH+' })).toBeVisible();
+  // At least one event card visible (seed has 20 events)
+  const eventLinks = page.locator('a[href^="/event/"]');
+  await expect(eventLinks.first()).toBeVisible();
+  expect(await eventLinks.count()).toBeGreaterThan(0);
+});
+
 test('/facts renders the knowledge base', async ({ page }) => {
   await page.goto('/facts');
   await expect(page.getByRole('heading', { name: 'KNOWLEDGE BASE' })).toBeVisible();

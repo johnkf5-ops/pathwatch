@@ -11,7 +11,12 @@ INSERT INTO country_stats (disease, country_code, country_name, cases, deaths, f
   ('hantavirus','CL','Chile',1,0,'2026-04-10','2026-04-10','monitoring','CDC Level 2: Patagonia/southern regions',NULL),
   ('hantavirus','NL','Netherlands',2,2,'2026-04-15','2026-04-22','active',NULL,'Dutch index couple, both deceased'),
   ('hantavirus','CH','Switzerland',1,0,'2026-05-06','2026-05-06','active',NULL,'First non-passenger contact case (intimate partner of returnee)'),
-  ('hantavirus','CV','Cape Verde',2,1,'2026-04-29','2026-05-04','active','WHO advisory: limit non-essential travel','MV Hondius currently anchored off Praia');
+  ('hantavirus','CV','Cape Verde',2,1,'2026-04-29','2026-05-04','active','WHO advisory: limit non-essential travel','MV Hondius currently anchored off Praia'),
+  ('hantavirus','US','United States',0,0,NULL,NULL,'monitoring','CDC: monitoring returning passengers',  'CDC active monitoring of NJ residents and KL592 deplaning contacts'),
+  ('hantavirus','ES','Spain',0,0,NULL,NULL,'monitoring',NULL,'Tenerife docking next port-of-call for MV Hondius; pre-arrival surveillance posture'),
+  ('hantavirus','SG','Singapore',0,0,NULL,NULL,'monitoring',NULL,'2 passengers transited through Changi 2026-04-26; on voluntary monitoring with MOH'),
+  ('hantavirus','ZA','South Africa',0,0,NULL,NULL,'monitoring',NULL,'MVH-006 evacuated to Sandton ICU 2026-05-01; contact tracing in Johannesburg'),
+  ('hantavirus','CA','Canada',0,0,NULL,NULL,'monitoring',NULL,'PHAC monitoring 4 returning passengers across BC, ON');
 
 -- ============================================================
 -- events (20 rows spanning all sources, significance levels, categories)

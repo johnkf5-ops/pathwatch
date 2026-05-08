@@ -24,6 +24,9 @@ tsconfig.tsbuildinfo
 test-results/
 playwright-report/
 playwright/.cache/
+.playwright-mcp/
+palantir-trace*.png
+palantir-trace*.jpg
 
 # Claude local settings
 .claude/

@@ -2,7 +2,7 @@ import type { CaseStatus } from '@/lib/types';
 import { STATUS_LABEL } from '@/lib/case-helpers';
 
 const PILL: Record<CaseStatus, string> = {
-  suspected: 'border-cyan text-cyan',
+  suspected: 'border-text-secondary text-text-secondary',
   confirmed: 'border-amber text-amber',
   critical: 'border-orange text-orange',
   deceased: 'border-red text-red',

@@ -41,3 +41,50 @@ body {
   color: #8a93a8;
   font-size: 18px;
 }
+
+/* Stop-tooltip for Palantir traces (no close button, hover-only) */
+.pathwatch-stop-popup .maplibregl-popup-content { padding: 10px 12px; }
+.pathwatch-stop-tooltip {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #d6dae6;
+  min-width: 180px;
+}
+.pathwatch-stop-tooltip .stop-num {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: #8a93a8;
+  text-transform: uppercase;
+}
+.pathwatch-stop-tooltip .stop-name {
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #f4f6fb;
+  letter-spacing: 0.02em;
+}
+.pathwatch-stop-tooltip dl {
+  margin: 8px 0 0;
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 2px 8px;
+}
+.pathwatch-stop-tooltip dt {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: #8a93a8;
+  text-transform: uppercase;
+  align-self: center;
+}
+.pathwatch-stop-tooltip dd {
+  margin: 0;
+  font-size: 11px;
+  color: #d6dae6;
+  word-break: break-word;
+}
+.pathwatch-stop-tooltip dd.exposure {
+  color: #ff7f3f;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}

@@ -1,0 +1,25 @@
+import type { Metadata } from 'next';
+import { Inter, JetBrains_Mono } from 'next/font/google';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
+import './globals.css';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
+const mono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', display: 'swap' });
+
+export const metadata: Metadata = {
+  title: 'Pathwatch — Real-Time Disease Outbreak Tracker',
+  description: 'AI-powered real-time tracking of emerging disease outbreaks.',
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" className={`${inter.variable} ${mono.variable}`}>
+      <body className="flex min-h-screen flex-col bg-bg font-sans text-text antialiased">
+        <Header />
+        <div className="flex-1">{children}</div>
+        <Footer />
+      </body>
+    </html>
+  );
+}

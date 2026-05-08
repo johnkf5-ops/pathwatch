@@ -76,7 +76,7 @@ export interface FilterState {
   limit: number;
 }
 
-export type CaseStatus = 'suspected' | 'confirmed' | 'recovered' | 'deceased' | 'critical';
+export type CaseStatus = 'monitoring' | 'suspected' | 'confirmed' | 'recovered' | 'deceased' | 'critical';
 export type CaseRole = 'passenger' | 'crew' | 'contact' | 'healthcare_worker' | 'rural_resident' | 'other';
 export type ExposureType = 'rodent_contact' | 'person_to_person' | 'unknown';
 
@@ -101,6 +101,7 @@ export interface Case {
   dossier: string | null;
   notes: string | null;
   source_event_id: string | null;
+  clearance_date: string | null;
 }
 
 export interface CaseLocation {

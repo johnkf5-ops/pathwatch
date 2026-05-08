@@ -242,3 +242,33 @@ INSERT INTO case_locations (case_id, country_code, region, location_name, latitu
   -- CH-001 (2 stops)
   ((SELECT id FROM cases WHERE case_code = 'CH-001'),'CH','Zurich','Zurich (residence)',47.37,8.55,'2026-05-01 16:00+00','2026-05-06 08:00+00','intimate partner of MVH-009; close contact exposure',true),
   ((SELECT id FROM cases WHERE case_code = 'CH-001'),'CH','Zurich','Universitätsspital Zürich',47.38,8.55,'2026-05-06 09:00+00',NULL,'hospital admission; oxygen support',false);
+
+-- ============================================================
+-- monitoring cohort (people in active 42-day exposure window)
+-- ============================================================
+INSERT INTO cases (case_code, status, is_index_case, role, exposure_type, age_range, sex,
+                   exposure_country, exposure_date, current_country, dossier, notes,
+                   clearance_date) VALUES
+  ('NJ-MON-001', 'monitoring', false, 'contact', 'person_to_person', '40-49', 'F', 'US',
+   '2026-04-01', 'US',
+   'New Jersey resident; close-contact exposure to a returning MV Hondius passenger transiting through Newark Liberty (EWR) on 2026-04-01. Asymptomatic; under voluntary daily check-in with NJDOH for the duration of the 42-day exposure window.',
+   'CDC monitoring; not a confirmed case.',
+   '2026-05-13'),
+
+  ('NJ-MON-002', 'monitoring', false, 'contact', 'person_to_person', '50-59', 'M', 'US',
+   '2026-04-01', 'US',
+   'New Jersey resident, household contact of NJ-MON-001. Same 2026-04-01 exposure. Asymptomatic; voluntary monitoring through clearance.',
+   'CDC monitoring; not a confirmed case.',
+   '2026-05-13'),
+
+  ('KL592-MON-001', 'monitoring', false, 'contact', 'person_to_person', '30-39', 'F', 'NL',
+   '2026-05-04', 'NL',
+   'Passenger seated within 2 rows of a symptomatic MV Hondius returnee on KLM flight 592, 2026-05-04 (the same flight as KL-001). Asymptomatic; remote daily symptom check via Dutch GGD throughout the exposure window.',
+   'GGD monitoring; not a confirmed case.',
+   '2026-06-15'),
+
+  ('KL592-MON-002', 'monitoring', false, 'crew', 'person_to_person', '20-29', 'F', 'NL',
+   '2026-04-25', 'NL',
+   'KLM cabin crew member, partial-shift contact with the symptomatic MV Hondius returnee on KL592, 2026-04-25 (earlier flight than KL-001 attendant). Asymptomatic; under occupational health monitoring.',
+   'GGD monitoring; not a confirmed case.',
+   '2026-05-19');

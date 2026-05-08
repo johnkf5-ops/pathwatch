@@ -27,3 +27,4 @@ playwright/.cache/
 
 # Claude local settings
 .claude/
+.vercel

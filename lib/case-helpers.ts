@@ -66,6 +66,10 @@ export function clearanceFor(
   return { daysRemaining, totalWindowDays, cleared, tone };
 }
 
+export function caseLabel(c: Pick<Case, 'display_name' | 'case_code'>): string {
+  return c.display_name ?? c.case_code;
+}
+
 export function caseLocationsFor(caseId: string, all: CaseLocation[]): CaseLocation[] {
   return all
     .filter((l) => l.case_id === caseId)

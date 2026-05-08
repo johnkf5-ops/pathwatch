@@ -9,7 +9,7 @@ import { ScatterplotLayer } from '@deck.gl/layers';
 import { TripsLayer } from '@deck.gl/geo-layers';
 import type { CountryStat, Case, CaseLocation } from '@/lib/types';
 import { caseBucket, BUCKET_COLOR } from '@/lib/map-colors';
-import { STATUS_COLOR, statusRgb, caseLocationsFor, currentLocation } from '@/lib/case-helpers';
+import { STATUS_COLOR, statusRgb, caseLocationsFor, currentLocation, caseLabel } from '@/lib/case-helpers';
 
 const TILE_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
@@ -173,7 +173,7 @@ export function MapPanel({ countries, cases, caseLocations, selectedCaseId }: Pr
           ? ''
           : `box-shadow:0 0 0 ${isSelected ? '5' : '3'}px ${color}33;`;
         el.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:${fill};${halo}cursor:pointer;${pulse}${border}`;
-        el.title = `${m.case.case_code} · ${m.case.status.toUpperCase()}`;
+        el.title = `${caseLabel(m.case)} · ${m.case.status.toUpperCase()}`;
         const marker = new maplibregl.Marker({ element: el })
           .setLngLat([m.lon, m.lat])
           .addTo(map);

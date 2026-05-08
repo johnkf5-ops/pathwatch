@@ -15,3 +15,16 @@ test('dashboard renders MV Hondius outbreak data', async ({ page }) => {
   await expect(page.getByText('Argentina').first()).toBeVisible();
   await expect(page.getByText('Cape Verde').first()).toBeVisible();
 });
+
+test('map and charts render', async ({ page }) => {
+  await page.goto('/');
+
+  // MapLibre attribution control is the most reliable map presence assertion
+  await expect(page.locator('.maplibregl-ctrl-attrib')).toBeVisible({ timeout: 10_000 });
+
+  // Source activity chart renders (data-testid on the wrapper card)
+  await expect(page.getByTestId('source-activity-chart')).toBeVisible();
+
+  // Single-snapshot seed → trend empty state
+  await expect(page.getByText(/Need at least 2 snapshots/i)).toBeVisible();
+});

@@ -13,9 +13,9 @@ You ARE the pipeline. There is no scheduled cron, no headless agent — you oper
 | | |
 |---|---|
 | Supabase URL | `https://wtatysorlkcteleqjzkm.supabase.co` |
-| Schema | events, snapshots, country_stats, scrape_log, cases, case_locations, facts |
+| Schema | events, snapshots, country_stats, scrape_log, cases, case_locations, facts, threat_assessments |
 | Service role key | Supabase dashboard → Settings → API Keys → "Secret key". **Never commit this.** Read it into the session env on each cycle. |
-| Realtime | Enabled on events, snapshots, country_stats, cases, case_locations, facts |
+| Realtime | Enabled on events, snapshots, country_stats, cases, case_locations, facts, threat_assessments |
 
 ## Cycle cadence
 
@@ -208,3 +208,66 @@ When you stop a Cowork session:
 1. Run one final cycle.
 2. Confirm `scrape_log` shows the last cycle's row.
 3. Note in chat the most recent `events.created_at` timestamp so the next session knows where to resume.
+
+---
+
+## Threat assessment cycle
+
+Runs once per pipeline cycle, **after** scrape/dedupe/fact-check/write — when you have the latest event/case/fact picture and are about to wrap up.
+
+### 1. Fetch Polymarket odds
+
+For each of the four watched markets, hit:
+```
+GET https://gamma-api.polymarket.com/events?slug=<slug>
+```
+No auth. The YES price lives in `markets[0].outcomePrices` (a JSON-encoded array paired with `markets[0].outcomes`). Markets to fetch:
+
+| Slug | Field on `threat_assessments` |
+|---|---|
+| `hantavirus-pandemic-in-2026` | `polymarket_pandemic_odds` |
+| `confirmed-case-of-hantavirus-in-us-by-may-15` | `polymarket_us_case_odds` |
+| `hantavirus-vaccine-in-2026` | `polymarket_vaccine_odds` |
+| `hantavirus-lab-leak-confirmed-by-june-30-1` | `polymarket_lab_leak_odds` |
+
+If any market 404s or returns no price, write `NULL` for that column and continue.
+
+### 2. Re-evaluate triggers
+
+Walk the list in `lib/threat-triggers.ts` (`TRIGGERS`). For each, check evidence in cases / events / facts written *since the last threat_assessments row*:
+
+- `airborne_transmission` — any case with no close-contact path?
+- `r0_above_one` — does the latest R0 estimate exceed 1?
+- `doubling_48h` — case count doubled within last 48h?
+- `spike_mutation` — new ANDV strain with Gn/Gc spike mutations confirmed?
+- `no_known_exposure` — confirmed case lacking a documented exposure path?
+- `who_above_low` — WHO published "moderate" or higher?
+- `cdc_above_level3` — CDC raised travel notice past Level 3?
+- `community_transmission` — case outside the index-contact graph?
+- `twenty_countries` — distinct country count ≥ 20?
+
+For each trigger, classify as `watching` (still monitoring, no evidence) or `tripped` (evidence in current cycle).
+
+### 3. Reassess pandemic_probability
+
+Compose:
+- `pandemic_probability` (0–1) and matching `threat_level` (use the threshold table).
+- `summary` — 1–3 sentences.
+- `reasoning` — paragraph including R0, mutation status, SAR, key historical comparators (El Bolsón 1996, Epuyén 2018), and an explicit note about why you diverge from Polymarket consensus if you do.
+- `r0_estimate`, `mutation_status`, `secondary_attack_rate`, `case_doubling_days`, `containment_effectiveness` — pin from current data.
+
+### 4. Decide whether to insert
+
+Compare new `pandemic_probability` to the previous row's. INSERT a new `threat_assessments` row **only if**:
+
+- `|new - last| > 0.01`, **OR**
+- A trigger transitioned watching ↔ tripped, **OR**
+- `threat_level` changed.
+
+Otherwise skip — don't spam the table with identical rows. The dashboard reads `ORDER BY created_at DESC LIMIT 1`, so silence keeps the prior assessment displayed.
+
+### 5. Provenance
+
+Always set:
+- `model` — current model id (e.g. `claude-opus-4-7`).
+- `pipeline_session_id` — Cowork session id, run id, or any string that lets us retrace which cycle produced the row.

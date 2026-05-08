@@ -1,12 +1,21 @@
 import type { Case, CaseLocation, CaseStatus } from './types';
 
 export const STATUS_COLOR: Record<CaseStatus, string> = {
-  suspected: '#4cd6ff',
+  suspected: '#8a93a8',
   confirmed: '#f5b041',
   critical: '#ff7f3f',
   deceased: '#ff4d5e',
   recovered: '#2ee37a',
 };
+
+export function statusRgb(status: CaseStatus): [number, number, number] {
+  const hex = STATUS_COLOR[status].replace('#', '');
+  return [
+    parseInt(hex.slice(0, 2), 16),
+    parseInt(hex.slice(2, 4), 16),
+    parseInt(hex.slice(4, 6), 16),
+  ];
+}
 
 export const STATUS_LABEL: Record<CaseStatus, string> = {
   suspected: 'SUSPECTED',

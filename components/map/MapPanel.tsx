@@ -3,9 +3,13 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import maplibregl, { type Map as MlMap, type GeoJSONSource } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { format, parseISO } from 'date-fns';
+import { MapboxOverlay } from '@deck.gl/mapbox';
+import { ScatterplotLayer } from '@deck.gl/layers';
+import { TripsLayer } from '@deck.gl/geo-layers';
 import type { CountryStat, Case, CaseLocation } from '@/lib/types';
 import { caseBucket, BUCKET_COLOR } from '@/lib/map-colors';
-import { STATUS_COLOR, caseLocationsFor, currentLocation } from '@/lib/case-helpers';
+import { STATUS_COLOR, statusRgb, caseLocationsFor, currentLocation } from '@/lib/case-helpers';
 
 const TILE_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
@@ -16,9 +20,34 @@ interface Props {
   selectedCaseId?: string | null;
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+}
+
+function stopTooltipHTML(s: CaseLocation, index: number, total: number): string {
+  const arrived = format(parseISO(s.arrived_at), 'MMM d, HH:mm') + ' UTC';
+  const departed = s.departed_at ? format(parseISO(s.departed_at), 'MMM d, HH:mm') + ' UTC' : 'PRESENT';
+  const name = escapeHtml(s.location_name ?? s.country_code);
+  const ctx = s.context ? `<dt>CONTEXT</dt><dd>${escapeHtml(s.context)}</dd>` : '';
+  const exp = s.is_exposure_site ? `<dt>FLAG</dt><dd class="exposure">EXPOSURE SITE</dd>` : '';
+  return `<div class="pathwatch-stop-tooltip">
+    <div class="stop-num">STOP ${index} OF ${total}</div>
+    <div class="stop-name">${name}</div>
+    <dl>
+      <dt>ARRIVED</dt><dd>${arrived}</dd>
+      <dt>DEPARTED</dt><dd>${departed}</dd>
+      ${ctx}
+      ${exp}
+    </dl>
+  </div>`;
+}
+
 export function MapPanel({ countries, cases, caseLocations, selectedCaseId }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
+  const overlayRef = useRef<MapboxOverlay | null>(null);
+  const hoverPopupRef = useRef<maplibregl.Popup | null>(null);
+  const rafRef = useRef<number>(0);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -39,7 +68,7 @@ export function MapPanel({ countries, cases, caseLocations, selectedCaseId }: Pr
       .filter((x): x is { case: Case; lat: number; lon: number } => x !== null);
   }, [cases, caseLocations]);
 
-  // Mount map once
+  // Mount map + deck.gl overlay once
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     const map = new maplibregl.Map({
@@ -87,7 +116,17 @@ export function MapPanel({ countries, cases, caseLocations, selectedCaseId }: Pr
       map.on('mouseleave', 'countries-fill', () => (map.getCanvas().style.cursor = ''));
     });
 
+    // deck.gl overlay (rendered above all map layers)
+    const overlay = new MapboxOverlay({ interleaved: false, layers: [] });
+    map.addControl(overlay as unknown as maplibregl.IControl);
+    overlayRef.current = overlay;
+
     return () => {
+      cancelAnimationFrame(rafRef.current);
+      hoverPopupRef.current?.remove();
+      hoverPopupRef.current = null;
+      try { overlay.finalize(); } catch { /* mid-teardown */ }
+      overlayRef.current = null;
       map.remove();
       mapRef.current = null;
     };
@@ -150,86 +189,131 @@ export function MapPanel({ countries, cases, caseLocations, selectedCaseId }: Pr
     return () => markers.forEach((mk) => mk.remove());
   }, [caseMarkers, selectedCaseId, pathname, router, searchParams]);
 
-  // Travel path for selected case
+  // Animated travel path (deck.gl) for selected case
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
+    const overlay = overlayRef.current;
+    if (!map || !overlay) return;
 
-    const SOURCE_ID = 'pathwatch-travel-path';
-    const LINE_LAYER_ID = 'pathwatch-travel-path-line';
-    const POINTS_LAYER_ID = 'pathwatch-travel-path-points';
-
-    const cleanup = () => {
-      if (!map) return;
-      try {
-        if (map.getLayer(POINTS_LAYER_ID)) map.removeLayer(POINTS_LAYER_ID);
-        if (map.getLayer(LINE_LAYER_ID)) map.removeLayer(LINE_LAYER_ID);
-        if (map.getSource(SOURCE_ID)) map.removeSource(SOURCE_ID);
-      } catch {
-        // map mid-teardown; ignore
-      }
-    };
+    cancelAnimationFrame(rafRef.current);
+    hoverPopupRef.current?.remove();
+    hoverPopupRef.current = null;
 
     if (!selectedCaseId) {
-      if (map.isStyleLoaded()) cleanup();
-      return cleanup;
+      overlay.setProps({ layers: [] });
+      return;
     }
 
     const sel = cases.find((c) => c.id === selectedCaseId);
-    if (!sel) return cleanup;
+    if (!sel) {
+      overlay.setProps({ layers: [] });
+      return;
+    }
+
     const stops = caseLocationsFor(sel.id, caseLocations).filter(
       (l) => l.latitude != null && l.longitude != null,
     );
-    if (stops.length < 1) return cleanup;
-    const color = STATUS_COLOR[sel.status];
-    const lineCoords = stops.map((s) => [s.longitude as number, s.latitude as number]);
-    const fc = {
-      type: 'FeatureCollection' as const,
-      features: [
-        {
-          type: 'Feature' as const,
-          geometry: { type: 'LineString' as const, coordinates: lineCoords },
-          properties: {},
-        },
-        ...stops.map((s, i) => ({
-          type: 'Feature' as const,
-          geometry: { type: 'Point' as const, coordinates: [s.longitude as number, s.latitude as number] },
-          properties: { stop: i + 1 },
-        })),
-      ],
-    };
-    const apply = () => {
-      cleanup();
-      map.addSource(SOURCE_ID, { type: 'geojson', data: fc });
-      map.addLayer({
-        id: LINE_LAYER_ID,
-        type: 'line',
-        source: SOURCE_ID,
-        filter: ['==', ['geometry-type'], 'LineString'],
-        paint: {
-          'line-color': color,
-          'line-width': 2,
-          'line-dasharray': [3, 2],
-          'line-opacity': 0.9,
-        },
-      });
-      map.addLayer({
-        id: POINTS_LAYER_ID,
-        type: 'circle',
-        source: SOURCE_ID,
-        filter: ['==', ['geometry-type'], 'Point'],
-        paint: {
-          'circle-radius': 5,
-          'circle-color': color,
-          'circle-stroke-color': '#0b0d13',
-          'circle-stroke-width': 2,
-        },
-      });
-    };
-    if (map.isStyleLoaded()) apply();
-    else map.once('load', apply);
+    if (stops.length === 0) {
+      overlay.setProps({ layers: [] });
+      return;
+    }
 
-    return cleanup;
+    const rgb = statusRgb(sel.status);
+    // Path encoded as [lon, lat, t]; we use stop-index as the time axis.
+    const path: [number, number, number][] = stops.map(
+      (s, i) => [s.longitude as number, s.latitude as number, i],
+    );
+    const tMax = Math.max(0, stops.length - 1);
+    const loopBuffer = 1.5; // pause-at-end before restart, in path-time units
+    const loopLength = tMax + loopBuffer;
+    const trailLength = Math.max(0.6, tMax * 0.55);
+    // Real-time pacing: total animation duration scales with stop count.
+    const durationMs = Math.max(1800, stops.length * 900);
+
+    const onHover = (info: { object?: CaseLocation | null }): void => {
+      const stop = info.object ?? null;
+      if (!stop) {
+        hoverPopupRef.current?.remove();
+        hoverPopupRef.current = null;
+        map.getCanvas().style.cursor = '';
+        return;
+      }
+      map.getCanvas().style.cursor = 'pointer';
+      const idx = stops.findIndex((s) => s.id === stop.id);
+      const html = stopTooltipHTML(stop, idx + 1, stops.length);
+      const popup =
+        hoverPopupRef.current ??
+        new maplibregl.Popup({
+          closeButton: false,
+          closeOnClick: false,
+          className: 'pathwatch-popup pathwatch-stop-popup',
+          offset: 14,
+          maxWidth: '280px',
+        });
+      hoverPopupRef.current = popup;
+      popup.setLngLat([stop.longitude as number, stop.latitude as number]).setHTML(html).addTo(map);
+    };
+
+    let startTs: number | null = null;
+    const tick = (ts: number) => {
+      if (startTs === null) startTs = ts;
+      // Loop the elapsed time over (durationMs + a 1.2s pause) so the trail clears,
+      // then re-draws on the next iteration.
+      const cyclePeriodMs = durationMs + 1200;
+      const cyclePos = (ts - startTs) % cyclePeriodMs;
+      // Map cycle position (0..duration) to path-time (0..loopLength).
+      const tPath = Math.min(loopLength, (cyclePos / durationMs) * loopLength);
+
+      overlay.setProps({
+        layers: [
+          new TripsLayer({
+            id: 'travel-trail',
+            data: [{ path }],
+            getPath: (d: { path: [number, number, number][] }) =>
+              d.path.map((p) => [p[0], p[1]] as [number, number]),
+            getTimestamps: (d: { path: [number, number, number][] }) =>
+              d.path.map((p) => p[2]),
+            getColor: rgb as [number, number, number],
+            opacity: 0.95,
+            widthMinPixels: 2.5,
+            jointRounded: true,
+            capRounded: true,
+            fadeTrail: true,
+            trailLength,
+            currentTime: tPath,
+          }),
+          new ScatterplotLayer<CaseLocation>({
+            id: 'travel-stops',
+            data: stops,
+            getPosition: (d) => [d.longitude as number, d.latitude as number],
+            getRadius: 7,
+            radiusUnits: 'pixels',
+            radiusMinPixels: 5,
+            radiusMaxPixels: 9,
+            getFillColor: [...(rgb as [number, number, number]), 235] as [number, number, number, number],
+            getLineColor: [11, 13, 19, 255],
+            lineWidthMinPixels: 2,
+            stroked: true,
+            pickable: true,
+            onHover,
+          }),
+        ],
+      });
+
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      hoverPopupRef.current?.remove();
+      hoverPopupRef.current = null;
+      try {
+        overlay.setProps({ layers: [] });
+      } catch {
+        /* mid-teardown */
+      }
+    };
   }, [selectedCaseId, cases, caseLocations]);
 
   return <div ref={containerRef} className="h-full w-full" />;

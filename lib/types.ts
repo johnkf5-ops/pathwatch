@@ -75,3 +75,44 @@ export interface FilterState {
   category: Category | null;
   limit: number;
 }
+
+export type CaseStatus = 'suspected' | 'confirmed' | 'recovered' | 'deceased' | 'critical';
+export type CaseRole = 'passenger' | 'crew' | 'contact' | 'healthcare_worker' | 'rural_resident' | 'other';
+export type ExposureType = 'rodent_contact' | 'person_to_person' | 'unknown';
+
+export interface Case {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  case_code: string;
+  disease: string;
+  status: CaseStatus;
+  is_index_case: boolean;
+  role: CaseRole | null;
+  exposure_type: ExposureType | null;
+  age_range: string | null;
+  sex: 'M' | 'F' | 'U' | null;
+  exposure_country: string | null;
+  exposure_date: string | null;
+  onset_date: string | null;
+  confirmed_date: string | null;
+  outcome_date: string | null;
+  current_country: string | null;
+  dossier: string | null;
+  notes: string | null;
+  source_event_id: string | null;
+}
+
+export interface CaseLocation {
+  id: string;
+  case_id: string;
+  country_code: string;
+  region: string | null;
+  location_name: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  arrived_at: string;
+  departed_at: string | null;
+  context: string | null;
+  is_exposure_site: boolean;
+}

@@ -1,31 +1,25 @@
 'use client';
 import { useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
-import type { Event, Snapshot, CountryStat, FilterState } from '@/lib/types';
-import { eventMatchesFilter } from '@/lib/filters';
+import { useSearchParams } from 'next/navigation';
+import type { Event, Snapshot, CountryStat, Case, CaseLocation } from '@/lib/types';
 import { getBrowserClient } from '@/lib/supabase-browser';
-import { SituationOverview } from '@/components/overview/SituationOverview';
-import { FilterBar } from '@/components/feed/FilterBar';
-import { EventFeed } from '@/components/feed/EventFeed';
-import { CountryBreakdown } from '@/components/country/CountryBreakdown';
-import { TrendChart } from '@/components/charts/TrendChart';
-import { SourceActivityChart } from '@/components/charts/SourceActivityChart';
-import { Skeleton } from '@/components/ui/Skeleton';
-
-const MapPanel = dynamic(
-  () => import('@/components/map/MapPanel').then((m) => m.MapPanel),
-  {
-    ssr: false,
-    loading: () => <Skeleton className="h-[280px] w-full rounded-xl" />,
-  },
-);
+import { TopBar } from '@/components/ops/TopBar';
+import { SituationBrief } from '@/components/ops/SituationBrief';
+import { KpiGrid } from '@/components/ops/KpiGrid';
+import { PostureMatrix } from '@/components/ops/PostureMatrix';
+import { Watchlist } from '@/components/ops/Watchlist';
+import { TabStrip, type Tab } from '@/components/ops/TabStrip';
+import { MapPane } from '@/components/ops/MapPane';
+import { ByCountryPane } from '@/components/ops/ByCountryPane';
+import { DossierDrawer } from '@/components/ops/DossierDrawer';
 
 interface Props {
   initialSnapshot: Snapshot | null;
   initialSnapshotHistory: Snapshot[];
   initialEvents: Event[];
   initialCountries: CountryStat[];
-  initialFilters: FilterState;
+  initialCases: Case[];
+  initialCaseLocations: CaseLocation[];
 }
 
 export function DashboardClient({
@@ -33,94 +27,156 @@ export function DashboardClient({
   initialSnapshotHistory,
   initialEvents,
   initialCountries,
-  initialFilters,
+  initialCases,
+  initialCaseLocations,
 }: Props) {
+  const searchParams = useSearchParams();
+  const caseCode = searchParams.get('case');
+  const countryCode = searchParams.get('country');
+
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [snapshotHistory, setSnapshotHistory] = useState(initialSnapshotHistory);
   const [events, setEvents] = useState(initialEvents);
   const [countries, setCountries] = useState(initialCountries);
-  const [connected, setConnected] = useState(true);
+  const [cases, setCases] = useState(initialCases);
+  const [caseLocations, setCaseLocations] = useState(initialCaseLocations);
+  const [activeTab, setActiveTab] = useState<'map' | 'country'>('map');
 
   useEffect(() => { setSnapshot(initialSnapshot); }, [initialSnapshot]);
   useEffect(() => { setSnapshotHistory(initialSnapshotHistory); }, [initialSnapshotHistory]);
   useEffect(() => { setEvents(initialEvents); }, [initialEvents]);
   useEffect(() => { setCountries(initialCountries); }, [initialCountries]);
+  useEffect(() => { setCases(initialCases); }, [initialCases]);
+  useEffect(() => { setCaseLocations(initialCaseLocations); }, [initialCaseLocations]);
 
   useEffect(() => {
     const supabase = getBrowserClient();
 
-    const eventsChannel = supabase
-      .channel('events-realtime')
+    const ch1 = supabase
+      .channel('events-rt')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'events', filter: 'disease=eq.hantavirus' },
-        (payload) => {
-          const ev = payload.new as Event;
+        (p) => {
+          const ev = p.new as Event;
           if (ev.duplicate_of) return;
-          if (!eventMatchesFilter(ev, initialFilters)) return;
           setEvents((prev) => (prev.find((e) => e.id === ev.id) ? prev : [ev, ...prev]));
-        },
-      )
-      .subscribe((status) => setConnected(status === 'SUBSCRIBED'));
-
-    const snapshotChannel = supabase
-      .channel('snapshots-realtime')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'snapshots', filter: 'disease=eq.hantavirus' },
-        (payload) => {
-          const s = payload.new as Snapshot;
-          setSnapshot(s);
-          setSnapshotHistory((prev) =>
-            prev.find((p) => p.id === s.id) ? prev : [...prev, s].slice(-30),
-          );
         },
       )
       .subscribe();
 
-    const countriesChannel = supabase
-      .channel('country-stats-realtime')
+    const ch2 = supabase
+      .channel('snapshots-rt')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'snapshots', filter: 'disease=eq.hantavirus' },
+        (p) => {
+          const s = p.new as Snapshot;
+          setSnapshot(s);
+          setSnapshotHistory((prev) => (prev.find((x) => x.id === s.id) ? prev : [...prev, s].slice(-30)));
+        },
+      )
+      .subscribe();
+
+    const ch3 = supabase
+      .channel('country-rt')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'country_stats', filter: 'disease=eq.hantavirus' },
-        (payload) => {
-          const row = (payload.new ?? payload.old) as CountryStat;
+        (p) => {
+          const row = (p.new ?? p.old) as CountryStat;
           setCountries((prev) => {
             const next = prev.filter((r) => r.country_code !== row.country_code);
-            if (payload.eventType !== 'DELETE') next.push(row);
+            if (p.eventType !== 'DELETE') next.push(row);
             return next;
           });
         },
       )
       .subscribe();
 
+    const ch4 = supabase
+      .channel('cases-rt')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'cases', filter: 'disease=eq.hantavirus' },
+        (p) => {
+          const row = (p.new ?? p.old) as Case;
+          setCases((prev) => {
+            const next = prev.filter((c) => c.id !== row.id);
+            if (p.eventType !== 'DELETE') next.push(row);
+            return next;
+          });
+        },
+      )
+      .subscribe();
+
+    const ch5 = supabase
+      .channel('case-loc-rt')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'case_locations' },
+        (p) => {
+          const row = p.new as CaseLocation;
+          setCaseLocations((prev) => (prev.find((l) => l.id === row.id) ? prev : [...prev, row]));
+        },
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(eventsChannel);
-      supabase.removeChannel(snapshotChannel);
-      supabase.removeChannel(countriesChannel);
+      supabase.removeChannel(ch1);
+      supabase.removeChannel(ch2);
+      supabase.removeChannel(ch3);
+      supabase.removeChannel(ch4);
+      supabase.removeChannel(ch5);
     };
-  }, [initialFilters]);
+  }, []);
+
+  const prevSnapshot = snapshotHistory.length >= 2 ? snapshotHistory[snapshotHistory.length - 2] : null;
+  const selectedCaseId = caseCode ? cases.find((c) => c.case_code === caseCode)?.id ?? null : null;
+
+  const tabs: Tab[] = [
+    { id: 'map', label: 'MAP', count: cases.length },
+    { id: 'country', label: 'BY COUNTRY', count: countries.length },
+  ];
 
   return (
-    <main className="mx-auto flex max-w-[1400px] flex-col gap-6 px-6 py-6">
-      {!connected && (
-        <div className="rounded-md border border-sig-3/40 bg-sig-3/10 px-3 py-2 text-xs text-sig-3">
-          Live connection lost. Showing last known data.
+    <div className="flex h-screen flex-col">
+      <TopBar snapshot={snapshot} />
+      <div className="grid flex-1 overflow-hidden lg:grid-cols-2">
+        {/* Sit-rep (left) */}
+        <div className="overflow-y-auto border-b border-border lg:border-b-0 lg:border-r">
+          <SituationBrief snapshot={snapshot} />
+          <KpiGrid snapshot={snapshot} prevSnapshot={prevSnapshot} />
+          <PostureMatrix countries={countries} />
+          <Watchlist events={events} />
         </div>
-      )}
-      <SituationOverview snapshot={snapshot} />
-      <div className="grid gap-6 lg:grid-cols-[1fr_minmax(0,440px)]">
-        <div>
-          <FilterBar filters={initialFilters} />
-          <EventFeed events={events} />
+
+        {/* Workspace (right) */}
+        <div className="relative flex flex-col overflow-hidden">
+          <TabStrip tabs={tabs} active={activeTab} onChange={(id) => setActiveTab(id as 'map' | 'country')} />
+          <div className="relative flex-1">
+            {activeTab === 'map' && (
+              <>
+                <MapPane
+                  countries={countries}
+                  cases={cases}
+                  caseLocations={caseLocations}
+                  selectedCaseId={selectedCaseId}
+                />
+                <DossierDrawer
+                  cases={cases}
+                  caseLocations={caseLocations}
+                  countries={countries}
+                  events={events}
+                  caseCode={caseCode}
+                  countryCode={countryCode}
+                />
+              </>
+            )}
+            {activeTab === 'country' && <ByCountryPane rows={countries} />}
+          </div>
         </div>
-        <aside className="flex flex-col gap-4">
-          <MapPanel countries={countries} events={events} />
-          <TrendChart snapshots={snapshotHistory} />
-          <SourceActivityChart events={events} />
-        </aside>
       </div>
-      <CountryBreakdown rows={countries} />
-    </main>
+    </div>
   );
 }

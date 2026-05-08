@@ -11,5 +11,5 @@ export function TimeAgo({ iso }: { iso: string }) {
     );
     return () => clearInterval(id);
   }, [iso]);
-  return <time dateTime={iso} className="text-xs text-text-muted">{text}</time>;
+  return <time dateTime={iso} className="text-xs text-text-muted" suppressHydrationWarning>{text}</time>;
 }

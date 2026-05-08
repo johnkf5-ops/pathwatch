@@ -3,12 +3,15 @@
 @tailwind utilities;
 
 html, body {
-  background-color: #0A0A0F;
-  color: #E8E8ED;
+  background-color: #07080c;
+  color: #d6dae6;
 }
 
 body {
-  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11', 'ss01';
+  background-image:
+    radial-gradient(circle at 20% -10%, rgba(46, 227, 122, 0.04), transparent 50%),
+    radial-gradient(circle at 90% 10%, rgba(76, 214, 255, 0.03), transparent 40%);
 }
 
 /* Map markers pulse */
@@ -17,19 +20,24 @@ body {
   50%      { opacity: 0.6; transform: scale(1.18); }
 }
 
-/* MapLibre popup body — tighten to match the dashboard surface */
+/* LIVE / status dots */
+@keyframes pathwatchDotPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.3; }
+}
+.dot-pulse { animation: pathwatchDotPulse 1.4s ease-in-out infinite; }
+
+/* MapLibre popup body — match the ops console surface */
 .pathwatch-popup .maplibregl-popup-content {
-  background: #12121A;
-  color: #E8E8ED;
-  border: 1px solid #2A2A35;
-  border-radius: 12px;
+  background: #161a25;
+  color: #d6dae6;
+  border: 1px solid #232a3a;
+  border-radius: 2px;
   padding: 12px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.5);
 }
-.pathwatch-popup .maplibregl-popup-tip {
-  border-top-color: #12121A;
-}
+.pathwatch-popup .maplibregl-popup-tip { border-top-color: #161a25; }
 .pathwatch-popup .maplibregl-popup-close-button {
-  color: #8888A0;
+  color: #8a93a8;
   font-size: 18px;
 }

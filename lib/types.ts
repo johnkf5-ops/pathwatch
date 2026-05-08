@@ -116,3 +116,28 @@ export interface CaseLocation {
   context: string | null;
   is_exposure_site: boolean;
 }
+
+export type FactCategory =
+  | 'pathogen' | 'transmission' | 'clinical' | 'epidemiology'
+  | 'containment' | 'history' | 'outbreak_timeline' | 'policy';
+
+export type VerificationStatus =
+  | 'unverified' | 'corroborated' | 'confirmed' | 'disputed' | 'retracted';
+
+export interface Fact {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  disease: string;
+  category: FactCategory;
+  title: string;
+  content: string;
+  verification_status: VerificationStatus;
+  confidence: number | null;
+  sources: string[];
+  source_types: string[] | null;
+  first_reported_at: string | null;
+  last_verified_at: string | null;
+  superseded_by: string | null;
+  tags: string[] | null;
+}

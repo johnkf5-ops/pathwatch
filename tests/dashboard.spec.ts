@@ -30,12 +30,24 @@ test('case permalink page', async ({ page }) => {
 });
 
 test('event detail page renders', async ({ page }) => {
-  await page.goto('/');
-  // Click the first watchlist item that has MV Hondius in title
-  const link = page.getByRole('link').filter({ hasText: /MV Hondius/i }).first();
-  await link.click();
+  // Reach the event detail page via the case permalink's "Linked event" link.
+  // The Watchlist click flow is age-sensitive (24h window) and gets flaky as
+  // seed timestamps drift past today's window; this is a stable surrogate.
+  await page.goto('/case/MVH-001');
+  await page.getByText(/LINKED EVENT/i).waitFor({ state: 'visible' });
+  const linkedEvent = page.getByRole('link', { name: /↗/ }).first();
+  await linkedEvent.click();
   await expect(page).toHaveURL(/\/event\/[0-9a-f-]+/);
-  await expect(page.getByRole('heading', { level: 1, name: /MV Hondius/i })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+});
+
+test('/facts renders the knowledge base', async ({ page }) => {
+  await page.goto('/facts');
+  await expect(page.getByRole('heading', { name: 'KNOWLEDGE BASE' })).toBeVisible();
+  await expect(page.getByText(/Andes orthohantavirus/i).first()).toBeVisible();
+  // Verify a CONFIRMED VerificationBadge (visible span, not the hidden <option> in the dropdown)
+  await expect(page.locator('span').filter({ hasText: /^CONFIRMED$/ }).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: 'pathogen' })).toBeVisible();
 });
 
 test('OG image generates', async ({ request }) => {

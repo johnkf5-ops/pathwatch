@@ -1,0 +1,210 @@
+# Pathwatch Pipeline Runbook
+
+**Audience:** Future Claude instance (or human operator) driving the Cowork session that scrapes, fact-checks, and writes data into the Pathwatch Supabase database.
+
+**Read this at session start before doing any pipeline work.**
+
+## What you are
+
+You ARE the pipeline. There is no scheduled cron, no headless agent — you operate it from a Cowork session running on the Mac mini. Each "cycle" you run = one full scrape → dedupe → process → fact-check → write loop. The dashboard at https://pathwatch-phi.vercel.app reads what you write.
+
+## Connection
+
+| | |
+|---|---|
+| Supabase URL | `https://wtatysorlkcteleqjzkm.supabase.co` |
+| Schema | events, snapshots, country_stats, scrape_log, cases, case_locations, facts |
+| Service role key | Supabase dashboard → Settings → API Keys → "Secret key". **Never commit this.** Read it into the session env on each cycle. |
+| Realtime | Enabled on events, snapshots, country_stats, cases, case_locations, facts |
+
+## Cycle cadence
+
+| Mode | Frequency | When |
+|---|---|---|
+| Active | every 15–30 min | normal monitoring |
+| Off-hours | every 60 min | midnight–6 AM local |
+| Surge | every 5–10 min | new country reports a case, WHO press conference, DON update, or fatality count change |
+
+A "cycle" = the 5 steps below. Aim for ~10–15 min wall-clock per cycle.
+
+## Per-cycle ops
+
+### 1. Scrape
+
+Sources, in order of priority:
+
+| Source | Endpoint / query |
+|---|---|
+| **WHO DON** | https://www.who.int/emergencies/disease-outbreak-news — read for any new entries since last cycle |
+| **CDC** | RSS https://tools.cdc.gov/api/v2/resources/media/rss — filter for hantavirus terms |
+| **ECDC** | https://www.ecdc.europa.eu/en — search "hantavirus" |
+| **Africa CDC** | https://africacdc.org/ — search "hantavirus" |
+| **Google News** | search `"hantavirus 2026"` and `"MV Hondius"` |
+| **Reddit** | https://www.reddit.com/r/{worldnews,medicine,epidemiology,health}/search.json?q=hantavirus&sort=new&t=day |
+| **BlueSky** | search API for "hantavirus" |
+| **X/Twitter** | via Chrome MCP — search `hantavirus OR "hanta virus" OR "MV Hondius" OR "andes virus"`, top 20–30 results since last scrape, 2–5 sec random delays between page loads |
+| **Wikipedia** | https://en.wikipedia.org/wiki/MV_Hondius_hantavirus_outbreak — check for substantive edits |
+
+Capture: URL, full text, author/handle, timestamp, engagement counts. Persist raw text in `events.raw_content`.
+
+### 2. Dedupe
+
+For each scraped item:
+
+1. **URL hash exact match**: the DB has a unique partial index on `events.source_url_hash` — duplicate URLs error on insert. If you hit `23505`, the item is already stored.
+2. **Semantic similarity** against events from the last 48h. If it's a new source reporting the same story, INSERT a new event with `duplicate_of` = the original event's id. (Allows corroboration counting later.)
+3. **Corroboration trigger**: 3+ independent sources reporting the same claim → run a fact-check pass against the `facts` table.
+
+### 3. Process & score
+
+For each unique item:
+
+- **Classify** category from this list: `case_report | policy | research | travel_advisory | mutation | death | containment | speculation`
+- **Extract** numeric values where possible: `case_count`, `death_count`, geographic location (country/region/city), lat/lng
+- **Geocode** via known centroids when lat/lng missing
+- **Score significance** 1–5:
+  - **5 (Critical)**: first case in new country, major policy change, significant death-toll increase, WHO emergency declaration
+  - **4 (High)**: official government statement, travel advisory, new research findings
+  - **3 (Notable)**: case-count update, expert opinion, containment measure
+  - **2 (Low)**: local news coverage, useful social-media discussion
+  - **1 (Routine)**: general discussion, speculation, reposts of known info
+- **Tag** with strain (`andes-virus`), context (`mv-hondius`), and topic (`transmission`, `cfr`, `human-to-human`, etc.)
+
+### 4. Fact-check
+
+For every claim in the new item:
+
+```
+Does it match an existing CONFIRMED fact?
+├── Yes → score routine (sig 1–2), note corroboration in tags
+└── No
+    ├── Does it CONTRADICT an existing CONFIRMED fact?
+    │   └── Yes → flag, score 3+, tag 'contradicts-known-fact', DO NOT auto-update facts
+    └── Is it a NEW factual claim?
+        ├── Tier-1 source (WHO/CDC/ECDC/Africa CDC/peer-reviewed)?
+        │   → INSERT facts row, status='confirmed', confidence 0.9–1.0
+        ├── 2+ independent credible sources?
+        │   → INSERT facts row, status='corroborated', confidence 0.7–0.9
+        ├── Single credible source?
+        │   → INSERT facts row, status='unverified', confidence 0.4–0.7
+        └── Single uncredible source (Reddit / random social)?
+            → DO NOT create fact yet; only log event with sig 1–2; watch for corroboration
+```
+
+Speculation, opinion, analysis → log as event with category `speculation` or `research`. **Never** add to facts.
+
+### 5. Write
+
+For each processed item:
+
+```
+INSERT events (with extracted fields)
+
+If fact-check produced a new confirmed/corroborated fact:
+  INSERT or UPDATE facts (UNIQUE (disease, title) is idempotent guard)
+
+If case-related (new MVH-### or CH-### or contact dossier):
+  UPDATE or INSERT cases (status, dossier append at end)
+  INSERT case_locations rows for any new movement
+
+If country-level case count changed:
+  UPSERT country_stats (cases, deaths, latest_case_date)
+
+INSERT scrape_log row (source, results_found, events_created, duplicates_skipped, error?, duration_ms)
+```
+
+After writing, **every 4th cycle** (or immediately on a sig-5 event):
+
+```
+Aggregate fresh totals from country_stats.
+Compare to last snapshot.
+If material change:
+  INSERT snapshots (total_cases, total_deaths, countries_affected, fatality_rate, trend, trend_description, risk_level, key_developments[], ai_analysis)
+```
+
+## Source credibility tiers
+
+| Tier | Examples |
+|---|---|
+| **1 (highest)** | WHO, CDC, ECDC, Africa CDC, national health ministries, peer-reviewed (Lancet, NEJM, Nature, JAMA) |
+| **2** | Major wire services (Reuters, AP), established medical journalists, university research labs |
+| **3** | Major news outlets (NYT, BBC, Guardian), verified medical professionals on social media |
+| **4** | Reddit threads, unverified social media, blogs, Wikipedia (early-signal only, never confirmation) |
+
+## Confidence scoring
+
+| Range | Meaning |
+|---|---|
+| **0.95–1.0** | WHO/CDC official statement, peer-reviewed data |
+| **0.85–0.95** | Multiple Tier 1–2 sources agree |
+| **0.70–0.85** | Tier 2 source + corroboration |
+| **0.50–0.70** | Single credible source, no contradiction |
+| **0.30–0.50** | Unverified but plausible |
+| **< 0.30** | Don't store as a fact; events table only |
+
+## Fact maintenance
+
+Every 6–12 hours during active monitoring:
+
+1. Walk all `unverified` facts. Has new evidence emerged? → upgrade or remove.
+2. Walk all `corroborated` facts. Has an official source confirmed? → upgrade.
+3. Check whether any `confirmed` fact has been contradicted. → mark `disputed`.
+4. Update `last_verified_at` on facts that re-confirmed.
+5. Refresh the snapshot row with current aggregates.
+
+When you supersede a fact:
+- Set old fact's `verification_status='retracted'`
+- Set old fact's `superseded_by = <new fact id>`
+- INSERT the new fact normally
+
+## Cross-referencing case dossiers
+
+When updating `cases.dossier`, reference confirmed facts by title:
+
+> "Confirmed ANDV via RT-PCR (see fact: *Causative agent identified as Andes orthohantavirus (ANDV)*)"
+
+Never include unverified claims in dossiers. Only `confirmed` or `corroborated`.
+
+## PII rule
+
+**Never write real names to the database.** Use case codes (MVH-001, CH-001) in dossiers and event summaries. If a source mentions a name, anonymize in your write.
+
+## Dossier append format
+
+When updating an existing case dossier, don't rewrite from scratch. Append:
+
+```
+[Updated 2026-05-08 14:00 UTC] Swiss authorities confirm patient stable on oxygen support; no ventilation required.
+```
+
+## Snapshot AI-analysis style
+
+Write the `ai_analysis` field as if briefing a decision-maker — concise, factual, forward-looking. What changed, what it means, what to watch for. ~3–6 sentences. Same voice as the existing seed snapshot.
+
+## Error handling
+
+| Error | Response |
+|---|---|
+| Source unreachable | Log error in `scrape_log`, continue to next source. Retry on next cycle. |
+| X rate limited | Back off X for 30 min. Continue with other sources. |
+| Supabase write fails | Retry once. If still fails, log error and surface in chat. |
+| Chrome disconnected | Log error, fall back to non-X sources, alert user to reconnect. |
+| Conflicting Tier-1 sources | Mark fact `disputed`. Surface in chat. Don't pick a winner without operator input. |
+
+## Surge triggers
+
+Switch to 5–10 min cycle cadence on:
+
+- New country reports a case
+- WHO press briefing or new DON entry
+- Death-count change
+- Confirmed mutation
+- Border closure or major travel advisory change
+
+## Session-end checklist
+
+When you stop a Cowork session:
+
+1. Run one final cycle.
+2. Confirm `scrape_log` shows the last cycle's row.
+3. Note in chat the most recent `events.created_at` timestamp so the next session knows where to resume.

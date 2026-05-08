@@ -2,7 +2,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 SET search_path TO extensions, public;
 
-SELECT plan(18);
+SELECT plan(21);
 
 -- Seed one row in each public table from a privileged role so anon has something to read
 INSERT INTO events (title, summary, source_type, category)
@@ -14,6 +14,8 @@ INSERT INTO scrape_log (source_type) VALUES ('x');
 INSERT INTO cases (case_code, status) VALUES ('rls-fixture-001', 'suspected');
 INSERT INTO case_locations (case_id, country_code, arrived_at)
   VALUES ((SELECT id FROM cases WHERE case_code = 'rls-fixture-001'), 'ZZ', now());
+INSERT INTO facts (category, title, content, verification_status, sources)
+  VALUES ('pathogen','rls-fixture','rls fixture content','confirmed', ARRAY['http://rls.test']);
 
 -- RLS enabled on all four tables
 SELECT is(
@@ -45,6 +47,11 @@ SELECT is(
   (SELECT relrowsecurity FROM pg_class WHERE relname = 'case_locations'),
   true,
   'RLS enabled on case_locations'
+);
+SELECT is(
+  (SELECT relrowsecurity FROM pg_class WHERE relname = 'facts'),
+  true,
+  'RLS enabled on facts'
 );
 
 -- Switch to anon and verify
@@ -102,6 +109,17 @@ SELECT throws_ok(
   '42501',
   NULL,
   'anon cannot INSERT case_locations'
+);
+
+SELECT cmp_ok(
+  (SELECT count(*)::int FROM facts), '>=', 1,
+  'anon can SELECT facts'
+);
+SELECT throws_ok(
+  $$INSERT INTO facts (category, title, content, verification_status, sources)
+    VALUES ('pathogen','anon-write','x','confirmed', ARRAY['http://x.test'])$$,
+  '42501', NULL,
+  'anon cannot INSERT facts'
 );
 
 -- scrape_log: RLS on, no policy → anon sees zero rows

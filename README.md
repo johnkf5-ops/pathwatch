@@ -46,16 +46,27 @@ pollute the seeded dataset.
 
 ## Schema overview
 
-Four tables (full DDL in `supabase/migrations/20260507000000_initial_schema.sql`):
+Seven tables across three migrations:
 
 - `events` — atomic intelligence units with URL-hash dedup, CHECK-constraint
   enums, and a partial index on the dashboard's hot read path.
 - `snapshots` — append-only situation rollups (LLM-generated narrative + aggregates).
 - `country_stats` — per-country state with `UNIQUE(disease, country_code)` for upsert.
 - `scrape_log` — pipeline observability, RLS-locked from anon.
+- `cases` + `case_locations` — individual infected persons (anonymized via
+  `case_code` like `MVH-001`) and their travel timelines.
+- `facts` — verified knowledge base; entries written by the pipeline with
+  `verification_status`, `confidence`, source attribution.
 
-RLS lets the anon key SELECT from the first three; all writes require the
-service role. `scrape_log` is service-role-only.
+RLS lets the anon key SELECT from all tables except `scrape_log`; all writes
+require the service role. `scrape_log` is service-role-only.
+
+## Pipeline runbook
+
+The Cowork session that operates the data pipeline reads
+`docs/runbooks/pipeline.md` at session start. That document codifies the
+scrape → dedupe → fact-check → write cycle, source credibility tiers,
+confidence-scoring rubric, and error handling.
 
 ## Notes for non-Docker-Desktop setups
 

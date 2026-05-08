@@ -115,7 +115,7 @@ export function DashboardClient({
           <EventFeed events={events} />
         </div>
         <aside className="flex flex-col gap-4">
-          <MapPanel countries={countries} events={events} />
+          <MapPanel countries={countries} cases={[]} caseLocations={[]} />
           <TrendChart snapshots={snapshotHistory} />
           <SourceActivityChart events={events} />
         </aside>

@@ -1,3 +1,4 @@
+'use client';
 import { ArrowUpRight } from 'lucide-react';
 import type { Case, CaseLocation } from '@/lib/types';
 import { caseLocationsFor, caseLabel } from '@/lib/case-helpers';

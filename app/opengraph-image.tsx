@@ -4,6 +4,8 @@ import { createServerClient } from '@/lib/supabase-server';
 export const alt = 'Pathwatch — Real-Time Disease Outbreak Tracker';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
+// Skip build-time prerender — needs runtime Supabase env vars.
+export const dynamic = 'force-dynamic';
 
 export default async function Image() {
   const supabase = createServerClient();

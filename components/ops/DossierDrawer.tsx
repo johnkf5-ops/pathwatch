@@ -104,12 +104,12 @@ export function DossierDrawer({
   return (
     <aside
       data-testid="dossier-drawer"
-      className={`pointer-events-none absolute inset-y-0 right-0 z-10 flex w-full max-w-[420px] transform flex-col overflow-hidden border-l border-border-strong bg-surface-2 transition-transform duration-200 ${
+      className={`pointer-events-none absolute inset-y-0 right-0 z-10 w-full max-w-[420px] transform overflow-y-scroll border-l border-border-strong bg-surface-2 transition-transform duration-200 ${
         open ? 'pointer-events-auto translate-x-0' : 'translate-x-full'
       }`}
     >
       {open && (
-        <div className="flex shrink-0 items-center justify-between border-b border-border bg-bg-2 px-3 py-2">
+        <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-bg-2/95 px-3 py-2 backdrop-blur">
           <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
             {headerLabel}
           </span>
@@ -123,7 +123,7 @@ export function DossierDrawer({
           </button>
         </div>
       )}
-      <div className="min-h-0 flex-1 overflow-y-scroll">{body}</div>
+      {body}
     </aside>
   );
 }

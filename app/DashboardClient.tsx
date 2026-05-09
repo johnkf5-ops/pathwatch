@@ -191,7 +191,7 @@ export function DashboardClient({
       {/* Desktop (lg+): three-column flight deck — left context · center map · right lists · bottom event feed */}
       <div
         data-testid="desktop-layout"
-        className="hidden flex-1 lg:grid lg:min-h-0 lg:grid-cols-[260px_1fr_300px] lg:grid-rows-[1fr_180px]"
+        className="hidden flex-1 lg:grid lg:min-h-0 lg:grid-cols-[300px_1fr_300px] lg:grid-rows-[1fr_180px]"
       >
         {/* Left: narrative context */}
         <div className="overflow-y-auto border-r border-border">

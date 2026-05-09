@@ -19,6 +19,18 @@ test('ops console renders sit-rep + tabs', async ({ page }) => {
   await expect(desktop.getByRole('tab', { name: /BY COUNTRY/ })).toBeVisible();
 });
 
+test('KPI HUD shows CASES (derived) and CONTACTS (no longer TRACKED)', async ({ page }) => {
+  await page.goto('/');
+  const desktop = page.getByTestId('desktop-layout');
+  const hud = desktop.getByText('KEY METRICS').locator('xpath=ancestor::div[contains(@class,"absolute")]');
+  await expect(hud.getByText('CASES', { exact: true })).toBeVisible();
+  await expect(hud.getByText('CONTACTS', { exact: true })).toBeVisible();
+  await expect(hud.getByText('TRACKED', { exact: true })).toHaveCount(0);
+  // Seed: 6 confirmed_case + 4 suspected_case = 10 cases; 4 contacts.
+  await expect(hud.getByText(/CASES.*10/)).toBeVisible();
+  await expect(hud.getByText(/CONTACTS.*4/)).toBeVisible();
+});
+
 test('case drilldown opens drawer', async ({ page }) => {
   await page.goto('/?case=MVH-001');
   const desktop = page.getByTestId('desktop-layout');

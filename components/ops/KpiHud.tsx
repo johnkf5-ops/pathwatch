@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import type { Snapshot, Case } from '@/lib/types';
 import { formatNumber, formatPercent } from '@/lib/format';
+import { isCase, isContact } from '@/lib/case-helpers';
 
 interface Props {
   snapshot: Snapshot | null;
@@ -45,12 +46,12 @@ function Row({
 
 export function KpiHud({ snapshot, prevSnapshot, cases }: Props) {
   const [open, setOpen] = useState(true);
-  const totalCases = snapshot?.total_cases ?? null;
+  const caseCount = cases.filter(isCase).length;
+  const contactCount = cases.filter(isContact).length;
   const deaths = snapshot?.total_deaths ?? null;
   const cfr = snapshot?.fatality_rate ?? null;
   const countries = snapshot?.countries_affected ?? null;
-  const tracked = cases.length;
-  const dCases = delta(totalCases, prevSnapshot?.total_cases, 'pct');
+  const dCases = delta(caseCount, prevSnapshot?.total_cases, 'pct');
   const dDeaths = delta(deaths, prevSnapshot?.total_deaths, 'pct');
   const dCfr = delta(cfr, prevSnapshot?.fatality_rate, 'pp');
   const dCountries = delta(countries, prevSnapshot?.countries_affected, 'abs');
@@ -68,8 +69,8 @@ export function KpiHud({ snapshot, prevSnapshot, cases }: Props) {
       </button>
       {open && (
         <div className="divide-y divide-white/5">
-          <Row label="CASES" value={formatNumber(totalCases)} d={dCases} />
-          <Row label="TRACKED" value={formatNumber(tracked)} d={null} />
+          <Row label="CASES" value={formatNumber(caseCount)} d={dCases} />
+          <Row label="CONTACTS" value={formatNumber(contactCount)} d={null} />
           <Row label="DEATHS" value={formatNumber(deaths)} d={dDeaths} />
           <Row label="FATALITY RATE" value={formatPercent(cfr)} d={dCfr} />
           <Row label="COUNTRIES" value={formatNumber(countries)} d={dCountries} />

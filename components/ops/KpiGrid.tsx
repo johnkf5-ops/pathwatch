@@ -38,7 +38,7 @@ export function KpiGrid({
   return (
     <section className="border-b border-border px-4 py-4">
       <SectionHeader>KEY METRICS</SectionHeader>
-      <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
+      <div className="mt-3 grid grid-cols-2 gap-2">
         <KpiTile testId="kpi-cases" label="CASES" value={formatNumber(cases)} delta={dCases?.text} deltaTone={dCases?.tone} />
         <KpiTile testId="kpi-deaths" label="DEATHS" value={formatNumber(deaths)} delta={dDeaths?.text} deltaTone={dDeaths?.tone} />
         <KpiTile testId="kpi-cfr" label="FATALITY RATE" value={formatPercent(cfr)} delta={dCfr?.text} deltaTone={dCfr?.tone} />

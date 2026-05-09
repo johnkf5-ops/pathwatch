@@ -237,11 +237,11 @@ Each can ship independently. Migrations 1+2 can deploy together; 3 ships after v
 
 ---
 
-## 8. Open questions (resolve before implementation)
+## 8. Resolved decisions (formerly open questions)
 
-- **Should `country_stats.cases` use `exposure_country` or `current_country`?** Today these can differ (e.g., MVH-006 exposed in CV, currently in ZA). Pick one explicitly. Recommendation: `current_country` for "where the case is now," with a separate `country_stats.exposed_in_country` count for "where they got it" if needed later.
-- **Should suspected cases count toward CASES?** WHO doesn't always count suspected. Maybe expose a `confirmed + probable` count separately and an `all cases` count. UI shows the right one for context.
-- **Should `monitoring` lifecycle status work for non-contact case_classes?** Probably — a confirmed_case can be `monitoring` post-recovery for surveillance. Allow all combinations except invalid ones noted above.
+- **`country_stats.cases` uses `current_country`.** "Where the case is now" matches the dashboard's geographic intent (markers and PostureMatrix both reflect current location). A future `exposed_in_country` count can be added separately if needed.
+- **Suspected cases count toward CASES.** The filter is `case_class IN ('confirmed_case','probable_case','suspected_case')` everywhere. No separate `confirmed+probable` chip in this iteration — keeps the UI simple. WHO-style breakdown can be a follow-up.
+- **All `case_class` × `status` combinations allowed**, except the invalid pairs noted in §1: `contact` and `returnee` cannot be `deceased` or `critical` (those promote to `confirmed_case` first). The DB CHECK constraint enforces only the enum membership; pipeline/operator logic enforces the relationship rule.
 
 ---
 

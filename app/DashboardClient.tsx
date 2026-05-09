@@ -213,14 +213,6 @@ export function DashboardClient({
                   selectedCaseId={selectedCaseId}
                 />
                 <KpiHud snapshot={snapshot} prevSnapshot={prevSnapshot} cases={cases} />
-                <DossierDrawer
-                  cases={cases}
-                  caseLocations={caseLocations}
-                  countries={countries}
-                  events={events}
-                  caseCode={caseCode}
-                  countryCode={countryCode}
-                />
               </>
             )}
             {activeTab === 'country' && <ByCountryPane rows={countries} />}
@@ -238,6 +230,19 @@ export function DashboardClient({
         <div className="col-span-3 overflow-y-auto border-t border-border">
           <EventFeed events={events} />
         </div>
+
+        {/* Dossier drawer — sibling grid item that overlays the center column
+            cell (col 2, row 1) with z-30. Renders only when open. Uses the
+            same overflow-y-auto pattern as the left and right columns, so it
+            inherits a definite height from the grid row and scrolls cleanly. */}
+        <DossierDrawer
+          cases={cases}
+          caseLocations={caseLocations}
+          countries={countries}
+          events={events}
+          caseCode={caseCode}
+          countryCode={countryCode}
+        />
       </div>
     </div>
   );

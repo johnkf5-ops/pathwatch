@@ -28,7 +28,7 @@ export function PostureMatrix({ countries }: { countries: CountryStat[] }) {
   if (countries.length === 0) {
     return (
       <section className="border-b border-border px-4 py-4">
-        <SectionHeader>REGIONAL POSTURE</SectionHeader>
+        <SectionHeader>COUNTRIES AFFECTED</SectionHeader>
         <p className="mt-2 text-sm text-text-muted">No country data yet.</p>
       </section>
     );
@@ -38,7 +38,7 @@ export function PostureMatrix({ countries }: { countries: CountryStat[] }) {
 
   return (
     <section className="border-b border-border px-4 py-4">
-      <SectionHeader>REGIONAL POSTURE</SectionHeader>
+      <SectionHeader>COUNTRIES AFFECTED</SectionHeader>
       <table className="mt-3 w-full font-mono text-[11.5px]">
         <thead className="text-text-muted">
           <tr className="border-b border-border-soft">

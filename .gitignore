@@ -27,6 +27,8 @@ playwright/.cache/
 .playwright-mcp/
 palantir-trace*.png
 palantir-trace*.jpg
+worldmonitor-*.jpg
+worldmonitor-*.png
 
 # Claude local settings
 .claude/

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Monitor } from 'lucide-react';
 import type { Snapshot, ThreatAssessment } from '@/lib/types';
 import { THREAT_LEVEL_TOKEN } from '@/lib/threat-triggers';
 
@@ -54,7 +55,15 @@ export function TopBar({
           <span className="hidden text-text-muted lg:inline">PANDEMIC PROBABILITY</span>
         </span>
       )}
-      <span className="ml-auto hidden items-center gap-4 text-text-secondary lg:flex">
+      {/* Mobile-only note nudging users toward the desktop layout */}
+      <span
+        className="ml-auto flex items-center gap-1.5 text-amber/80 lg:hidden"
+        title="This intelligence console is optimized for desktop. Some panels are condensed on mobile."
+      >
+        <Monitor size={11} />
+        <span>DESKTOP RECOMMENDED</span>
+      </span>
+      <span className="hidden items-center gap-4 text-text-secondary lg:ml-auto lg:flex">
         <span>SCOPE GLOBAL</span>
         <span className="border-l border-border pl-4">UTC {utcStamp()}</span>
         <span className={`border-l border-border pl-4 ${riskClass.split(' ')[0]}`}>{riskLabel}</span>

@@ -101,25 +101,32 @@ export function DossierDrawer({
 
   const headerLabel = caseCode ? `DOSSIER · ${caseCode}` : countryCode ? `COUNTRY · ${countryCode}` : 'DETAILS';
 
-  if (!open) return null;
   return (
     <aside
       data-testid="dossier-drawer"
-      className="z-30 overflow-y-auto border-l border-border-strong bg-surface-2 lg:col-start-2 lg:row-start-1"
+      aria-hidden={!open}
+      className={`fixed right-0 z-30 w-full max-w-[420px] overflow-y-auto border-l border-border-strong bg-surface-2 transition-transform duration-200 ${open ? 'pointer-events-auto' : 'pointer-events-none'}`}
+      style={{
+        top: '36px',
+        bottom: '0',
+        transform: open ? 'translateX(0)' : 'translateX(100%)',
+      }}
     >
-      <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-bg-2 px-3 py-2">
-        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
-          {headerLabel}
-        </span>
-        <button
-          type="button"
-          onClick={close}
-          aria-label="Close drawer"
-          className="flex h-7 w-7 items-center justify-center rounded text-text-muted hover:bg-surface-3 hover:text-text"
-        >
-          <X size={16} />
-        </button>
-      </div>
+      {open && (
+        <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-bg-2 px-3 py-2">
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
+            {headerLabel}
+          </span>
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Close drawer"
+            className="flex h-7 w-7 items-center justify-center rounded text-text-muted hover:bg-surface-3 hover:text-text"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
       {body}
     </aside>
   );

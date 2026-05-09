@@ -79,13 +79,30 @@ Migrations live in `supabase/migrations/`. Use `npm run db:reset` to reapply loc
 
 Pathwatch's case/event data is written by a **separate Claude session**, not by the Next.js app. The runbook for that session is `docs/runbooks/pipeline.md` (agent-facing) plus `docs/runbooks/pipeline-operator.md` (human operator-facing).
 
-There's a designed-but-not-yet-built API rebuild that replaces the SKILL-based pipeline with a Vercel Function:
-- Spec: `docs/superpowers/specs/2026-05-09-pipeline-api-rebuild-design.md`
-- Plan: `docs/superpowers/plans/2026-05-09-pipeline-api-rebuild.md` (28 TDD tasks)
+### Current state
 
-Until the rebuild ships, manual cycles are run by opening a fresh Claude Code session in this repo and pasting the operator-runbook prompt. The session uses `supabase db query --linked` for all writes (no service-role key needed).
+The Anthropic-hosted scheduled task that previously drove the pipeline (SKILL.md-based) hits AUP false positives intermittently — outbreak terminology accumulates in session context and trips the safety classifier. Currently disabled. Manual cycles are run by opening a **fresh Claude Code session** in this repo and pasting the operator prompt; the session uses `supabase db query --linked` for all writes (no service-role key needed).
 
-**Rule:** dossier text and structured fields can be added by ad-hoc research, but **status changes are owned by the pipeline only** — research never overwrites case status. Flag conflicts inline as "POSSIBLE CORRECTION" footnotes for pipeline review.
+### What's next — the API rebuild (designed, not yet implemented)
+
+A complete replacement is specced and planned but not implemented. When the user wants pipeline reliability:
+
+- **Spec:** `docs/superpowers/specs/2026-05-09-pipeline-api-rebuild-design.md` (389 lines — full output coverage map, 4 schema migrations, Sonnet 4.6 Phase 1 agent loop + Opus 4.7 1M Phase 2 structured output, Vercel Cron every 6h, ~$120/mo at chosen cadence)
+- **Plan:** `docs/superpowers/plans/2026-05-09-pipeline-api-rebuild.md` (28 TDD tasks, each with file paths + exact code + commit message)
+- **How to execute:** invoke `superpowers:executing-plans` skill (or the subagent-driven variant) with the plan file. Each task is self-contained and TDD-shaped. Tasks 4–7 ship the four pending migrations (`20260509120000_case_locations_transit`, `20260509130000_case_relationships`, `20260509140000_scrape_log_metrics`, `20260509150000_case_locations_unique`) — those migration files already exist in `supabase/migrations/`.
+- **Cutover:** Task 28 includes verification that the local SKILL-based scheduled task stays disabled so both pipelines don't run in parallel.
+
+The rebuild does not need to ship before any other work — the manual-session cycles keep data flowing. But when the user asks for pipeline reliability or surfaces "the pipeline broke again," the answer is "execute the plan."
+
+### Rule: status is pipeline-owned
+
+Dossier text and most structured fields can be added by ad-hoc research, but **`cases.status` changes are owned by the pipeline only** — research never overwrites case status. Flag conflicts inline as "POSSIBLE CORRECTION" or "POSSIBLE REJECTION" footnotes in the dossier for pipeline review. The pipeline picks them up on its next cycle and decides whether to revise.
+
+### Updating dossiers via research (parallel-agent playbook)
+
+The full step-by-step pattern is documented in `docs/runbooks/case-dossier-update.md`. Summary: pull current case state, identify gaps, dispatch ~20 parallel general-purpose research agents (one per named case + one per anonymized cohort) with strict JSON output, build per-case `UPDATE` SQL appending to `dossier`, apply via `supabase db query --linked`, verify, surface the diff to the operator.
+
+Privacy rules baked into that playbook: demographics as ranges only, no real names on anonymized passengers, status never changed from research, sources cited inline in every dossier addition.
 
 ## Conventions
 

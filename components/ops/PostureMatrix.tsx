@@ -2,6 +2,7 @@ import type { CountryStat } from '@/lib/types';
 import { CountryFlag } from '@/components/ui/CountryFlag';
 import { formatNumber } from '@/lib/format';
 import { SectionHeader } from './SectionHeader';
+import { PostureMatrixCards } from './PostureMatrixCards';
 
 const STATUS_TAG: Record<NonNullable<CountryStat['status']>, string> = {
   active: 'text-red',
@@ -39,7 +40,14 @@ export function PostureMatrix({ countries }: { countries: CountryStat[] }) {
   return (
     <section className="border-b border-border px-4 py-4">
       <SectionHeader>COUNTRIES AFFECTED</SectionHeader>
-      <table className="mt-3 w-full font-mono text-[11.5px]">
+
+      {/* Mobile: card list */}
+      <div className="lg:hidden">
+        <PostureMatrixCards countries={countries} />
+      </div>
+
+      {/* Desktop: table */}
+      <table className="mt-3 hidden w-full font-mono text-[11.5px] lg:table">
         <thead className="text-text-muted">
           <tr className="border-b border-border-soft">
             <th className="px-2 py-1 text-left font-medium">COUNTRY</th>

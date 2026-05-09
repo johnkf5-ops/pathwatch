@@ -77,6 +77,7 @@ export interface FilterState {
 }
 
 export type CaseStatus = 'monitoring' | 'suspected' | 'confirmed' | 'recovered' | 'deceased' | 'critical';
+export type CaseClass = 'confirmed_case' | 'probable_case' | 'suspected_case' | 'contact' | 'returnee';
 export type CaseRole = 'passenger' | 'crew' | 'contact' | 'healthcare_worker' | 'rural_resident' | 'other';
 export type ExposureType = 'rodent_contact' | 'person_to_person' | 'unknown';
 
@@ -87,6 +88,7 @@ export interface Case {
   case_code: string;
   disease: string;
   status: CaseStatus;
+  case_class: CaseClass;
   is_index_case: boolean;
   role: CaseRole | null;
   exposure_type: ExposureType | null;

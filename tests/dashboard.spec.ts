@@ -22,6 +22,24 @@ test('ops console renders sit-rep + tabs', async ({ page }) => {
   await expect(desktop.getByRole('tab', { name: /BY COUNTRY/ })).toBeVisible();
 });
 
+test('MonitoringCohort has ALL/CONTACTS/RETURNEES filter chips', async ({ page }) => {
+  await page.goto('/');
+  const desktop = page.getByTestId('desktop-layout');
+  const monitoring = desktop.getByText('MONITORING', { exact: true }).locator('xpath=ancestor::section[1]');
+  await expect(monitoring.getByRole('button', { name: 'ALL' })).toBeVisible();
+  await expect(monitoring.getByRole('button', { name: 'CONTACTS' })).toBeVisible();
+  await expect(monitoring.getByRole('button', { name: 'RETURNEES' })).toBeVisible();
+  // Default ALL: 4 rows visible (4 contacts in seed).
+  await expect(monitoring.getByText('NJ-MON-001')).toBeVisible();
+  await expect(monitoring.getByText('KL592-MON-001')).toBeVisible();
+  // Click RETURNEES: list becomes empty (no returnees in seed).
+  await monitoring.getByRole('button', { name: 'RETURNEES' }).click();
+  await expect(monitoring.getByText('NJ-MON-001')).toHaveCount(0);
+  // Click CONTACTS: 4 contacts visible again.
+  await monitoring.getByRole('button', { name: 'CONTACTS' }).click();
+  await expect(monitoring.getByText('NJ-MON-001')).toBeVisible();
+});
+
 test('TopBar CASES chip uses case_class-derived count', async ({ page }) => {
   await page.goto('/');
   // Topbar chip is in <header>, hidden on mobile (lg:flex). Default test viewport

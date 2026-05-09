@@ -13,7 +13,7 @@ export function ThreatBanner({ assessment }: { assessment: ThreatAssessment }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-6 px-4 py-2 text-left hover:bg-surface-2"
+        className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-surface-2 lg:gap-6 lg:px-4"
         aria-expanded={open}
       >
         <ProbabilityMeter assessment={assessment} />

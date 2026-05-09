@@ -10,10 +10,10 @@ export function ProbabilityMeter({ assessment }: { assessment: ThreatAssessment 
       <span className={`border px-2 py-0.5 font-mono text-[10px] tracking-[0.14em] ${t.borderCls} ${t.textCls}`}>
         {t.label}
       </span>
-      <span className="font-mono text-[20px] font-semibold leading-none text-text">
+      <span className="font-mono text-[16px] font-semibold leading-none text-text lg:text-[20px]">
         {pct}%
       </span>
-      <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
+      <span className="hidden font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted lg:inline">
         PANDEMIC PROBABILITY
       </span>
     </div>

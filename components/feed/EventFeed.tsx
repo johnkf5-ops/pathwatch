@@ -47,9 +47,11 @@ export function EventFeed({ events }: { events: Event[] }) {
           No events in this view.
         </p>
       ) : (
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
+        <div className="event-ticker -mx-4 flex gap-2 overflow-x-auto px-4 pb-2">
           {filtered.map((e) => (
-            <EventCard key={e.id} event={e} />
+            <div key={e.id} className="w-[320px] shrink-0">
+              <EventCard event={e} />
+            </div>
           ))}
         </div>
       )}

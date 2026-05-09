@@ -90,3 +90,23 @@ body {
   letter-spacing: 0.06em;
 }
 
+/* Convert vertical wheel scroll to horizontal scroll on the event ticker
+   so users can browse the feed with a normal trackpad/mouse wheel. */
+.event-ticker {
+  scrollbar-width: thin;
+  overscroll-behavior-x: contain;
+}
+.event-ticker::-webkit-scrollbar {
+  height: 8px;
+}
+.event-ticker::-webkit-scrollbar-track {
+  background: transparent;
+}
+.event-ticker::-webkit-scrollbar-thumb {
+  background: rgba(214, 218, 230, 0.18);
+  border-radius: 4px;
+}
+.event-ticker::-webkit-scrollbar-thumb:hover {
+  background: rgba(214, 218, 230, 0.32);
+}
+

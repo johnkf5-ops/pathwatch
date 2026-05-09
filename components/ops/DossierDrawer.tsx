@@ -104,12 +104,12 @@ export function DossierDrawer({
   return (
     <aside
       data-testid="dossier-drawer"
-      className={`pointer-events-none absolute inset-y-0 right-0 z-10 w-full max-w-[420px] transform overflow-y-scroll border-l border-border-strong bg-surface-2 transition-transform duration-200 ${
+      className={`pointer-events-none absolute inset-y-0 right-0 z-10 grid w-full max-w-[420px] transform grid-rows-[auto_minmax(0,1fr)] overflow-hidden border-l border-border-strong bg-surface-2 transition-transform duration-200 ${
         open ? 'pointer-events-auto translate-x-0' : 'translate-x-full'
       }`}
     >
-      {open && (
-        <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-bg-2/95 px-3 py-2 backdrop-blur">
+      {open ? (
+        <div className="flex items-center justify-between border-b border-border bg-bg-2 px-3 py-2">
           <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
             {headerLabel}
           </span>
@@ -122,8 +122,10 @@ export function DossierDrawer({
             <X size={16} />
           </button>
         </div>
+      ) : (
+        <div />
       )}
-      {body}
+      <div className="overflow-y-auto">{body}</div>
     </aside>
   );
 }

@@ -15,6 +15,7 @@ import { MapPane } from '@/components/ops/MapPane';
 import { ByCountryPane } from '@/components/ops/ByCountryPane';
 import { DossierDrawer } from '@/components/ops/DossierDrawer';
 import { MonitoringCohort } from '@/components/ops/MonitoringCohort';
+import { MobileLayout } from '@/components/ops/MobileLayout';
 import { EventFeed } from '@/components/feed/EventFeed';
 import { ThreatBanner } from '@/components/threat/ThreatBanner';
 import { VirusProfile } from '@/components/profile/VirusProfile';
@@ -169,47 +170,66 @@ export function DashboardClient({
   return (
     <div className="flex min-h-screen flex-col">
       <TopBar snapshot={snapshot} />
-      {threat && <ThreatBanner assessment={threat} />}
-      <div className="grid h-[calc(100vh-2rem)] lg:grid-cols-[35fr_65fr]">
-        {/* Sit-rep (left, ~35%) */}
-        <div className="overflow-y-auto border-b border-border lg:border-b-0 lg:border-r">
-          <SituationBrief snapshot={snapshot} />
-          <KpiGrid snapshot={snapshot} prevSnapshot={prevSnapshot} />
-          <PostureMatrix countries={countries} />
-          <Watchlist events={events} />
-          <MonitoringCohort cases={monitoringCases} />
-          <VirusProfile facts={facts} />
-        </div>
 
-        {/* Workspace (right, ~65%) */}
-        <div className="relative flex flex-col overflow-hidden">
-          <TabStrip tabs={tabs} active={activeTab} onChange={(id) => setActiveTab(id as 'map' | 'country')} />
-          <div className="relative flex-1">
-            {activeTab === 'map' && (
-              <>
-                <MapPane
-                  countries={countries}
-                  cases={cases}
-                  caseLocations={caseLocations}
-                  selectedCaseId={selectedCaseId}
-                />
-                <DossierDrawer
-                  cases={cases}
-                  caseLocations={caseLocations}
-                  countries={countries}
-                  events={events}
-                  caseCode={caseCode}
-                  countryCode={countryCode}
-                />
-              </>
-            )}
-            {activeTab === 'country' && <ByCountryPane rows={countries} />}
-          </div>
-        </div>
+      {/* Mobile (< lg): single-column stack with collapsible map + bottom sheet */}
+      <div className="lg:hidden">
+        <MobileLayout
+          snapshot={snapshot}
+          prevSnapshot={prevSnapshot}
+          events={events}
+          countries={countries}
+          cases={cases}
+          caseLocations={caseLocations}
+          threat={threat}
+          facts={facts}
+          monitoringCases={monitoringCases}
+          selectedCaseId={selectedCaseId}
+          caseCode={caseCode}
+        />
       </div>
 
-      {/* Full-width intelligence feed below the grid */}
-      <EventFeed events={events} />
+      {/* Desktop (lg+): 35/65 grid + full-width feed */}
+      <div data-testid="desktop-layout" className="hidden lg:contents">
+        {threat && <ThreatBanner assessment={threat} />}
+        <div className="grid h-[calc(100vh-2rem)] lg:grid-cols-[35fr_65fr]">
+          {/* Sit-rep (left, ~35%) */}
+          <div className="overflow-y-auto border-b border-border lg:border-b-0 lg:border-r">
+            <SituationBrief snapshot={snapshot} />
+            <KpiGrid snapshot={snapshot} prevSnapshot={prevSnapshot} />
+            <PostureMatrix countries={countries} />
+            <Watchlist events={events} />
+            <MonitoringCohort cases={monitoringCases} />
+            <VirusProfile facts={facts} />
+          </div>
+
+          {/* Workspace (right, ~65%) */}
+          <div className="relative flex flex-col overflow-hidden">
+            <TabStrip tabs={tabs} active={activeTab} onChange={(id) => setActiveTab(id as 'map' | 'country')} />
+            <div className="relative flex-1">
+              {activeTab === 'map' && (
+                <>
+                  <MapPane
+                    countries={countries}
+                    cases={cases}
+                    caseLocations={caseLocations}
+                    selectedCaseId={selectedCaseId}
+                  />
+                  <DossierDrawer
+                    cases={cases}
+                    caseLocations={caseLocations}
+                    countries={countries}
+                    events={events}
+                    caseCode={caseCode}
+                    countryCode={countryCode}
+                  />
+                </>
+              )}
+              {activeTab === 'country' && <ByCountryPane rows={countries} />}
+            </div>
+          </div>
+        </div>
+        <EventFeed events={events} />
+      </div>
     </div>
   );
 }

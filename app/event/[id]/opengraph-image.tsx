@@ -5,6 +5,8 @@ import { countryFlag } from '@/lib/format';
 export const alt = 'Pathwatch event';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
+// Skip build-time prerender — needs runtime Supabase env vars.
+export const dynamic = 'force-dynamic';
 
 const SIG_COLOR: Record<number, string> = {
   1: '#6B7280',

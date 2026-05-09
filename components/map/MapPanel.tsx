@@ -259,7 +259,7 @@ export function MapPanel({ countries, cases, caseLocations, selectedCaseId }: Pr
           closeOnClick: false,
           className: 'pathwatch-popup pathwatch-stop-popup',
           offset: 14,
-          maxWidth: '360px',
+          maxWidth: 'min(360px, 92vw)',
         });
       hoverPopupRef.current = popup;
       popup.setLngLat([stop.longitude as number, stop.latitude as number]).setHTML(html).addTo(map);

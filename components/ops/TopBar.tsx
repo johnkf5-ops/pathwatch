@@ -32,12 +32,12 @@ export function TopBar({ snapshot }: { snapshot: Snapshot | null }) {
         <span className="inline-flex h-4 w-4 items-center justify-center bg-green text-[10px] font-bold text-bg">P</span>
         <span className="font-bold tracking-[0.16em] text-text">PATHWATCH</span>
       </Link>
-      <span className="text-text-muted">OPS CONSOLE</span>
+      <span className="hidden text-text-muted lg:inline">OPS CONSOLE</span>
       <span className="flex items-center gap-1.5 text-green">
         <span className="dot-pulse inline-block h-1.5 w-1.5 rounded-full bg-green" />
         LIVE
       </span>
-      <span className="ml-auto flex items-center gap-4 text-text-secondary">
+      <span className="ml-auto hidden items-center gap-4 text-text-secondary lg:flex">
         <span>SCOPE GLOBAL</span>
         <span className="border-l border-border pl-4">UTC {utcStamp()}</span>
         <span className={`border-l border-border pl-4 ${riskClass.split(' ')[0]}`}>{riskLabel}</span>

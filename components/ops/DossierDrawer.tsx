@@ -1,11 +1,13 @@
 'use client';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { X } from 'lucide-react';
 import Link from 'next/link';
 import type { Case, CaseLocation, CountryStat, Event } from '@/lib/types';
 import { CountryFlag } from '@/components/ui/CountryFlag';
 import { CaseStatusPill } from '@/components/case/CaseStatusPill';
-import { CaseDossier } from '@/components/case/CaseDossier';
+import { CaseFactSheet } from '@/components/case/CaseFactSheet';
+import { CaseDossierModal } from '@/components/case/CaseDossierModal';
 import { SectionHeader } from './SectionHeader';
 import { casesByCountry, caseLabel } from '@/lib/case-helpers';
 
@@ -28,6 +30,12 @@ export function DossierDrawer({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const open = caseCode != null || countryCode != null;
+  const [showFull, setShowFull] = useState(false);
+
+  // If the selected case changes, close any open full-dossier modal
+  useEffect(() => {
+    setShowFull(false);
+  }, [caseCode]);
 
   function close() {
     const u = new URLSearchParams(searchParams.toString());
@@ -38,13 +46,14 @@ export function DossierDrawer({
   }
 
   let body: React.ReactNode = null;
+  const selectedCase = caseCode ? cases.find((x) => x.case_code === caseCode) ?? null : null;
+  const selectedSourceEvent = selectedCase?.source_event_id
+    ? events.find((e) => e.id === selectedCase.source_event_id) ?? null
+    : null;
+
   if (caseCode) {
-    const c = cases.find((x) => x.case_code === caseCode);
-    if (c) {
-      const sourceEvent = c.source_event_id
-        ? events.find((e) => e.id === c.source_event_id) ?? null
-        : null;
-      body = <CaseDossier case_={c} locations={caseLocations} sourceEvent={sourceEvent} showOpenLink />;
+    if (selectedCase) {
+      body = <CaseFactSheet case_={selectedCase} locations={caseLocations} onMoreInfo={() => setShowFull(true)} />;
     } else {
       body = <p className="p-4 text-sm text-text-muted">Case {caseCode} not found.</p>;
     }
@@ -103,25 +112,35 @@ export function DossierDrawer({
 
   if (!open) return null;
   return (
-    <aside
-      data-testid="dossier-drawer"
-      className="fixed right-0 z-30 w-full max-w-[420px] overflow-y-auto border-l border-border-strong bg-surface-2"
-      style={{ top: '36px', bottom: '0' }}
-    >
-      <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-bg-2 px-3 py-2">
-        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
-          {headerLabel}
-        </span>
-        <button
-          type="button"
-          onClick={close}
-          aria-label="Close drawer"
-          className="flex h-7 w-7 items-center justify-center rounded text-text-muted hover:bg-surface-3 hover:text-text"
-        >
-          <X size={16} />
-        </button>
-      </div>
-      {body}
-    </aside>
+    <>
+      <aside
+        data-testid="dossier-drawer"
+        className="fixed right-0 z-30 w-full max-w-[420px] overflow-y-auto border-l border-border-strong bg-surface-2"
+        style={{ top: '36px', bottom: '0' }}
+      >
+        <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-bg-2 px-3 py-2">
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
+            {headerLabel}
+          </span>
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Close drawer"
+            className="flex h-7 w-7 items-center justify-center rounded text-text-muted hover:bg-surface-3 hover:text-text"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        {body}
+      </aside>
+      {showFull && selectedCase && (
+        <CaseDossierModal
+          case_={selectedCase}
+          locations={caseLocations}
+          sourceEvent={selectedSourceEvent}
+          onClose={() => setShowFull(false)}
+        />
+      )}
+    </>
   );
 }

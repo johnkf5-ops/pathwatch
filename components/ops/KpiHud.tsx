@@ -34,10 +34,10 @@ function Row({
   const cls = d?.tone === 'good' ? 'text-green' : d?.tone === 'bad' ? 'text-red' : '';
   return (
     <div className="flex items-baseline justify-between gap-3 px-3 py-1.5 font-mono text-[11px]">
-      <span className="text-text-muted">{label}</span>
+      <span className="text-text-muted/80">{label}</span>
       <span className="flex items-baseline gap-2">
         {d && <span className={`text-[10px] ${cls}`}>{d.text}</span>}
-        <span className="tabular-nums text-text">{value}</span>
+        <span className="tabular-nums text-text/95">{value}</span>
       </span>
     </div>
   );
@@ -56,18 +56,18 @@ export function KpiHud({ snapshot, prevSnapshot, cases }: Props) {
   const dCountries = delta(countries, prevSnapshot?.countries_affected, 'abs');
 
   return (
-    <div className="pointer-events-auto absolute right-3 top-3 z-10 w-[240px] overflow-hidden rounded-sm border border-border-strong bg-bg-2/95 shadow-lg backdrop-blur">
+    <div className="pointer-events-auto absolute right-3 top-3 z-10 w-[240px] overflow-hidden rounded-sm border border-white/10 bg-bg-2/40 shadow-xl backdrop-blur-md">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between border-b border-border px-3 py-1.5 text-left hover:bg-surface-2"
+        className="flex w-full items-center justify-between border-b border-white/10 px-3 py-1.5 text-left hover:bg-white/5"
       >
-        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">KEY METRICS</span>
-        {open ? <ChevronUp size={12} className="text-text-muted" /> : <ChevronDown size={12} className="text-text-muted" />}
+        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted/80">KEY METRICS</span>
+        {open ? <ChevronUp size={12} className="text-text-muted/70" /> : <ChevronDown size={12} className="text-text-muted/70" />}
       </button>
       {open && (
-        <div className="divide-y divide-border-soft">
+        <div className="divide-y divide-white/5">
           <Row label="CASES" value={formatNumber(totalCases)} d={dCases} />
           <Row label="TRACKED" value={formatNumber(tracked)} d={null} />
           <Row label="DEATHS" value={formatNumber(deaths)} d={dDeaths} />

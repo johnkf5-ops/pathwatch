@@ -1,6 +1,7 @@
 import type { CountryStat } from '@/lib/types';
 import { CountryFlag } from '@/components/ui/CountryFlag';
 import { formatNumber } from '@/lib/format';
+import { bySeverity } from '@/lib/country-sort';
 import { SectionHeader } from './SectionHeader';
 import { PostureMatrixCards } from './PostureMatrixCards';
 
@@ -35,7 +36,7 @@ export function PostureMatrix({ countries }: { countries: CountryStat[] }) {
     );
   }
 
-  const sorted = [...countries].sort((a, b) => b.cases - a.cases);
+  const sorted = [...countries].sort(bySeverity);
 
   return (
     <section className="border-b border-border px-4 py-4">

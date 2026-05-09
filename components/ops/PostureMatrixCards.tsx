@@ -1,6 +1,7 @@
 import type { CountryStat } from '@/lib/types';
 import { CountryFlag } from '@/components/ui/CountryFlag';
 import { formatNumber } from '@/lib/format';
+import { bySeverity } from '@/lib/country-sort';
 
 const STATUS_TAG: Record<NonNullable<CountryStat['status']>, string> = {
   active: 'border-red text-red',
@@ -10,7 +11,7 @@ const STATUS_TAG: Record<NonNullable<CountryStat['status']>, string> = {
 };
 
 export function PostureMatrixCards({ countries }: { countries: CountryStat[] }) {
-  const sorted = [...countries].sort((a, b) => b.cases - a.cases);
+  const sorted = [...countries].sort(bySeverity);
   return (
     <ul className="mt-3 divide-y divide-border-soft border-y border-border-soft">
       {sorted.map((c) => (

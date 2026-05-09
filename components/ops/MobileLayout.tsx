@@ -1,4 +1,5 @@
 'use client';
+import { useMediaQuery } from '@/lib/use-media-query';
 import type {
   Event, Snapshot, CountryStat, Case, CaseLocation, ThreatAssessment, Fact,
 } from '@/lib/types';
@@ -40,6 +41,14 @@ export function MobileLayout({
   selectedCaseId,
   caseCode,
 }: Props) {
+  // Only mount the vaul-based bottom sheet when the viewport is actually
+  // mobile. lg:hidden alone doesn't prevent the React component from
+  // mounting — and when its open, Radix DismissableLayer (used by vaul)
+  // sets `body.style.pointerEvents = 'none'`, which blocks clicks on the
+  // desktop dashboard. Mounting the sheet only on mobile prevents that
+  // body-level lock from ever applying on desktop.
+  const isMobileViewport = useMediaQuery('(max-width: 1023.98px)', false);
+
   return (
     <div data-testid="mobile-layout" className="flex flex-col">
       <MapWithToggle
@@ -56,12 +65,14 @@ export function MobileLayout({
       <PostureMatrix countries={countries} />
       <VirusProfile facts={facts} />
       <EventFeed events={events} />
-      <CaseDossierSheet
-        cases={cases}
-        caseLocations={caseLocations}
-        events={events}
-        caseCode={caseCode}
-      />
+      {isMobileViewport && (
+        <CaseDossierSheet
+          cases={cases}
+          caseLocations={caseLocations}
+          events={events}
+          caseCode={caseCode}
+        />
+      )}
     </div>
   );
 }

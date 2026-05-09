@@ -271,3 +271,32 @@ Otherwise skip — don't spam the table with identical rows. The dashboard reads
 Always set:
 - `model` — current model id (e.g. `claude-opus-4-7`).
 - `pipeline_session_id` — Cowork session id, run id, or any string that lets us retrace which cycle produced the row.
+
+## Case classification
+
+Every `cases` row has two orthogonal columns:
+
+- `status` — lifecycle: `monitoring | suspected | confirmed | recovered | deceased | critical`
+- `case_class` — what the row represents:
+  - `confirmed_case` — Tier-1 source explicitly says PCR-confirmed or lab-positive.
+  - `probable_case` — Tier-1 source describes the case as probable / postmortem-positive / strong epi link without lab.
+  - `suspected_case` — Symptomatic but neither lab-confirmed nor probable per source.
+  - `contact` — Known direct exposure to a case but not yet symptomatic-and-tested.
+  - `returnee` — Returned from an exposure area without known direct contact (precautionary).
+
+When writing a new row, always set both. Allowed combinations:
+
+- `confirmed_case` × `monitoring | recovered | deceased | critical`
+- `probable_case` × `monitoring | recovered | deceased`
+- `suspected_case` × `suspected | monitoring | recovered`
+- `contact` × `monitoring | recovered` only — promote to `confirmed_case` if the contact tests positive
+- `returnee` × `monitoring | recovered` only — same promotion rule
+
+Promotion is operator-driven for now. If a contact tests positive, write an UPDATE that flips `case_class` to `confirmed_case` AND adjusts `status` accordingly. Do not leave a contact in `confirmed`/`deceased`/`critical` lifecycle states.
+
+The dashboard counts:
+
+- CASES = rows with `case_class IN (confirmed_case, probable_case, suspected_case)`
+- CONTACTS = rows with `case_class IN (contact, returnee)`
+- `country_stats.cases` is keyed on `current_country` (where the row is now), not exposure_country.
+

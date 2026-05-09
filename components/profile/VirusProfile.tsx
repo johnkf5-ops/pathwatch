@@ -87,6 +87,22 @@ const SLOTS: SlotDef[] = [
     },
   },
   {
+    tag: 'key:symptoms',
+    label: 'Symptoms',
+    value: (f) => tidyTitle(f.title, ['symptoms:', 'symptoms']),
+    descriptor: () => 'First flu-like (fever, muscle pain), then rapid lung failure.',
+  },
+  {
+    tag: 'key:past_outbreaks',
+    label: 'Past outbreaks',
+    value: (f) => {
+      const years = (f.title + ' ' + f.content).match(/\b(19|20)\d{2}\b/g);
+      if (years) return [...new Set(years)].slice(0, 4).join(' · ');
+      return tidyTitle(f.title, ['past ANDV outbreaks:', 'past outbreaks:']);
+    },
+    descriptor: () => 'All previous ANDV outbreaks have burned out on their own.',
+  },
+  {
     tag: 'key:treatment',
     label: 'Treatment',
     value: (f) => tidyTitle(f.title, ['no specific antiviral; care is supportive including', 'no cure exists.']),

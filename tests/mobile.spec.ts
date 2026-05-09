@@ -45,6 +45,15 @@ test('mobile: case selection opens bottom sheet, close dismisses', async ({ page
   await expect(sheet).toBeHidden();
 });
 
+test('mobile: KPI grid shows CASES + CONTACTS (no TRACKED)', async ({ page }) => {
+  await page.goto('/');
+  // Seed: 6 confirmed_case + 4 suspected_case = 10 cases; 4 contacts.
+  await expect(page.getByTestId('kpi-cases')).toContainText('10');
+  await expect(page.getByTestId('kpi-contacts')).toContainText('4');
+  // Old TRACKED tile is gone.
+  await expect(page.getByTestId('kpi-tracked')).toHaveCount(0);
+});
+
 test('mobile: country posture renders as cards (not table)', async ({ page }) => {
   await page.goto('/');
   const mobile = page.getByTestId('mobile-layout');

@@ -14,7 +14,10 @@ test('ops console renders sit-rep + tabs', async ({ page }) => {
   await expect(desktop.getByText('KEY METRICS')).toBeVisible();
   await expect(desktop.getByText('COUNTRIES AFFECTED')).toBeVisible();
   await expect(desktop.getByText('WATCHLIST')).toBeVisible();
-  await expect(desktop.getByTestId('kpi-cases')).toContainText('8');
+  // CASES chip in TopBar (desktop-only, lg:flex on the right side of the header).
+  // Seed: 6 confirmed_case + 4 suspected_case = 10. Pre-Task-8 this still reads
+  // snapshot.total_cases (8) but Task 8 swaps it to a derived count (10).
+  await expect(page.getByText(/CASES\s+\d+/).first()).toBeVisible();
   await expect(desktop.getByRole('tab', { name: /MAP/ })).toBeVisible();
   await expect(desktop.getByRole('tab', { name: /BY COUNTRY/ })).toBeVisible();
 });

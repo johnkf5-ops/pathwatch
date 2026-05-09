@@ -1,5 +1,6 @@
 import type { Snapshot, Case } from '@/lib/types';
 import { formatNumber, formatPercent } from '@/lib/format';
+import { isCase, isContact } from '@/lib/case-helpers';
 import { SectionHeader } from './SectionHeader';
 import { KpiTile } from './KpiTile';
 
@@ -28,11 +29,11 @@ export function KpiGrid({
   prevSnapshot: Snapshot | null;
   cases: Case[];
 }) {
-  const cases = snapshot?.total_cases ?? null;
+  const cases = caseRows.filter(isCase).length;
+  const contacts = caseRows.filter(isContact).length;
   const deaths = snapshot?.total_deaths ?? null;
   const cfr = snapshot?.fatality_rate ?? null;
   const countries = snapshot?.countries_affected ?? null;
-  const tracked = caseRows.length;
   const dCases = delta(cases, prevSnapshot?.total_cases, 'pct');
   const dDeaths = delta(deaths, prevSnapshot?.total_deaths, 'pct');
   const dCfr = delta(cfr, prevSnapshot?.fatality_rate, 'pp');
@@ -46,15 +47,15 @@ export function KpiGrid({
           testId="kpi-cases"
           label="CASES"
           value={formatNumber(cases)}
-          subtitle="CONFIRMED + SUSPECTED"
+          subtitle="CONFIRMED + PROBABLE + SUSPECTED"
           delta={dCases?.text}
           deltaTone={dCases?.tone}
         />
         <KpiTile
-          testId="kpi-tracked"
-          label="TRACKED"
-          value={formatNumber(tracked)}
-          subtitle="INCL. MONITORING + CONTACTS"
+          testId="kpi-contacts"
+          label="CONTACTS"
+          value={formatNumber(contacts)}
+          subtitle="MONITORED CONTACTS + RETURNEES"
         />
         <KpiTile testId="kpi-deaths" label="DEATHS" value={formatNumber(deaths)} delta={dDeaths?.text} deltaTone={dDeaths?.tone} />
         <KpiTile testId="kpi-cfr" label="FATALITY RATE" value={formatPercent(cfr)} delta={dCfr?.text} deltaTone={dCfr?.tone} />

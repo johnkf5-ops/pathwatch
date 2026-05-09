@@ -49,11 +49,9 @@ export function SituationBrief({ snapshot }: { snapshot: Snapshot | null }) {
         </ul>
       )}
 
-      {snapshot.ai_analysis && (
-        <p className="mt-4 max-w-[72ch] text-[13px] leading-[1.55] text-text-secondary">
-          {snapshot.ai_analysis}
-        </p>
-      )}
+      {/* ai_analysis is intentionally NOT rendered — it duplicates the
+          trend_description headline above the bullets. The pipeline still
+          writes the field (kept for historic data); the UI just hides it. */}
     </section>
   );
 }

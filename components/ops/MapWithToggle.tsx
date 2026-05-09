@@ -44,7 +44,7 @@ export function MapWithToggle({ countries, cases, caseLocations, selectedCaseId 
           {open ? 'Hide Map' : 'Show Map'}
         </button>
         <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
-          {cases.length} CASES · {countries.length} COUNTRIES
+          {cases.length} TRACKED · {countries.length} COUNTRIES
         </span>
       </div>
       {hydrated && open && (

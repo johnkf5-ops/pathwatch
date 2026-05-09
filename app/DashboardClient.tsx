@@ -195,7 +195,7 @@ export function DashboardClient({
           {/* Sit-rep (left, ~35%) */}
           <div className="overflow-y-auto border-b border-border lg:border-b-0 lg:border-r">
             <SituationBrief snapshot={snapshot} />
-            <KpiGrid snapshot={snapshot} prevSnapshot={prevSnapshot} />
+            <KpiGrid snapshot={snapshot} prevSnapshot={prevSnapshot} cases={cases} />
             <PostureMatrix countries={countries} />
             <Watchlist events={events} />
             <MonitoringCohort cases={monitoringCases} />

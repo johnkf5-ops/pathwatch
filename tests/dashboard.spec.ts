@@ -56,24 +56,21 @@ test('intelligence feed renders with 6 tabs and signal warning', async ({ page }
   await expect(page.getByText('UNVERIFIED SOCIAL MEDIA SIGNAL')).toBeVisible();
 });
 
-test('virus profile card renders hero CFR + stat grid + expand', async ({ page }) => {
+test('virus profile card renders 9 plain-language tiles + expand', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('heading', { name: 'Virus Profile' }).scrollIntoViewIfNeeded();
   await expect(page.getByRole('heading', { name: 'Virus Profile' })).toBeVisible();
-  // Metadata strip
-  await expect(page.getByText(/FACTS INDEXED/)).toBeVisible();
-  // Hero CFR label + at least one zone label
-  await expect(page.getByText('Case fatality rate')).toBeVisible();
-  await expect(page.getByText('SEVERE', { exact: true })).toBeVisible();
-  // Stat grid labels (sentence case)
-  await expect(page.getByText('R₀', { exact: true })).toBeVisible();
-  await expect(page.getByText('Incubation', { exact: true })).toBeVisible();
-  await expect(page.getByText('Reservoir', { exact: true })).toBeVisible();
-  await expect(page.getByText('Transmission', { exact: true })).toBeVisible();
-  await expect(page.getByText('Strain', { exact: true })).toBeVisible();
+  // Tile labels (plain English, sentence case)
+  await expect(page.getByText('Virus', { exact: true })).toBeVisible();
+  await expect(page.getByText('Virus family', { exact: true })).toBeVisible();
+  await expect(page.getByText('Carried by', { exact: true })).toBeVisible();
+  await expect(page.getByText('How it spreads', { exact: true })).toBeVisible();
+  await expect(page.getByText('Fatality rate', { exact: true })).toBeVisible();
+  await expect(page.getByText('Reproduction number', { exact: true })).toBeVisible();
+  await expect(page.getByText('Incubation period', { exact: true })).toBeVisible();
   // Expand reveals categorized list
   await page.getByRole('button', { name: /Expand/i }).last().click();
-  await expect(page.getByRole('heading', { name: /PATHOGEN/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Pathogen/ })).toBeVisible();
 });
 
 test('/facts renders the knowledge base', async ({ page }) => {

@@ -1,108 +1,113 @@
 'use client';
 import { useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
 import type { Fact, FactCategory } from '@/lib/types';
 
-// ─── slot definitions ─────────────────────────────────────────────────────────
+// ─── tile slots ───────────────────────────────────────────────────────────────
 
 interface SlotDef {
   tag: string;
   label: string;
-  /** Returns the short value to render in the tile (e.g. "< 1", "9–40d"). */
+  /** Returns the short value text for the tile. */
   value: (f: Fact) => string;
-  /** Optional contextual descriptor under the value (e.g. "Cannot sustain spread"). */
+  /** Optional plain-English explanation of the value. Only present where jargon needs decoding. */
   descriptor?: (f: Fact) => string | null;
 }
 
-// Squeeze a long fact title into a short tile-friendly value.
-function shortenTitle(t: string): string {
-  // strip leading "ANDV ", "Causative agent identified as ", "No specific antiviral; care is "
-  let s = t.replace(/^(ANDV\s+)/i, '');
-  s = s.replace(/^Causative agent identified as\s+/i, '');
-  s = s.replace(/^No specific antiviral;\s+care is supportive including\s+/i, '');
-  s = s.replace(/^No licensed hantavirus vaccine;\s*/i, '');
-  s = s.replace(/^Person-to-person ANDV requires\s+/i, '');
-  s = s.replace(/^reservoir host is the\s+/i, '');
-  // Drop parenthetical Latin / clarifications
+/** Strip leading-prefix words that duplicate the tile label, drop parentheticals. */
+function tidyTitle(t: string, dropPrefixes: string[] = []): string {
+  let s = t.trim();
+  for (const p of dropPrefixes) {
+    const re = new RegExp(`^${p}[:\\s-]+`, 'i');
+    s = s.replace(re, '');
+  }
+  // Strip parenthetical clarifications: "Andes orthohantavirus (ANDV)" -> "Andes orthohantavirus"
   s = s.replace(/\s*\([^)]*\)\s*/g, ' ').trim();
-  // Cut at first comma/semicolon — keep the head clause
-  s = s.split(/[,;]/, 1)[0].trim();
-  // Capitalise first char
+  // Cut at sentence boundary only — keep comma'd lists intact.
+  s = s.split(/[.;]/, 1)[0].trim();
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 function extractRange(t: string, suffix = ''): string | null {
   const m = t.match(/(\d+)\s*[-–]\s*(\d+)/);
-  if (!m) return null;
-  return `${m[1]}–${m[2]}${suffix}`;
+  return m ? `${m[1]}–${m[2]}${suffix}` : null;
 }
 
-const HERO: SlotDef = {
-  tag: 'key:cfr',
-  label: 'Case fatality rate',
-  value: (f) => extractRange(f.title, '%') ?? extractRange(f.content, '%') ?? '—',
-};
-
-const STATS: SlotDef[] = [
+const SLOTS: SlotDef[] = [
+  {
+    tag: 'key:strain',
+    label: 'Virus',
+    value: (f) => tidyTitle(f.title, ['strain', 'causative agent identified as']),
+  },
+  {
+    tag: 'key:family',
+    label: 'Virus family',
+    value: (f) => tidyTitle(f.title, ['family']),
+  },
+  {
+    tag: 'key:reservoir',
+    label: 'Carried by',
+    value: (f) => tidyTitle(f.title, ['ANDV reservoir host is the', 'reservoir host', 'reservoir host:', 'carried by']),
+  },
+  {
+    tag: 'key:transmission',
+    label: 'How it spreads',
+    value: (f) => tidyTitle(f.title, ['person-to-person ANDV requires', 'spreads only through', 'transmission:']),
+  },
+  {
+    tag: 'key:cfr',
+    label: 'Fatality rate',
+    value: (f) => extractRange(f.title, '%') ?? extractRange(f.content, '%') ?? '—',
+  },
   {
     tag: 'key:r0',
-    label: 'R₀',
+    label: 'Reproduction number',
     value: (f) => {
       const m = f.title.match(/R0?\s*(?:below|<|less than)\s*([\d.]+)/i)
             ?? f.content.match(/R0?\s*(?:below|<|less than)\s*([\d.]+)/i);
       if (m) return `< ${m[1]}`;
-      const n = (f.title + ' ' + f.content).match(/[\b\s](?:R0|R₀)\s*[~≈=]?\s*([\d.]+)/i);
+      const n = (f.title + ' ' + f.content).match(/(?:R0|R₀)\s*[~≈=]?\s*([\d.]+)/i);
       return n ? n[1] : '—';
     },
     descriptor: (f) => {
-      const v = (f.title + ' ' + f.content).match(/(?:below|<|less than)\s*1/i);
-      return v ? 'Cannot sustain spread' : null;
+      if (/(below|<|less than)\s*1/i.test(f.title + ' ' + f.content)) {
+        return 'Each case infects fewer than one other person; outbreaks fade on their own.';
+      }
+      return null;
     },
   },
   {
     tag: 'key:incubation',
-    label: 'Incubation',
-    value: (f) => extractRange(f.title, 'd') ?? extractRange(f.content, 'd') ?? '—',
+    label: 'Incubation period',
+    value: (f) => extractRange(f.title, ' days') ?? extractRange(f.content, ' days') ?? '—',
     descriptor: (f) => {
       const m = f.title.match(/(\d+)\s*[-–]\s*(\d+)/) ?? f.content.match(/(\d+)\s*[-–]\s*(\d+)/);
-      if (m && Number(m[2]) >= 30) return 'Long tail';
+      if (m && Number(m[2]) >= 30) return 'Symptoms can appear weeks after exposure.';
       return null;
     },
   },
-  { tag: 'key:reservoir',    label: 'Reservoir',       value: (f) => shortenTitle(f.title) },
-  { tag: 'key:strain',       label: 'Strain',          value: (f) => shortenTitle(f.title) },
-  { tag: 'key:transmission', label: 'Transmission',    value: (f) => shortenTitle(f.title) },
-  { tag: 'key:family',       label: 'Family',          value: (f) => shortenTitle(f.title) },
-  { tag: 'key:treatment',    label: 'Treatment',       value: (f) => shortenTitle(f.title) },
-  { tag: 'key:vaccine',      label: 'Vaccine',         value: (f) => shortenTitle(f.title) },
-  { tag: 'key:first_identified', label: 'First identified', value: (f) => {
+  {
+    tag: 'key:treatment',
+    label: 'Treatment',
+    value: (f) => tidyTitle(f.title, ['no specific antiviral; care is supportive including', 'no cure exists.']),
+  },
+  {
+    tag: 'key:vaccine',
+    label: 'Vaccine',
+    value: (f) => tidyTitle(f.title, ['no licensed hantavirus vaccine;', 'no vaccine exists.']),
+    descriptor: (f) => /no\s+(licensed|vaccine\s+exists)/i.test(f.title) ? 'No licensed vaccine; candidates years away.' : null,
+  },
+  {
+    tag: 'key:first_identified',
+    label: 'First identified',
+    value: (f) => {
       const m = f.title.match(/(\d{4})/);
       const year = m ? m[1] : '';
       const place = (f.content.match(/in\s+([A-Z][a-zA-ZÀ-ſ\s]+(?:,\s*[A-Z][a-zA-ZÀ-ſ\s]+)?)/) ?? [])[1];
-      return [year, place?.split(/\.|;/)[0]?.trim()].filter(Boolean).join(' · ') || shortenTitle(f.title);
+      return [year, place?.split(/\.|;/)[0]?.trim()].filter(Boolean).join(' · ') || tidyTitle(f.title);
     },
   },
 ];
-
-// ─── CFR severity scale (LOW / MOD / HIGH / SEVERE) ───────────────────────────
-
-type CfrZone = 'LOW' | 'MOD' | 'HIGH' | 'SEVERE';
-const CFR_ZONES: { id: CfrZone; max: number; cls: string }[] = [
-  { id: 'LOW',    max: 5,    cls: 'bg-green' },
-  { id: 'MOD',    max: 15,   cls: 'bg-amber' },
-  { id: 'HIGH',   max: 30,   cls: 'bg-orange' },
-  { id: 'SEVERE', max: 100,  cls: 'bg-red' },
-];
-
-function cfrZone(value: string): CfrZone | null {
-  // value formats: "30–50%", "35–40%", "30%", etc. Use the upper bound.
-  const m = value.match(/(\d+)(?:[-–](\d+))?/);
-  if (!m) return null;
-  const upper = Number(m[2] ?? m[1]);
-  for (const z of CFR_ZONES) if (upper <= z.max) return z.id;
-  return 'SEVERE';
-}
 
 // ─── full categorised list (expanded view) ────────────────────────────────────
 
@@ -111,14 +116,14 @@ const CATEGORY_ORDER: FactCategory[] = [
   'containment', 'history', 'outbreak_timeline', 'policy',
 ];
 const CATEGORY_LABEL: Record<FactCategory, string> = {
-  pathogen: 'PATHOGEN',
-  transmission: 'TRANSMISSION',
-  clinical: 'CLINICAL',
-  epidemiology: 'EPIDEMIOLOGY',
-  containment: 'CONTAINMENT',
-  history: 'HISTORY',
-  outbreak_timeline: 'OUTBREAK TIMELINE',
-  policy: 'POLICY',
+  pathogen: 'Pathogen',
+  transmission: 'Transmission',
+  clinical: 'Clinical',
+  epidemiology: 'Epidemiology',
+  containment: 'Containment',
+  history: 'History',
+  outbreak_timeline: 'Outbreak timeline',
+  policy: 'Policy',
 };
 
 // ─── component ────────────────────────────────────────────────────────────────
@@ -130,12 +135,8 @@ function findKeyFact(facts: Fact[], tag: string): Fact | undefined {
 export function VirusProfile({ facts }: { facts: Fact[] }) {
   const [open, setOpen] = useState(false);
 
-  const heroFact = useMemo(() => findKeyFact(facts, HERO.tag), [facts]);
-  const heroValue = heroFact ? HERO.value(heroFact) : '—';
-  const zone = heroFact ? cfrZone(heroValue) : null;
-
-  const slots = useMemo(
-    () => STATS.map((s) => {
+  const tiles = useMemo(
+    () => SLOTS.map((s) => {
       const f = findKeyFact(facts, s.tag);
       return {
         ...s,
@@ -146,18 +147,6 @@ export function VirusProfile({ facts }: { facts: Fact[] }) {
     }),
     [facts],
   );
-
-  const shown = (heroFact ? 1 : 0) + slots.filter((s) => s.fact).length;
-  const strainFact = useMemo(() => findKeyFact(facts, 'key:strain'), [facts]);
-  const strainName = strainFact ? shortenTitle(strainFact.title).toUpperCase() : '';
-  const lastUpdate = useMemo(() => {
-    const ts = facts
-      .map((f) => f.last_verified_at ?? f.updated_at)
-      .filter((t): t is string => !!t)
-      .sort()
-      .pop();
-    return ts ? format(parseISO(ts), 'HH:mm:ss') + ' UTC' : '';
-  }, [facts]);
 
   const grouped = useMemo(() => {
     const m = new Map<FactCategory, Fact[]>();
@@ -171,73 +160,30 @@ export function VirusProfile({ facts }: { facts: Fact[] }) {
 
   return (
     <section className="border-t border-border bg-bg">
-      {/* Top metadata strip */}
-      <div className="border-b border-border-soft bg-bg-2 px-4 py-1.5 font-mono text-[9.5px] uppercase tracking-[0.14em] text-text-muted">
-        <span className="text-text-secondary">HANTAVIRUS</span>
-        {strainName && <> · <span>{strainName}</span></>}
-        {lastUpdate && <> · LAST UPDATE <span suppressHydrationWarning>{lastUpdate}</span></>}
-        {' '}· {facts.length} FACTS INDEXED
-      </div>
-
       {/* Title row */}
-      <header className="flex items-center justify-between px-4 pb-3 pt-3">
+      <header className="flex items-center justify-between px-4 pb-3 pt-4">
         <h2 className="font-mono text-[14px] font-semibold tracking-[0.02em] text-text">Virus Profile</h2>
-        <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
-          <span>
-            <span className="text-text">{shown}</span> shown · <span className="text-text">{facts.length}</span> total
-          </span>
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            aria-expanded={open}
-            className="inline-flex items-center gap-1 hover:text-text"
-          >
-            {open ? 'Collapse' : 'Expand'}
-            {open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted hover:text-text"
+        >
+          {open ? 'Collapse' : 'Expand'}
+          {open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+        </button>
       </header>
 
-      {/* Hero CFR */}
-      <div className="border-t border-border-soft px-4 py-4">
-        <div className="flex items-baseline gap-3">
-          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">{HERO.label}</span>
-        </div>
-        <div className="mt-1 flex items-baseline gap-2">
-          <span className="font-mono text-[42px] font-bold leading-none tracking-[-0.02em] text-text">
-            {heroValue.replace('%', '')}
-          </span>
-          <span className="font-mono text-[18px] text-text-secondary">%</span>
-        </div>
-        <div className="mt-3 grid grid-cols-4 gap-1">
-          {CFR_ZONES.map((z) => {
-            const active = z.id === zone;
-            return (
-              <div key={z.id} className="flex flex-col items-stretch gap-1">
-                <div className={`h-1.5 ${active ? z.cls : 'bg-border'}`} />
-                <span
-                  className={`font-mono text-[9.5px] uppercase tracking-[0.14em] ${
-                    active ? 'text-text' : 'text-text-faint'
-                  }`}
-                >
-                  {z.id}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Stat grid */}
+      {/* Tile grid */}
       <dl className="grid grid-cols-1 gap-px border-t border-border-soft bg-border-soft sm:grid-cols-2 md:grid-cols-3">
-        {slots.map((s) => (
-          <div key={s.tag} className="bg-bg px-3 py-3 min-w-0">
-            <dt className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-text-muted">{s.label}</dt>
-            <dd className="mt-0.5 line-clamp-2 font-mono text-[13px] leading-snug text-text">{s.value}</dd>
+        {tiles.map((s) => (
+          <div key={s.tag} className="bg-bg px-4 py-3 min-w-0">
+            <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
+              {s.label}
+            </dt>
+            <dd className="mt-1 font-mono text-[14px] leading-snug text-text">{s.value}</dd>
             {s.descriptor && (
-              <div className="mt-0.5 font-mono text-[10px] tracking-[0.06em] text-text-secondary">
-                {s.descriptor}
-              </div>
+              <p className="mt-1.5 text-[12px] leading-relaxed text-text-secondary">{s.descriptor}</p>
             )}
           </div>
         ))}

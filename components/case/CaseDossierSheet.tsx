@@ -35,10 +35,10 @@ export function CaseDossierSheet({ cases, caseLocations, events, caseCode }: Pro
       activeSnapPoint={open ? 0.55 : null}
     >
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-40 bg-black/50" />
+        <Drawer.Overlay className="fixed inset-0 z-40 bg-black/50 lg:hidden" />
         <Drawer.Content
           data-testid="dossier-sheet"
-          className="fixed inset-x-0 bottom-0 z-50 flex h-[90vh] flex-col rounded-t-[8px] border-t border-border-strong bg-surface-2 outline-none"
+          className="fixed inset-x-0 bottom-0 z-50 flex h-[90vh] flex-col rounded-t-[8px] border-t border-border-strong bg-surface-2 outline-none lg:hidden"
         >
           <Drawer.Title className="sr-only">Case dossier</Drawer.Title>
           <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-border" />

@@ -6,13 +6,31 @@ This guide is the companion to [`pipeline.md`](pipeline.md). That doc is for the
 
 ---
 
+## Schema reminder
+
+The `cases` table has two orthogonal columns the operator should know:
+
+- `status` (lifecycle): `monitoring | suspected | confirmed | recovered | deceased | critical`
+- `case_class` (what kind of row): `confirmed_case | probable_case | suspected_case | contact | returnee`
+
+Dashboard counts:
+- **CASES** = `case_class IN (confirmed_case, probable_case, suspected_case)`
+- **CONTACTS** = `case_class IN (contact, returnee)`
+- `country_stats.cases` is keyed on `current_country`, not exposure_country.
+
+Snapshots row has both `total_cases` and `total_contacts` columns. Pipeline must always derive these from the live `cases` table case_class filter — never write arbitrary numbers.
+
+See `docs/runbooks/pipeline.md` "UI output coverage map" for every dashboard surface and which table feeds it.
+
+---
+
 ## What "the pipeline" actually is
 
-There is no cron job, no headless agent, no scheduler. The pipeline is **a Claude conversation** running in your Cowork environment that:
+There is no cron job, no headless agent, no scheduler. The pipeline is **a Claude conversation** running in any Claude client (Claude Code is the current default; Cowork worked previously but hit AUP false positives) that:
 
 1. Reads `docs/runbooks/pipeline.md` at session start
-2. Has the Pathwatch Supabase service-role key in its environment
-3. Has Chrome MCP for X/Twitter scraping
+2. Has access to the linked Supabase via the Supabase CLI (`supabase db query --linked`) — no service-role key in session env required
+3. Has WebFetch + WebSearch (and Chrome MCP if available, for X/Twitter)
 4. Loops scrape → dedupe → fact-check → write into Supabase, on a cadence you tell it to maintain
 
 Each loop is called a **cycle**. The dashboard at https://pathwatch-phi.vercel.app reads whatever the pipeline writes — Realtime subscriptions push changes to anyone with the page open.
@@ -23,18 +41,18 @@ Each loop is called a **cycle**. The dashboard at https://pathwatch-phi.vercel.a
 
 | Thing | Where it lives | Why |
 |---|---|---|
-| Cowork environment | Mac mini in your office | Where the pipeline Claude session runs |
-| Supabase service-role key | Supabase dashboard → Settings → API Keys → "Secret key" | Bypasses RLS; required for writes |
-| Chrome with persistent profile | Logged into X/Twitter, BlueSky, Reddit | Lets the agent scrape without auth dialogs interrupting |
+| Claude session | Claude Code, Cowork, or any client with Supabase CLI | Where the pipeline runs |
+| `supabase` CLI authenticated | `supabase link` already run against the linked project | All writes go via `supabase db query --linked`; no service-role key needed |
+| Chrome with persistent profile (optional) | Logged into X/Twitter, BlueSky, Reddit | Lets the agent scrape without auth dialogs (only needed if Chrome MCP is in use) |
 | Vercel `NEXT_PUBLIC_*` env vars | Already in Vercel project settings | Production already pulls these on deploy |
 
-Verify the secret key is set in your shell session:
+Verify the Supabase CLI link is working:
 
 ```bash
-echo -n "$SUPABASE_SERVICE_ROLE_KEY" | wc -c   # should print >50
+supabase db query "SELECT count(*) FROM scrape_log;" --linked
 ```
 
-Never echo the value itself. Never paste it into chat.
+If that returns a row count, the session can read and write the linked DB.
 
 ---
 
@@ -140,7 +158,7 @@ supabase db query "
 **Latest threat assessment + last few snapshots:**
 ```bash
 supabase db query "SELECT created_at, threat_level, pandemic_probability, polymarket_pandemic_odds FROM threat_assessments ORDER BY created_at DESC LIMIT 3;" --linked
-supabase db query "SELECT created_at, total_cases, total_deaths, countries_affected, risk_level FROM snapshots ORDER BY created_at DESC LIMIT 3;" --linked
+supabase db query "SELECT created_at, total_cases, total_contacts, total_deaths, countries_affected, risk_level FROM snapshots ORDER BY created_at DESC LIMIT 3;" --linked
 ```
 
 **Open the dashboard** at https://pathwatch-phi.vercel.app — Realtime should reflect anything written in the last few minutes.
@@ -168,9 +186,9 @@ The agent is following the runbook, not running on rails. It will negotiate with
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| `scrape_log` hasn't grown in >60 min | Session crashed, sleeping, or rate-limited everywhere | Check the Cowork window. Restart with the same opening prompt. |
+| `scrape_log` hasn't grown in >60 min | Session crashed, sleeping, or rate-limited everywhere | Check the Claude session window. Restart with the same opening prompt. |
 | All cycles error on X/Twitter | Chrome session expired or rate-limited | Re-auth Chrome on the Mac mini. Tell agent to skip X for now. |
-| Supabase write errors with `42501` | Service-role key not in env, or key was rotated | Re-export `SUPABASE_SERVICE_ROLE_KEY` in the session shell. |
+| Supabase write errors with `42501` (RLS denial) | Session is using anon key instead of CLI link | Switch to `supabase db query --linked`; that uses the CLI's auth and bypasses RLS for writes. Re-run `supabase link` if needed. |
 | Duplicate-key errors `23505` on events | Working as intended — that's the URL-hash unique index doing dedup. | Ignore. The agent should be catching these and recording `duplicates_skipped`. |
 | Polymarket odds all NULL | Markets moved or were renamed | See `pipeline.md` "Threat assessment cycle § 1" — slugs are listed there. Verify each via `curl https://gamma-api.polymarket.com/events?slug=<slug>`. |
 | Dashboard shows stale data | Vercel data cache (rare — `unstable_noStore()` is in place) OR the agent stopped writing | Check `scrape_log`. If recent → it's a UI cache; hard-refresh. If stale → agent issue. |
@@ -200,7 +218,7 @@ Tell the agent:
 
 > Run one final cycle, then stop. Confirm `scrape_log` shows the last cycle's row. Print the most recent `events.created_at` so the next session knows where to resume.
 
-That maps onto the "Session-end checklist" in `pipeline.md`. After it confirms, just close the Cowork window.
+That maps onto the "Session-end checklist" in `pipeline.md`. After it confirms, just close the session.
 
 If the session crashed or hung instead of being stopped cleanly, no recovery is needed — every write is independent. The next session resumes from the latest `scrape_log` timestamp on its own.
 
@@ -208,7 +226,7 @@ If the session crashed or hung instead of being stopped cleanly, no recovery is 
 
 ## Picking up the next session
 
-Open a new Cowork session and use the same opening prompt as in [Starting a session](#starting-a-session). The agent will:
+Open a new Claude session and use the same opening prompt as in [Starting a session](#starting-a-session). The agent will:
 
 1. Re-read `pipeline.md`
 2. Query `scrape_log` for the most recent run to know how far back to scan
@@ -237,7 +255,7 @@ The whole project is built so the operator can verify any claim by querying the 
 ## Quick reference card
 
 ```
-Start:    Open Cowork → paste opening prompt → expect first scrape_log row in ~5 min
+Start:    Open Claude session → paste opening prompt → expect first scrape_log row shortly
 Health:   supabase db query "SELECT created_at, source_type FROM scrape_log ORDER BY created_at DESC LIMIT 5;" --linked
 Surge:    Tell agent: "Surge cycle to 5–10 min for the next 2h"
 Pause:    Tell agent: "Read-only mode for the next hour"

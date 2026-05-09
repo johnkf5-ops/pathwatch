@@ -63,9 +63,9 @@ Grid: `lg:grid-cols-[540px_1fr_300px] lg:grid-rows-[1fr_180px]`. Each panel has 
 
 Tables in production Supabase, all with public-read RLS:
 - `events` — scraped news/intelligence items
-- `cases` + `case_locations` — outbreak cases and their travel timeline
-- `country_stats` — per-country case/death totals + status
-- `snapshots` — outbreak snapshots (totals + ai_analysis paragraph + key_developments)
+- `cases` + `case_locations` — outbreak cases and their travel timeline. **`cases.case_class`** disambiguates `confirmed_case` / `probable_case` / `suspected_case` / `contact` / `returnee` from the lifecycle `status` field. Counts toward "cases" only when `case_class IN ('confirmed_case','probable_case','suspected_case')`. Contacts and returnees count toward "contacts" only.
+- `country_stats` — per-country case/death totals + status. `cases` recounted on `current_country` after the case_class migration.
+- `snapshots` — outbreak snapshots (totals + ai_analysis paragraph + key_developments + `total_contacts` for the contacts-and-returnees count).
 - `threat_assessments` — pandemic_probability + threat_level + reasoning + Polymarket comparison + triggers
 - `facts` — verified facts with `key:*`-tagged subset surfaced in VirusProfile
 - `scrape_log` — per-cycle observability for the pipeline
@@ -73,7 +73,11 @@ Tables in production Supabase, all with public-read RLS:
 
 Migrations live in `supabase/migrations/`. Use `npm run db:reset` to reapply locally (Colima/Docker required). Apply to remote with `supabase db push --linked`.
 
-**Migrations sitting unapplied** (as of this CLAUDE.md): `20260509120000` (case_locations transit fields), `20260509130000` (case_relationships), `20260509140000` (scrape_log metrics), `20260509150000` (case_locations dedup). They ship with the pipeline rebuild.
+**Migrations applied to remote prod:**
+- `20260509160000_visitor_log` (live + cumulative visitor counters)
+- `20260509170000`–`20260509170400` (case_class enum: column + backfill + country recount + snapshots.total_contacts + NOT NULL)
+
+**Migrations sitting unapplied** (will ship with the pipeline rebuild): `20260509120000` (case_locations transit fields), `20260509130000` (case_relationships), `20260509140000` (scrape_log metrics), `20260509150000` (case_locations dedup).
 
 ## Pipeline (data ingestion)
 

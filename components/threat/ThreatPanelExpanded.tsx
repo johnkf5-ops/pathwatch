@@ -16,9 +16,8 @@ export function ThreatPanelExpanded({ assessment: a }: { assessment: ThreatAsses
         </div>
         <p className="text-[13px] leading-snug text-text">{a.summary}</p>
         <p className="text-[12px] leading-relaxed text-text-secondary">{a.reasoning}</p>
-        <SignalIndicators assessment={a} />
       </div>
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div>
           <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">POLYMARKET</div>
           <dl className="grid grid-cols-[1fr_auto] gap-y-0.5 font-mono text-[11px]">
@@ -34,6 +33,10 @@ export function ThreatPanelExpanded({ assessment: a }: { assessment: ThreatAsses
           {a.ai_vs_market_note && (
             <p className="mt-2 text-[11px] leading-snug text-text-secondary">{a.ai_vs_market_note}</p>
           )}
+        </div>
+        <div>
+          <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">KEY METRICS</div>
+          <SignalIndicators assessment={a} />
         </div>
       </div>
     </div>

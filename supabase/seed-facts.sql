@@ -161,7 +161,7 @@ INSERT INTO facts (category, title, content, verification_status, confidence, so
    ARRAY['https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(96)91194-3'],
    ARRAY['peer_reviewed'],
    '1995-11-01 00:00:00+00','2026-05-07 13:00:00+00',
-   ARRAY['andes-virus','history','isolation']),
+   ARRAY['andes-virus','history','isolation','key:first_identified']),
 
   -- outbreak_timeline (1)
   ('outbreak_timeline',
@@ -208,6 +208,15 @@ INSERT INTO facts (category, title, content, verification_status, confidence, so
    ARRAY['https://www.who.int/news/item/07-05-2026-who-s-response-to-hantavirus-cases-linked-to-a-cruise-ship','https://www.ecdc.europa.eu/en/publications-data/hantavirus-associated-cluster-illness-cruise-ship-ecdc-assessment-and'],
    ARRAY['who','ecdc'],
    '2026-05-07 13:00:00+00','2026-05-07 13:00:00+00',
-   ARRAY['mv-hondius','r0','reproduction-number','key:r0'])
+   ARRAY['mv-hondius','r0','reproduction-number','key:r0']),
+
+  ('pathogen',
+   'Family Hantaviridae, order Bunyavirales',
+   'Andes orthohantavirus belongs to the family Hantaviridae, order Bunyavirales. The family contains New World (Sin Nombre, Andes, Hantaan) and Old World (Puumala, Seoul) species. ANDV is grouped with the New World hantaviruses that cause hantavirus pulmonary syndrome (HPS).',
+   'confirmed', 0.99,
+   ARRAY['https://www.cdc.gov/hantavirus/clinical-overview.html'],
+   ARRAY['cdc'],
+   NULL,'2026-05-07 13:00:00+00',
+   ARRAY['andes-virus','taxonomy','bunyavirales','hantaviridae','key:family'])
 
 ON CONFLICT (disease, title) DO NOTHING;

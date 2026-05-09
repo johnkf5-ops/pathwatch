@@ -56,16 +56,23 @@ test('intelligence feed renders with 6 tabs and signal warning', async ({ page }
   await expect(page.getByText('UNVERIFIED SOCIAL MEDIA SIGNAL')).toBeVisible();
 });
 
-test('virus profile card renders compact stats and expands', async ({ page }) => {
+test('virus profile card renders hero CFR + stat grid + expand', async ({ page }) => {
   await page.goto('/');
-  // Compact card always visible — at minimum the heading and one key stat label
-  await page.getByText('VIRUS PROFILE').scrollIntoViewIfNeeded();
-  await expect(page.getByText('VIRUS PROFILE')).toBeVisible();
-  await expect(page.getByText('TRANSMISSION', { exact: true }).first()).toBeVisible();
-  await expect(page.getByText('CASE FATALITY', { exact: true })).toBeVisible();
-  await expect(page.getByText('INCUBATION', { exact: true })).toBeVisible();
+  await page.getByRole('heading', { name: 'Virus Profile' }).scrollIntoViewIfNeeded();
+  await expect(page.getByRole('heading', { name: 'Virus Profile' })).toBeVisible();
+  // Metadata strip
+  await expect(page.getByText(/FACTS INDEXED/)).toBeVisible();
+  // Hero CFR label + at least one zone label
+  await expect(page.getByText('Case fatality rate')).toBeVisible();
+  await expect(page.getByText('SEVERE', { exact: true })).toBeVisible();
+  // Stat grid labels (sentence case)
+  await expect(page.getByText('R₀', { exact: true })).toBeVisible();
+  await expect(page.getByText('Incubation', { exact: true })).toBeVisible();
+  await expect(page.getByText('Reservoir', { exact: true })).toBeVisible();
+  await expect(page.getByText('Transmission', { exact: true })).toBeVisible();
+  await expect(page.getByText('Strain', { exact: true })).toBeVisible();
   // Expand reveals categorized list
-  await page.getByRole('button', { name: /EXPAND/i }).last().click();
+  await page.getByRole('button', { name: /Expand/i }).last().click();
   await expect(page.getByRole('heading', { name: /PATHOGEN/ })).toBeVisible();
 });
 

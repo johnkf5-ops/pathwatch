@@ -6,7 +6,7 @@ test('ops console renders sit-rep + tabs', async ({ page }) => {
   await expect(page.getByText('OPS CONSOLE')).toBeVisible();
   await expect(page.getByText('SITUATION BRIEF')).toBeVisible();
   await expect(page.getByText('KEY METRICS')).toBeVisible();
-  await expect(page.getByText('REGIONAL POSTURE')).toBeVisible();
+  await expect(page.getByText('COUNTRIES AFFECTED')).toBeVisible();
   await expect(page.getByText('WATCHLIST')).toBeVisible();
   await expect(page.getByTestId('kpi-cases')).toContainText('8');
   await expect(page.getByRole('tab', { name: /MAP/ })).toBeVisible();

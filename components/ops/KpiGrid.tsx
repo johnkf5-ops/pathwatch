@@ -3,13 +3,14 @@ import { formatNumber, formatPercent } from '@/lib/format';
 import { SectionHeader } from './SectionHeader';
 import { KpiTile } from './KpiTile';
 
-function delta(curr: number | null | undefined, prev: number | null | undefined, unit: 'abs' | 'pct' | 'pp'): {
-  text: string;
-  tone: 'good' | 'bad' | 'neutral';
-} {
-  if (curr == null || prev == null) return { text: '—', tone: 'neutral' };
+function delta(
+  curr: number | null | undefined,
+  prev: number | null | undefined,
+  unit: 'abs' | 'pct' | 'pp',
+): { text: string; tone: 'good' | 'bad' | 'neutral' } | null {
+  if (curr == null || prev == null) return null;
   const d = curr - prev;
-  if (d === 0) return { text: '— 0', tone: 'neutral' };
+  if (d === 0) return null;
   const arrow = d > 0 ? '▲' : '▼';
   const tone: 'good' | 'bad' | 'neutral' = d > 0 ? 'bad' : 'good';
   if (unit === 'abs') return { text: `${arrow} ${d > 0 ? '+' : ''}${d}`, tone };
@@ -38,10 +39,10 @@ export function KpiGrid({
     <section className="border-b border-border px-4 py-4">
       <SectionHeader>KEY METRICS</SectionHeader>
       <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
-        <KpiTile testId="kpi-cases" label="CASES" value={formatNumber(cases)} delta={dCases.text} deltaTone={dCases.tone} />
-        <KpiTile testId="kpi-deaths" label="DEATHS" value={formatNumber(deaths)} delta={dDeaths.text} deltaTone={dDeaths.tone} />
-        <KpiTile testId="kpi-cfr" label="CFR" value={formatPercent(cfr)} delta={dCfr.text} deltaTone={dCfr.tone} />
-        <KpiTile testId="kpi-countries" label="COUNTRIES" value={formatNumber(countries)} delta={dCountries.text} deltaTone="neutral" />
+        <KpiTile testId="kpi-cases" label="CASES" value={formatNumber(cases)} delta={dCases?.text} deltaTone={dCases?.tone} />
+        <KpiTile testId="kpi-deaths" label="DEATHS" value={formatNumber(deaths)} delta={dDeaths?.text} deltaTone={dDeaths?.tone} />
+        <KpiTile testId="kpi-cfr" label="FATALITY RATE" value={formatPercent(cfr)} delta={dCfr?.text} deltaTone={dCfr?.tone} />
+        <KpiTile testId="kpi-countries" label="COUNTRIES" value={formatNumber(countries)} delta={dCountries?.text} deltaTone="neutral" />
       </div>
     </section>
   );

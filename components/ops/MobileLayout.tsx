@@ -13,6 +13,7 @@ import { VirusProfile } from '@/components/profile/VirusProfile';
 import { EventFeed } from '@/components/feed/EventFeed';
 import { ThreatPanelExpanded } from '@/components/threat/ThreatPanelExpanded';
 import { CaseDossierSheet } from '@/components/case/CaseDossierSheet';
+import { isCase, isContact } from '@/lib/case-helpers';
 
 interface Props {
   snapshot: Snapshot | null;
@@ -48,6 +49,8 @@ export function MobileLayout({
   // desktop dashboard. Mounting the sheet only on mobile prevents that
   // body-level lock from ever applying on desktop.
   const isMobileViewport = useMediaQuery('(max-width: 1023.98px)', false);
+  const caseRows = cases.filter(isCase);
+  const contactRows = cases.filter(isContact);
 
   return (
     <div data-testid="mobile-layout" className="flex flex-col">
@@ -56,6 +59,8 @@ export function MobileLayout({
         cases={cases}
         caseLocations={caseLocations}
         selectedCaseId={selectedCaseId}
+        caseCount={caseRows.length}
+        contactCount={contactRows.length}
       />
       <SituationBrief snapshot={snapshot} />
       <KpiGrid snapshot={snapshot} prevSnapshot={prevSnapshot} cases={cases} />

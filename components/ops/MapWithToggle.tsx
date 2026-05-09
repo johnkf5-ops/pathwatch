@@ -11,9 +11,11 @@ interface Props {
   cases: Case[];
   caseLocations: CaseLocation[];
   selectedCaseId: string | null;
+  caseCount: number;
+  contactCount: number;
 }
 
-export function MapWithToggle({ countries, cases, caseLocations, selectedCaseId }: Props) {
+export function MapWithToggle({ countries, cases, caseLocations, selectedCaseId, caseCount, contactCount }: Props) {
   const [open, setOpen] = useState<boolean>(true);
   const [hydrated, setHydrated] = useState(false);
 
@@ -44,7 +46,7 @@ export function MapWithToggle({ countries, cases, caseLocations, selectedCaseId 
           {open ? 'Hide Map' : 'Show Map'}
         </button>
         <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
-          {cases.length} TRACKED · {countries.length} COUNTRIES
+          {caseCount} CASES · {contactCount} CONTACTS · {countries.length} COUNTRIES
         </span>
       </div>
       {hydrated && open && (

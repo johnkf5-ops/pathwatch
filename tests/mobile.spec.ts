@@ -45,6 +45,14 @@ test('mobile: case selection opens bottom sheet, close dismisses', async ({ page
   await expect(sheet).toBeHidden();
 });
 
+test('mobile: MapWithToggle subtitle shows CASES + CONTACTS (no TRACKED)', async ({ page }) => {
+  await page.goto('/');
+  // Seed: 10 cases, 4 contacts.
+  await expect(page.getByText(/10 CASES.*4 CONTACTS/)).toBeVisible();
+  // The MapWithToggle subtitle no longer says TRACKED.
+  await expect(page.getByText(/\d+ TRACKED/)).toHaveCount(0);
+});
+
 test('mobile: KPI grid shows CASES + CONTACTS (no TRACKED)', async ({ page }) => {
   await page.goto('/');
   // Seed: 6 confirmed_case + 4 suspected_case = 10 cases; 4 contacts.

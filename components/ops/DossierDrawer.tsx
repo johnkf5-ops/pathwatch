@@ -123,7 +123,7 @@ export function DossierDrawer({
           </button>
         </div>
       )}
-      <div className="flex-1 overflow-y-scroll">{body}</div>
+      <div className="min-h-0 flex-1 overflow-y-scroll">{body}</div>
     </aside>
   );
 }

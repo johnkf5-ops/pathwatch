@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Monitor } from 'lucide-react';
 import type { Snapshot, ThreatAssessment } from '@/lib/types';
 import { THREAT_LEVEL_TOKEN } from '@/lib/threat-triggers';
-import { LiveVisitorCount } from './LiveVisitorCount';
+import { VisitorStats } from './VisitorStats';
 
 const RISK_COLOR: Record<NonNullable<Snapshot['risk_level']>, string> = {
   low: 'text-green border-green',
@@ -66,9 +66,7 @@ export function TopBar({
       </span>
       <span className="hidden items-center gap-4 text-text-secondary lg:ml-auto lg:flex">
         <span>SCOPE GLOBAL</span>
-        <span className="border-l border-border pl-4">
-          <LiveVisitorCount />
-        </span>
+        <VisitorStats />
         <span className="border-l border-border pl-4">UTC {utcStamp()}</span>
         <span className={`border-l border-border pl-4 ${riskClass.split(' ')[0]}`}>{riskLabel}</span>
       </span>

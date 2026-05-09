@@ -36,7 +36,7 @@ export default async function FactsPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <TopBar snapshot={snapshot} />
+      <TopBar snapshot={snapshot} threat={null} />
       <FactsClient facts={facts} />
     </div>
   );

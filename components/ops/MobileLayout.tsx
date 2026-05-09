@@ -10,7 +10,7 @@ import { MonitoringCohort } from './MonitoringCohort';
 import { MapWithToggle } from './MapWithToggle';
 import { VirusProfile } from '@/components/profile/VirusProfile';
 import { EventFeed } from '@/components/feed/EventFeed';
-import { ThreatBanner } from '@/components/threat/ThreatBanner';
+import { ThreatPanelExpanded } from '@/components/threat/ThreatPanelExpanded';
 import { CaseDossierSheet } from '@/components/case/CaseDossierSheet';
 
 interface Props {
@@ -42,7 +42,6 @@ export function MobileLayout({
 }: Props) {
   return (
     <div data-testid="mobile-layout" className="flex flex-col">
-      {threat && <ThreatBanner assessment={threat} />}
       <MapWithToggle
         countries={countries}
         cases={cases}
@@ -51,9 +50,10 @@ export function MobileLayout({
       />
       <SituationBrief snapshot={snapshot} />
       <KpiGrid snapshot={snapshot} prevSnapshot={prevSnapshot} cases={cases} />
-      <PostureMatrix countries={countries} />
+      {threat && <ThreatPanelExpanded assessment={threat} />}
       <Watchlist events={events} />
       <MonitoringCohort cases={monitoringCases} />
+      <PostureMatrix countries={countries} />
       <VirusProfile facts={facts} />
       <EventFeed events={events} />
       <CaseDossierSheet

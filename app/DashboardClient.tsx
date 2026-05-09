@@ -7,7 +7,6 @@ import type {
 import { getBrowserClient } from '@/lib/supabase-browser';
 import { TopBar } from '@/components/ops/TopBar';
 import { SituationBrief } from '@/components/ops/SituationBrief';
-import { KpiGrid } from '@/components/ops/KpiGrid';
 import { PostureMatrix } from '@/components/ops/PostureMatrix';
 import { Watchlist } from '@/components/ops/Watchlist';
 import { TabStrip, type Tab } from '@/components/ops/TabStrip';
@@ -17,7 +16,8 @@ import { DossierDrawer } from '@/components/ops/DossierDrawer';
 import { MonitoringCohort } from '@/components/ops/MonitoringCohort';
 import { MobileLayout } from '@/components/ops/MobileLayout';
 import { EventFeed } from '@/components/feed/EventFeed';
-import { ThreatBanner } from '@/components/threat/ThreatBanner';
+import { ThreatPanelExpanded } from '@/components/threat/ThreatPanelExpanded';
+import { KpiHud } from '@/components/ops/KpiHud';
 import { VirusProfile } from '@/components/profile/VirusProfile';
 
 interface Props {
@@ -168,8 +168,8 @@ export function DashboardClient({
   ];
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <TopBar snapshot={snapshot} />
+    <div className="flex min-h-screen flex-col lg:h-screen lg:min-h-0">
+      <TopBar snapshot={snapshot} threat={threat} />
 
       {/* Mobile (< lg): single-column stack with collapsible map + bottom sheet */}
       <div className="lg:hidden">
@@ -188,47 +188,56 @@ export function DashboardClient({
         />
       </div>
 
-      {/* Desktop (lg+): 35/65 grid + full-width feed */}
-      <div data-testid="desktop-layout" className="hidden lg:contents">
-        {threat && <ThreatBanner assessment={threat} />}
-        <div className="grid h-[calc(100vh-2rem)] lg:grid-cols-[35fr_65fr]">
-          {/* Sit-rep (left, ~35%) */}
-          <div className="overflow-y-auto border-b border-border lg:border-b-0 lg:border-r">
-            <SituationBrief snapshot={snapshot} />
-            <KpiGrid snapshot={snapshot} prevSnapshot={prevSnapshot} cases={cases} />
-            <PostureMatrix countries={countries} />
-            <Watchlist events={events} />
-            <MonitoringCohort cases={monitoringCases} />
-            <VirusProfile facts={facts} />
-          </div>
+      {/* Desktop (lg+): three-column flight deck — left context · center map · right lists · bottom event feed */}
+      <div
+        data-testid="desktop-layout"
+        className="hidden flex-1 lg:grid lg:min-h-0 lg:grid-cols-[260px_1fr_300px] lg:grid-rows-[1fr_180px]"
+      >
+        {/* Left: narrative context */}
+        <div className="overflow-y-auto border-r border-border">
+          <SituationBrief snapshot={snapshot} />
+          {threat && <ThreatPanelExpanded assessment={threat} />}
+          <VirusProfile facts={facts} />
+        </div>
 
-          {/* Workspace (right, ~65%) */}
-          <div className="relative flex flex-col overflow-hidden">
-            <TabStrip tabs={tabs} active={activeTab} onChange={(id) => setActiveTab(id as 'map' | 'country')} />
-            <div className="relative flex-1">
-              {activeTab === 'map' && (
-                <>
-                  <MapPane
-                    countries={countries}
-                    cases={cases}
-                    caseLocations={caseLocations}
-                    selectedCaseId={selectedCaseId}
-                  />
-                  <DossierDrawer
-                    cases={cases}
-                    caseLocations={caseLocations}
-                    countries={countries}
-                    events={events}
-                    caseCode={caseCode}
-                    countryCode={countryCode}
-                  />
-                </>
-              )}
-              {activeTab === 'country' && <ByCountryPane rows={countries} />}
-            </div>
+        {/* Center: map workspace with KPI HUD overlay */}
+        <div className="relative flex flex-col overflow-hidden">
+          <TabStrip tabs={tabs} active={activeTab} onChange={(id) => setActiveTab(id as 'map' | 'country')} />
+          <div className="relative flex-1">
+            {activeTab === 'map' && (
+              <>
+                <MapPane
+                  countries={countries}
+                  cases={cases}
+                  caseLocations={caseLocations}
+                  selectedCaseId={selectedCaseId}
+                />
+                <KpiHud snapshot={snapshot} prevSnapshot={prevSnapshot} cases={cases} />
+                <DossierDrawer
+                  cases={cases}
+                  caseLocations={caseLocations}
+                  countries={countries}
+                  events={events}
+                  caseCode={caseCode}
+                  countryCode={countryCode}
+                />
+              </>
+            )}
+            {activeTab === 'country' && <ByCountryPane rows={countries} />}
           </div>
         </div>
-        <EventFeed events={events} />
+
+        {/* Right: situational lists */}
+        <div className="overflow-y-auto border-l border-border">
+          <Watchlist events={events} />
+          <MonitoringCohort cases={monitoringCases} />
+          <PostureMatrix countries={countries} />
+        </div>
+
+        {/* Bottom: event feed strip spanning all three columns */}
+        <div className="col-span-3 overflow-y-auto border-t border-border">
+          <EventFeed events={events} />
+        </div>
       </div>
     </div>
   );

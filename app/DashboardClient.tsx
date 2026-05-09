@@ -170,20 +170,21 @@ export function DashboardClient({
     <div className="flex min-h-screen flex-col">
       <TopBar snapshot={snapshot} />
       {threat && <ThreatBanner assessment={threat} />}
-      <div className="grid h-[calc(100vh-2rem)] lg:grid-cols-2">
-        {/* Sit-rep (left) */}
+      <div className="grid h-[calc(100vh-2rem)] lg:grid-cols-[35fr_65fr]">
+        {/* Sit-rep (left, ~35%) */}
         <div className="overflow-y-auto border-b border-border lg:border-b-0 lg:border-r">
           <SituationBrief snapshot={snapshot} />
           <KpiGrid snapshot={snapshot} prevSnapshot={prevSnapshot} />
           <PostureMatrix countries={countries} />
           <Watchlist events={events} />
           <MonitoringCohort cases={monitoringCases} />
+          <VirusProfile facts={facts} />
         </div>
 
-        {/* Workspace (right) */}
-        <div className="relative flex flex-col overflow-y-auto">
+        {/* Workspace (right, ~65%) */}
+        <div className="relative flex flex-col overflow-hidden">
           <TabStrip tabs={tabs} active={activeTab} onChange={(id) => setActiveTab(id as 'map' | 'country')} />
-          <div className="relative min-h-[60vh] flex-shrink-0">
+          <div className="relative flex-1">
             {activeTab === 'map' && (
               <>
                 <MapPane
@@ -204,7 +205,6 @@ export function DashboardClient({
             )}
             {activeTab === 'country' && <ByCountryPane rows={countries} />}
           </div>
-          <VirusProfile facts={facts} />
         </div>
       </div>
 

@@ -191,7 +191,7 @@ export function VirusProfile({ facts }: { facts: Fact[] }) {
       </header>
 
       {/* Tile grid */}
-      <dl className="grid grid-cols-1 gap-px border-t border-border-soft bg-border-soft sm:grid-cols-2 md:grid-cols-3">
+      <dl className="grid grid-cols-1 gap-px border-t border-border-soft bg-border-soft sm:grid-cols-2">
         {tiles.map((s) => (
           <div key={s.tag} className="bg-bg px-4 py-3 min-w-0">
             <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">

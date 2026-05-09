@@ -49,7 +49,8 @@ body {
   font-size: 11px;
   line-height: 1.45;
   color: #d6dae6;
-  min-width: 180px;
+  min-width: 220px;
+  max-width: 340px;
 }
 .pathwatch-stop-tooltip .stop-num {
   font-size: 9px;

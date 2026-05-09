@@ -169,7 +169,7 @@ export function DashboardClient({
 
   return (
     <div className="flex min-h-screen flex-col lg:h-screen lg:min-h-0">
-      <TopBar snapshot={snapshot} threat={threat} />
+      <TopBar snapshot={snapshot} threat={threat} monitoringCount={monitoringCases.length} />
 
       {/* Mobile (< lg): single-column stack with collapsible map + bottom sheet */}
       <div className="lg:hidden">

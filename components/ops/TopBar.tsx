@@ -24,9 +24,11 @@ function utcStamp() {
 export function TopBar({
   snapshot,
   threat,
+  monitoringCount,
 }: {
   snapshot: Snapshot | null;
   threat: ThreatAssessment | null;
+  monitoringCount: number;
 }) {
   const risk = snapshot?.risk_level ?? null;
   const fatality = snapshot?.fatality_rate;
@@ -67,6 +69,15 @@ export function TopBar({
       <span className="hidden items-center gap-4 text-text-secondary lg:ml-auto lg:flex">
         <span>SCOPE GLOBAL</span>
         <VisitorStats />
+        <span className="border-l border-border pl-4">
+          CASES <span className="tabular-nums text-text">{snapshot?.total_cases ?? '—'}</span>
+        </span>
+        <span className="border-l border-border pl-4 text-red">
+          DEATHS <span className="tabular-nums">{snapshot?.total_deaths ?? '—'}</span>
+        </span>
+        <span className="border-l border-border pl-4">
+          MONITORING <span className="tabular-nums text-text">{monitoringCount}</span>
+        </span>
         <span className="border-l border-border pl-4">UTC {utcStamp()}</span>
         <span className={`border-l border-border pl-4 ${riskClass.split(' ')[0]}`}>{riskLabel}</span>
       </span>

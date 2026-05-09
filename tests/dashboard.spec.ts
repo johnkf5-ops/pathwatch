@@ -22,6 +22,14 @@ test('ops console renders sit-rep + tabs', async ({ page }) => {
   await expect(desktop.getByRole('tab', { name: /BY COUNTRY/ })).toBeVisible();
 });
 
+test('TopBar CASES chip uses case_class-derived count', async ({ page }) => {
+  await page.goto('/');
+  // Topbar chip is in <header>, hidden on mobile (lg:flex). Default test viewport
+  // is desktop (1280x720). Seed: 6 confirmed_case + 4 suspected_case = 10.
+  const header = page.locator('header').first();
+  await expect(header.getByText(/CASES\s+10/)).toBeVisible();
+});
+
 test('KPI HUD shows CASES (derived) and CONTACTS (no longer TRACKED)', async ({ page }) => {
   await page.goto('/');
   const desktop = page.getByTestId('desktop-layout');

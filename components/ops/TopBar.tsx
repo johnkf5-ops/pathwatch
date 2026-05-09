@@ -25,10 +25,12 @@ export function TopBar({
   snapshot,
   threat,
   monitoringCount,
+  caseCount,
 }: {
   snapshot: Snapshot | null;
   threat: ThreatAssessment | null;
   monitoringCount: number;
+  caseCount: number;
 }) {
   const risk = snapshot?.risk_level ?? null;
   const fatality = snapshot?.fatality_rate;
@@ -70,7 +72,7 @@ export function TopBar({
         <span>SCOPE GLOBAL</span>
         <VisitorStats />
         <span className="border-l border-border pl-4">
-          CASES <span className="tabular-nums text-text">{snapshot?.total_cases ?? '—'}</span>
+          CASES <span className="tabular-nums text-text">{caseCount}</span>
         </span>
         <span className="border-l border-border pl-4 text-red">
           DEATHS <span className="tabular-nums">{snapshot?.total_deaths ?? '—'}</span>

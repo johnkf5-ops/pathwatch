@@ -19,6 +19,7 @@ import { EventFeed } from '@/components/feed/EventFeed';
 import { ThreatPanelExpanded } from '@/components/threat/ThreatPanelExpanded';
 import { KpiHud } from '@/components/ops/KpiHud';
 import { VirusProfile } from '@/components/profile/VirusProfile';
+import { isCase } from '@/lib/case-helpers';
 
 interface Props {
   initialSnapshot: Snapshot | null;
@@ -161,6 +162,7 @@ export function DashboardClient({
 
   const activeCases = cases.filter((c) => c.status !== 'monitoring');
   const monitoringCases = cases.filter((c) => c.status === 'monitoring');
+  const caseRows = cases.filter(isCase);
 
   const tabs: Tab[] = [
     { id: 'map', label: 'MAP', count: activeCases.length },
@@ -169,7 +171,7 @@ export function DashboardClient({
 
   return (
     <div className="flex min-h-screen flex-col lg:h-screen lg:min-h-0">
-      <TopBar snapshot={snapshot} threat={threat} monitoringCount={monitoringCases.length} />
+      <TopBar snapshot={snapshot} threat={threat} monitoringCount={monitoringCases.length} caseCount={caseRows.length} />
 
       {/* Mobile (< lg): single-column stack with collapsible map + bottom sheet */}
       <div className="lg:hidden">

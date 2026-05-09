@@ -105,7 +105,7 @@ export function DossierDrawer({
     <aside
       data-testid="dossier-drawer"
       aria-hidden={!open}
-      className={`dossier-scroll fixed right-0 z-30 w-full max-w-[420px] overflow-y-scroll border-l border-border-strong bg-surface-2 transition-transform duration-200 ${open ? 'pointer-events-auto' : 'pointer-events-none'}`}
+      className={`fixed right-0 z-30 w-full max-w-[420px] overflow-y-auto border-l border-border-strong bg-surface-2 transition-transform duration-200 ${open ? 'pointer-events-auto' : 'pointer-events-none'}`}
       style={{
         top: '36px',
         bottom: '0',

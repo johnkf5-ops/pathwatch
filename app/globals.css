@@ -90,29 +90,3 @@ body {
   letter-spacing: 0.06em;
 }
 
-/* Always-visible custom scrollbar for the dossier drawer body — overrides
-   macOS overlay scrollbars that fade and are easy to miss-click. */
-.dossier-scroll {
-  scrollbar-gutter: stable;
-}
-.dossier-scroll::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
-}
-.dossier-scroll::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02);
-}
-.dossier-scroll::-webkit-scrollbar-thumb {
-  background: rgba(214, 218, 230, 0.18);
-  border: 3px solid transparent;
-  background-clip: padding-box;
-  border-radius: 6px;
-}
-.dossier-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(214, 218, 230, 0.32);
-  background-clip: padding-box;
-}
-.dossier-scroll {
-  scrollbar-color: rgba(214, 218, 230, 0.25) transparent;
-  scrollbar-width: thin;
-}

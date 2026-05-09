@@ -133,64 +133,64 @@ INSERT INTO snapshots (disease, total_cases, total_deaths, countries_affected, c
 -- ============================================================
 -- cases (real MV Hondius cohort, anonymized via case_code)
 -- ============================================================
-INSERT INTO cases (case_code, status, is_index_case, role, exposure_type, age_range, sex,
+INSERT INTO cases (case_code, case_class, status, is_index_case, role, exposure_type, age_range, sex,
                    exposure_country, exposure_date, onset_date, confirmed_date, outcome_date,
                    current_country, dossier, notes, source_event_id) VALUES
-  ('MVH-001', 'deceased', true,  'passenger', 'rodent_contact',     '60-69', 'F', 'AR',
+  ('MVH-001', 'confirmed_case', 'deceased', true,  'passenger', 'rodent_contact',     '60-69', 'F', 'AR',
    '2026-04-01','2026-04-15','2026-04-18','2026-04-22','NL',
    'Dutch retiree, mid-60s, infectious-disease researcher emerita. Visited Argentina and Chile in late March 2026 on a private birdwatching expedition focused on Andean condors and rufous-collared sparrows. Stayed in a rustic cabin near Ushuaia 2026-03-29 to 2026-04-02 where rodent contact is the suspected exposure event. Returned to Amsterdam 2026-04-08, presented to Erasmus MC with hantavirus pulmonary syndrome 2026-04-15, deceased 2026-04-22 of acute respiratory distress and cardiogenic shock. ANDV confirmed via RT-PCR. The familial cohort with MVH-002 triggered the entire MV Hondius cascade.',
    'Index case for the outbreak. Family requested media privacy.',
    (SELECT id FROM events WHERE title LIKE 'Dutch index couple obituary%' LIMIT 1)),
 
-  ('MVH-002', 'deceased', true,  'passenger', 'person_to_person',   '60-69', 'M', 'AR',
+  ('MVH-002', 'confirmed_case', 'deceased', true,  'passenger', 'person_to_person',   '60-69', 'M', 'AR',
    '2026-04-01','2026-04-17','2026-04-19','2026-04-25','NL',
    'Dutch retiree, mid-60s, partner of MVH-001. Same Patagonia birdwatching itinerary; close-contact exposure to symptomatic partner before either knew they were ill. Onset 2026-04-17, two days after MVH-001. Hospitalized at Erasmus MC; deceased 2026-04-25 from progressive respiratory failure. ANDV confirmed via RT-PCR with sequence identity to MVH-001 (no mutation between hosts). Together they form the index dyad for the MV Hondius cluster.',
    'Confirms ANDV person-to-person transmission within the index dyad.',
    (SELECT id FROM events WHERE title LIKE 'Dutch index couple obituary%' LIMIT 1)),
 
-  ('MVH-003', 'confirmed', false, 'passenger', 'person_to_person',  '40-49', 'F', 'AR',
+  ('MVH-003', 'confirmed_case', 'confirmed', false, 'passenger', 'person_to_person',  '40-49', 'F', 'AR',
    '2026-04-04','2026-04-25','2026-04-27', NULL, 'CV',
    'German national, MV Hondius passenger who shared a guided shore excursion with the Dutch index couple in Ushuaia 2026-04-01. Boarded MV Hondius 2026-04-02. Onset 2026-04-25 mid-voyage. Currently receiving care aboard the ship while it remains anchored off Praia, Cape Verde. Stable, mild presentation.',
    'Earliest confirmed onboard case after the index dyad.',
    (SELECT id FROM events WHERE title LIKE 'WHO confirms hantavirus%' LIMIT 1)),
 
-  ('MVH-004', 'confirmed', false, 'crew',      'person_to_person',  '30-39', 'M', 'AR',
+  ('MVH-004', 'confirmed_case', 'confirmed', false, 'crew',      'person_to_person',  '30-39', 'M', 'AR',
    '2026-04-05','2026-04-28','2026-04-30', NULL, 'CV',
    'Filipino-national cabin steward assigned to the deck the index couple occupied. Likely exposure via contaminated linens and prolonged close contact during cleaning. Onset 2026-04-28; isolated to crew quarters; transferred to onshore Praia hospital 2026-05-04 with critical respiratory symptoms but downgraded to stable 2026-05-06.',
    'First crew case. Triggered onboard quarantine of the affected deck.',
    (SELECT id FROM events WHERE title LIKE 'WHO confirms hantavirus%' LIMIT 1)),
 
-  ('MVH-005', 'suspected', false, 'passenger', 'unknown',           '50-59', 'F', NULL,
+  ('MVH-005', 'suspected_case', 'suspected', false, 'passenger', 'unknown',           '50-59', 'F', NULL,
    NULL, NULL, NULL, NULL, 'US',
    'US national, California resident. Disembarked MV Hondius at intermediate port before the cluster was identified. CDC contact tracing found her among the manifest; under voluntary home isolation in CA. Asymptomatic at last check 2026-05-06; PCR pending.',
    'Part of the US monitoring cohort across CA, GA, AZ.',
    (SELECT id FROM events WHERE title LIKE 'CDC: Risk to American%' LIMIT 1)),
 
-  ('MVH-006', 'suspected', false, 'passenger', 'unknown',           '60-69', 'M', NULL,
+  ('MVH-006', 'suspected_case', 'suspected', false, 'passenger', 'unknown',           '60-69', 'M', NULL,
    NULL, NULL, NULL, NULL, 'US',
    'US national, Georgia resident, MV Hondius passenger. Disembarked early. Asymptomatic; under voluntary home isolation. PCR pending.',
    'Same monitoring cohort as MVH-005.',
    (SELECT id FROM events WHERE title LIKE 'CDC: Risk to American%' LIMIT 1)),
 
-  ('MVH-007', 'suspected', false, 'passenger', 'unknown',           '40-49', 'F', NULL,
+  ('MVH-007', 'suspected_case', 'suspected', false, 'passenger', 'unknown',           '40-49', 'F', NULL,
    NULL, NULL, NULL, NULL, 'US',
    'US national, Arizona resident. MV Hondius passenger. Asymptomatic; voluntary home isolation. PCR pending.',
    'Same monitoring cohort as MVH-005 / MVH-006.',
    (SELECT id FROM events WHERE title LIKE 'CDC: Risk to American%' LIMIT 1)),
 
-  ('MVH-008', 'critical',  false, 'passenger', 'person_to_person',  '70-79', 'M', 'AR',
+  ('MVH-008', 'confirmed_case', 'critical',  false, 'passenger', 'person_to_person',  '70-79', 'M', 'AR',
    '2026-04-04','2026-04-22','2026-04-24', NULL, 'CV',
    'Italian national, eldest confirmed MV Hondius case. Pre-existing COPD aggravates respiratory presentation. Mechanical ventilation since 2026-05-02 at the Praia hospital. Prognosis guarded.',
    'Most clinically severe active case as of 2026-05-07.',
    (SELECT id FROM events WHERE title LIKE 'WHO confirms hantavirus%' LIMIT 1)),
 
-  ('MVH-009', 'suspected', false, 'passenger', 'unknown',           '30-39', 'M', NULL,
+  ('MVH-009', 'suspected_case', 'suspected', false, 'passenger', 'unknown',           '30-39', 'M', NULL,
    NULL, NULL, NULL, NULL, 'CH',
    'Swiss national, MV Hondius passenger who disembarked at Praia 2026-04-30 and flew home to Zurich 2026-05-01. Cohabitating partner CH-001 became symptomatic 2026-05-04. MVH-009 himself remains asymptomatic; in voluntary isolation. PCR pending.',
    'Linked to the first known secondary case (CH-001).',
    (SELECT id FROM events WHERE title LIKE 'Switzerland confirms first secondary%' LIMIT 1)),
 
-  ('CH-001',  'confirmed', false, 'contact',   'person_to_person',  '30-39', 'F', 'CH',
+  ('CH-001',  'confirmed_case', 'confirmed', false, 'contact',   'person_to_person',  '30-39', 'F', 'CH',
    '2026-05-02','2026-05-04','2026-05-06', NULL, 'CH',
    'Swiss national, intimate partner of MVH-009. First confirmed secondary (non-cruise) ANDV case in this outbreak. Hospitalized at Universitätsspital Zürich 2026-05-06; clinically stable, oxygen support but not ventilated.',
    'Validates the close-contact transmission risk MVH-009 represented.',
@@ -251,28 +251,28 @@ INSERT INTO case_locations (case_id, country_code, region, location_name, latitu
 -- ============================================================
 -- monitoring cohort (people in active 42-day exposure window)
 -- ============================================================
-INSERT INTO cases (case_code, status, is_index_case, role, exposure_type, age_range, sex,
+INSERT INTO cases (case_code, case_class, status, is_index_case, role, exposure_type, age_range, sex,
                    exposure_country, exposure_date, current_country, dossier, notes,
                    clearance_date) VALUES
-  ('NJ-MON-001', 'monitoring', false, 'contact', 'person_to_person', '40-49', 'F', 'US',
+  ('NJ-MON-001', 'contact', 'monitoring', false, 'contact', 'person_to_person', '40-49', 'F', 'US',
    '2026-04-01', 'US',
    'New Jersey resident; close-contact exposure to a returning MV Hondius passenger transiting through Newark Liberty (EWR) on 2026-04-01. Asymptomatic; under voluntary daily check-in with NJDOH for the duration of the 42-day exposure window.',
    'CDC monitoring; not a confirmed case.',
    '2026-05-13'),
 
-  ('NJ-MON-002', 'monitoring', false, 'contact', 'person_to_person', '50-59', 'M', 'US',
+  ('NJ-MON-002', 'contact', 'monitoring', false, 'contact', 'person_to_person', '50-59', 'M', 'US',
    '2026-04-01', 'US',
    'New Jersey resident, household contact of NJ-MON-001. Same 2026-04-01 exposure. Asymptomatic; voluntary monitoring through clearance.',
    'CDC monitoring; not a confirmed case.',
    '2026-05-13'),
 
-  ('KL592-MON-001', 'monitoring', false, 'contact', 'person_to_person', '30-39', 'F', 'NL',
+  ('KL592-MON-001', 'contact', 'monitoring', false, 'contact', 'person_to_person', '30-39', 'F', 'NL',
    '2026-05-04', 'NL',
    'Passenger seated within 2 rows of a symptomatic MV Hondius returnee on KLM flight 592, 2026-05-04 (the same flight as KL-001). Asymptomatic; remote daily symptom check via Dutch GGD throughout the exposure window.',
    'GGD monitoring; not a confirmed case.',
    '2026-06-15'),
 
-  ('KL592-MON-002', 'monitoring', false, 'crew', 'person_to_person', '20-29', 'F', 'NL',
+  ('KL592-MON-002', 'contact', 'monitoring', false, 'crew', 'person_to_person', '20-29', 'F', 'NL',
    '2026-04-25', 'NL',
    'KLM cabin crew member, partial-shift contact with the symptomatic MV Hondius returnee on KL592, 2026-04-25 (earlier flight than KL-001 attendant). Asymptomatic; under occupational health monitoring.',
    'GGD monitoring; not a confirmed case.',

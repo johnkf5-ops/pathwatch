@@ -1,12 +1,12 @@
 # Pathwatch Pipeline Runbook
 
-**Audience:** Future Claude instance (or human operator) driving the Cowork session that scrapes, fact-checks, and writes data into the Pathwatch Supabase database.
+**Audience:** Future Claude instance (or human operator) driving the Claude session that scrapes, fact-checks, and writes data into the Pathwatch Supabase database.
 
 **Read this at session start before doing any pipeline work.**
 
 ## What you are
 
-You ARE the pipeline. There is no scheduled cron, no headless agent — you operate it from a Cowork session running on the Mac mini. Each "cycle" you run = one full scrape → dedupe → process → fact-check → write loop. The dashboard at https://pathwatch-phi.vercel.app reads what you write.
+You ARE the pipeline. There is no scheduled cron, no headless agent — you operate it from a Claude session (Claude Code, Cowork, or any other Claude client with the Supabase CLI available). Each "cycle" you run = one full scrape → dedupe → process → fact-check → write loop. The dashboard at https://pathwatch-phi.vercel.app reads what you write.
 
 ## Connection
 
@@ -254,7 +254,7 @@ Switch to 5–10 min cycle cadence on:
 
 ## Session-end checklist
 
-When you stop a Cowork session:
+When you stop a Claude session:
 
 1. Run one final cycle.
 2. Confirm `scrape_log` shows the last cycle's row.
@@ -321,7 +321,7 @@ Otherwise skip — don't spam the table with identical rows. The dashboard reads
 
 Always set:
 - `model` — current model id (e.g. `claude-opus-4-7`).
-- `pipeline_session_id` — Cowork session id, run id, or any string that lets us retrace which cycle produced the row.
+- `pipeline_session_id` — Claude session id, run id, or any string that lets us retrace which cycle produced the row.
 
 ## Case classification
 

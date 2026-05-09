@@ -101,17 +101,20 @@ export function DossierDrawer({
 
   const headerLabel = caseCode ? `DOSSIER · ${caseCode}` : countryCode ? `COUNTRY · ${countryCode}` : 'DETAILS';
 
-  // Layout heights used to bound the inner scroll area regardless of how the
-  // parent flex/grid chain resolves. TopBar=36px, EventFeed strip=180px,
-  // TabStrip≈32px, drawer header≈33px → ~281px of chrome around the body.
-  const SCROLL_MAX = 'calc(100vh - 281px)';
+  // Pin the drawer's height directly to the viewport so its inner overflow
+  // scroll has a guaranteed bound. Outer chrome we exclude:
+  //   TopBar 36px + EventFeed strip 180px + TabStrip 32px = 248px
+  const DRAWER_HEIGHT = 'calc(100vh - 248px)';
 
   return (
     <aside
       data-testid="dossier-drawer"
       aria-hidden={!open}
-      className="pointer-events-none absolute inset-y-0 right-0 z-10 w-full max-w-[420px] transition-transform duration-200"
-      style={{ transform: open ? 'translateX(0)' : 'translateX(100%)' }}
+      className="pointer-events-none absolute right-0 top-0 z-10 w-full max-w-[420px] transition-transform duration-200"
+      style={{
+        height: DRAWER_HEIGHT,
+        transform: open ? 'translateX(0)' : 'translateX(100%)',
+      }}
     >
       <div
         className={`flex h-full w-full flex-col overflow-hidden border-l border-border-strong bg-surface-2 ${open ? 'pointer-events-auto' : ''}`}
@@ -131,10 +134,7 @@ export function DossierDrawer({
             </button>
           </div>
         )}
-        <div
-          className="overflow-y-auto"
-          style={{ maxHeight: SCROLL_MAX, minHeight: 0 }}
-        >
+        <div className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>
           {body}
         </div>
       </div>

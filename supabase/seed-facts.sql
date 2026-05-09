@@ -217,6 +217,24 @@ INSERT INTO facts (category, title, content, verification_status, confidence, so
    ARRAY['https://www.cdc.gov/hantavirus/clinical-overview.html'],
    ARRAY['cdc'],
    NULL,'2026-05-07 13:00:00+00',
-   ARRAY['andes-virus','taxonomy','bunyavirales','hantaviridae','key:family'])
+   ARRAY['andes-virus','taxonomy','bunyavirales','hantaviridae','key:family']),
+
+  ('clinical',
+   'Symptoms: fever and muscle pain, then severe lung failure',
+   'Initial flu-like phase (3-7 days): fever, headache, muscle pain, gastrointestinal upset. Patient typically improves briefly, then deteriorates rapidly into the cardiopulmonary phase: shortness of breath, fluid in the lungs, low blood pressure. Severe cases progress to hantavirus pulmonary syndrome (HPS) with cardiogenic shock. Death, when it occurs, usually follows the acute pulmonary phase by 24-48 hours.',
+   'confirmed', 0.95,
+   ARRAY['https://www.cdc.gov/hantavirus/clinical-overview.html'],
+   ARRAY['cdc'],
+   NULL,'2026-05-07 13:00:00+00',
+   ARRAY['andes-virus','symptoms','HPS','clinical-presentation','key:symptoms']),
+
+  ('history',
+   'Past ANDV outbreaks: El Bolson 1996, Epuyen 2018 (both self-limited)',
+   '1996 El Bolson, Rio Negro province, Argentina: 20 cases, first documented person-to-person ANDV transmission; cluster burned out without sustained spread. 2018 Epuyen, Chubut province, Argentina: 36 cases including a documented superspreading event; also self-limited. Both outbreaks featured close-contact transmission within households and healthcare settings rather than community spread, consistent with R0 < 1.',
+   'confirmed', 0.92,
+   ARRAY['https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(96)91194-3','https://www.who.int/news/item/07-05-2026-who-s-response-to-hantavirus-cases-linked-to-a-cruise-ship'],
+   ARRAY['peer_reviewed','who'],
+   '1996-08-15 00:00:00+00','2026-05-07 13:00:00+00',
+   ARRAY['andes-virus','history','el-bolson-1996','epuyen-2018','key:past_outbreaks'])
 
 ON CONFLICT (disease, title) DO NOTHING;

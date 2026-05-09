@@ -57,7 +57,7 @@ export function ByCountryPane({ rows }: { rows: CountryStat[] }) {
     const u = new URLSearchParams(searchParams.toString());
     u.delete('case');
     u.set('country', code);
-    router.replace(`${pathname}?${u.toString()}`);
+    router.replace(`${pathname}?${u.toString()}`, { scroll: false });
   }
 
   return (

@@ -34,7 +34,7 @@ export function DossierDrawer({
     u.delete('case');
     u.delete('country');
     const qs = u.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname);
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }
 
   let body: React.ReactNode = null;
@@ -84,6 +84,7 @@ export function DossierDrawer({
                   <Link
                     href={`?case=${c.case_code}`}
                     replace
+                    scroll={false}
                     className="flex items-center justify-between border-b border-border-soft py-2 last:border-0 hover:bg-surface-2"
                   >
                     <span className="font-mono text-[11.5px] text-text">{caseLabel(c)}</span>

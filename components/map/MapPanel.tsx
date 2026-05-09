@@ -5,7 +5,7 @@ import maplibregl, { type Map as MlMap, type GeoJSONSource } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { format, parseISO } from 'date-fns';
 import { MapboxOverlay } from '@deck.gl/mapbox';
-import { ScatterplotLayer } from '@deck.gl/layers';
+import { ScatterplotLayer, PathLayer } from '@deck.gl/layers';
 import { TripsLayer } from '@deck.gl/geo-layers';
 import type { CountryStat, Case, CaseLocation } from '@/lib/types';
 import { countryBucket, BUCKET_COLOR } from '@/lib/map-colors';
@@ -116,7 +116,7 @@ export function MapPanel({ countries, cases, caseLocations, selectedCaseId }: Pr
         const u = new URLSearchParams(searchParams.toString());
         u.delete('case');
         u.set('country', iso2);
-        router.replace(`${pathname}?${u.toString()}`);
+        router.replace(`${pathname}?${u.toString()}`, { scroll: false });
       });
       map.on('mouseenter', 'countries-fill', () => (map.getCanvas().style.cursor = 'pointer'));
       map.on('mouseleave', 'countries-fill', () => (map.getCanvas().style.cursor = ''));
@@ -188,7 +188,7 @@ export function MapPanel({ countries, cases, caseLocations, selectedCaseId }: Pr
           const u = new URLSearchParams(searchParams.toString());
           u.delete('country');
           u.set('case', m.case.case_code);
-          router.replace(`${pathname}?${u.toString()}`);
+          router.replace(`${pathname}?${u.toString()}`, { scroll: false });
         });
         markers.push(marker);
       }
@@ -300,6 +300,19 @@ export function MapPanel({ countries, cases, caseLocations, selectedCaseId }: Pr
 
       overlay.setProps({
         layers: [
+          // Static base path: full route always visible at low opacity
+          new PathLayer<{ path: [number, number][] }>({
+            id: 'travel-path-static',
+            data: [{ path: path.map((p) => [p[0], p[1]] as [number, number]) }],
+            getPath: (d) => d.path,
+            getColor: [...(rgb as [number, number, number]), 90] as [number, number, number, number],
+            getWidth: 2,
+            widthUnits: 'pixels',
+            widthMinPixels: 1.5,
+            jointRounded: true,
+            capRounded: true,
+          }),
+          // Animated trail: bright leading-edge pulse that loops over the static path
           new TripsLayer({
             id: 'travel-trail',
             data: [{ path }],

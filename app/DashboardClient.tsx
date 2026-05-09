@@ -229,8 +229,8 @@ export function DashboardClient({
 
         {/* Right: situational lists */}
         <div className="overflow-y-auto border-l border-border">
-          <Watchlist events={events} />
           <MonitoringCohort cases={monitoringCases} />
+          <Watchlist events={events} />
           <PostureMatrix countries={countries} />
         </div>
 

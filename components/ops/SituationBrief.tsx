@@ -12,8 +12,9 @@ export function SituationBrief({ snapshot }: { snapshot: Snapshot | null }) {
     );
   }
 
-  const headline = snapshot.trend_description ?? 'Outbreak status updated.';
   const fresh = formatDistanceToNow(parseISO(snapshot.created_at), { addSuffix: true }).toUpperCase();
+  const developments = snapshot.key_developments ?? [];
+  const trendLabel = snapshot.trend?.toUpperCase();
 
   return (
     <section className="border-b border-border px-4 py-4">
@@ -27,11 +28,29 @@ export function SituationBrief({ snapshot }: { snapshot: Snapshot | null }) {
           {fresh}
         </span>
       </div>
-      <h3 className="mt-2 font-mono text-[22px] font-bold leading-tight tracking-[-0.01em] text-text">
-        {headline}
-      </h3>
+
+      {(trendLabel || snapshot.trend_description) && (
+        <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-[0.14em]">
+          {trendLabel && <span className="text-text-muted">TREND <span className="text-text">{trendLabel}</span></span>}
+          {snapshot.trend_description && (
+            <span className="text-text-secondary normal-case tracking-normal">{snapshot.trend_description}</span>
+          )}
+        </div>
+      )}
+
+      {developments.length > 0 && (
+        <ul className="mt-3 space-y-1.5">
+          {developments.map((dev, i) => (
+            <li key={i} className="flex gap-2 font-mono text-[13px] leading-snug text-text">
+              <span className="select-none text-green">▸</span>
+              <span>{dev}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
       {snapshot.ai_analysis && (
-        <p className="mt-3 max-w-[60ch] text-[13px] leading-[1.5] text-text-secondary">
+        <p className="mt-4 max-w-[72ch] text-[13px] leading-[1.55] text-text-secondary">
           {snapshot.ai_analysis}
         </p>
       )}

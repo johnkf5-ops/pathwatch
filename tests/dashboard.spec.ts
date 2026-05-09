@@ -157,6 +157,22 @@ test('threat banner renders + expands', async ({ page }) => {
   await expect(desktop.getByText('POLYMARKET', { exact: true })).toBeVisible();
 });
 
+test('smoke: CASES displayed = sum of case_class IN (confirmed,probable,suspected)', async ({ page }) => {
+  await page.goto('/');
+  // Topbar chip (desktop, lg:flex). Pattern: "CASES <number>".
+  const header = page.locator('header').first();
+  const topbarChip = header.getByText(/CASES\s+\d+/);
+  await expect(topbarChip).toBeVisible();
+  const topbarText = (await topbarChip.textContent()) ?? '';
+  const topbarCount = Number(topbarText.replace(/\D/g, ''));
+
+  // Mobile KPI tile is rendered in DOM but visually hidden on desktop viewport.
+  await expect(page.getByTestId('kpi-cases')).toContainText(String(topbarCount));
+
+  // Sanity: derived value should be 10 from seed (6 confirmed + 4 suspected).
+  expect(topbarCount).toBe(10);
+});
+
 test('OG image generates', async ({ request }) => {
   const res = await request.get('/opengraph-image');
   expect(res.status()).toBe(200);

@@ -1,4 +1,4 @@
-import type { Snapshot } from '@/lib/types';
+import type { Snapshot, Case } from '@/lib/types';
 import { formatNumber, formatPercent } from '@/lib/format';
 import { SectionHeader } from './SectionHeader';
 import { KpiTile } from './KpiTile';
@@ -22,14 +22,17 @@ function delta(
 export function KpiGrid({
   snapshot,
   prevSnapshot,
+  cases: caseRows,
 }: {
   snapshot: Snapshot | null;
   prevSnapshot: Snapshot | null;
+  cases: Case[];
 }) {
   const cases = snapshot?.total_cases ?? null;
   const deaths = snapshot?.total_deaths ?? null;
   const cfr = snapshot?.fatality_rate ?? null;
   const countries = snapshot?.countries_affected ?? null;
+  const tracked = caseRows.length;
   const dCases = delta(cases, prevSnapshot?.total_cases, 'pct');
   const dDeaths = delta(deaths, prevSnapshot?.total_deaths, 'pct');
   const dCfr = delta(cfr, prevSnapshot?.fatality_rate, 'pp');
@@ -39,7 +42,20 @@ export function KpiGrid({
     <section className="border-b border-border px-4 py-4">
       <SectionHeader>KEY METRICS</SectionHeader>
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <KpiTile testId="kpi-cases" label="CASES" value={formatNumber(cases)} delta={dCases?.text} deltaTone={dCases?.tone} />
+        <KpiTile
+          testId="kpi-cases"
+          label="CASES"
+          value={formatNumber(cases)}
+          subtitle="CONFIRMED + SUSPECTED"
+          delta={dCases?.text}
+          deltaTone={dCases?.tone}
+        />
+        <KpiTile
+          testId="kpi-tracked"
+          label="TRACKED"
+          value={formatNumber(tracked)}
+          subtitle="INCL. MONITORING + CONTACTS"
+        />
         <KpiTile testId="kpi-deaths" label="DEATHS" value={formatNumber(deaths)} delta={dDeaths?.text} deltaTone={dDeaths?.tone} />
         <KpiTile testId="kpi-cfr" label="FATALITY RATE" value={formatPercent(cfr)} delta={dCfr?.text} deltaTone={dCfr?.tone} />
         <KpiTile testId="kpi-countries" label="COUNTRIES" value={formatNumber(countries)} delta={dCountries?.text} deltaTone="neutral" />

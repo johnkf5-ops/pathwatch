@@ -50,7 +50,7 @@ export function MobileLayout({
         selectedCaseId={selectedCaseId}
       />
       <SituationBrief snapshot={snapshot} />
-      <KpiGrid snapshot={snapshot} prevSnapshot={prevSnapshot} />
+      <KpiGrid snapshot={snapshot} prevSnapshot={prevSnapshot} cases={cases} />
       <PostureMatrix countries={countries} />
       <Watchlist events={events} />
       <MonitoringCohort cases={monitoringCases} />

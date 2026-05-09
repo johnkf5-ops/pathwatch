@@ -13,9 +13,12 @@ You ARE the pipeline. There is no scheduled cron, no headless agent — you oper
 | | |
 |---|---|
 | Supabase URL | `https://wtatysorlkcteleqjzkm.supabase.co` |
-| Schema | events, snapshots, country_stats, scrape_log, cases, case_locations, facts, threat_assessments |
-| Service role key | Supabase dashboard → Settings → API Keys → "Secret key". **Never commit this.** Read it into the session env on each cycle. |
-| Realtime | Enabled on events, snapshots, country_stats, cases, case_locations, facts, threat_assessments |
+| Schema | events, snapshots, country_stats, scrape_log, cases, case_locations, facts, threat_assessments, visitor_log |
+| Access pattern (preferred) | `supabase db query --linked` for all reads and writes. The Supabase CLI is already authenticated via `vercel link` / `supabase link`. No service-role key needed in session env. |
+| Service role key (fallback) | Available in Supabase dashboard → Settings → API Keys → "Secret key" if a session must use REST API for some reason. **Never commit this.** |
+| Realtime | Enabled on events, snapshots, country_stats, cases, case_locations, facts, threat_assessments, visitor_log |
+
+See `docs/runbooks/pipeline-operator.md` for operator-facing setup details.
 
 ## Cycle cadence
 
@@ -116,11 +119,59 @@ INSERT scrape_log row (source, results_found, events_created, duplicates_skipped
 After writing, **every 4th cycle** (or immediately on a sig-5 event):
 
 ```
-Aggregate fresh totals from country_stats.
+Aggregate fresh totals from cases (filtered by case_class) + country_stats.
 Compare to last snapshot.
 If material change:
-  INSERT snapshots (total_cases, total_deaths, countries_affected, fatality_rate, trend, trend_description, risk_level, key_developments[], ai_analysis)
+  INSERT snapshots (
+    total_cases,         -- cases.filter(case_class IN confirmed/probable/suspected).length
+    total_deaths,        -- cases.filter(status='deceased').length
+    total_contacts,      -- cases.filter(case_class IN contact/returnee).length
+    countries_affected,  -- count of distinct countries involved (incl. contact-tracing reach)
+    countries_list,      -- ISO codes of involved countries
+    fatality_rate,       -- total_deaths / total_cases (use cases denominator, not all-tracked)
+    trend, trend_description, risk_level, key_developments[], ai_analysis
+  )
 ```
+
+**Always derive `total_cases` and `total_contacts` from the `case_class` filter on the live `cases` table** — never write arbitrary numbers. The UI also derives from `case_class` for live counts; if the snapshot disagrees with the derived number, panels disagree.
+
+## UI output coverage map
+
+Every dashboard surface is fed by one or more of the writes above. Use this map to verify a cycle's writes will refresh everything that should refresh:
+
+| UI surface | Table | Field(s) read |
+|---|---|---|
+| TopBar pandemic-probability chip + threat level | `threat_assessments` | latest row: `pandemic_probability`, `threat_level` |
+| TopBar CASES chip | `cases` (live filter) | `case_class IN (confirmed_case, probable_case, suspected_case)` |
+| TopBar DEATHS chip | `snapshots` | latest `total_deaths` |
+| TopBar MONITORING chip | `cases` (live filter) | `status = 'monitoring'` |
+| TopBar VIEWING chip | (presence channel) | live websocket count |
+| TopBar UTC + RISK chips | system + `snapshots` | system clock + `risk_level` |
+| Situation Brief — TREND label + headline | `snapshots` | `trend` + `trend_description` |
+| Situation Brief — bullets | `snapshots` | `key_developments[]` |
+| Assessment narrative + reasoning | `threat_assessments` | `summary`, `reasoning` |
+| Assessment KEY SIGNALS pills | `threat_assessments` | `r0_estimate`, `mutation_status`, `secondary_attack_rate`, `containment_effectiveness` |
+| Assessment Polymarket grid | `threat_assessments` | `polymarket_pandemic_odds`, `polymarket_us_case_odds`, `polymarket_vaccine_odds`, `polymarket_lab_leak_odds` |
+| Assessment AI vs market note | `threat_assessments` | `ai_vs_market_note` |
+| Assessment triggers | `threat_assessments` | `triggers_watching[]`, `triggers_tripped[]` |
+| Map — country choropleth | `country_stats` | `cases`, `status` |
+| Map — case markers | `cases` + `case_locations` | latest `currentLocation` per case |
+| Map — Palantir trace | `case_locations` | full timeline ordered by `arrived_at` for selected case |
+| KPI HUD CASES tile | `cases` (live filter) | `case_class IN (confirmed_case, probable_case, suspected_case)` |
+| KPI HUD CONTACTS tile | `cases` (live filter) | `case_class IN (contact, returnee)` |
+| KPI HUD DEATHS / FATALITY / COUNTRIES | `snapshots` | `total_deaths`, `fatality_rate`, `countries_affected` |
+| Map subtitle | derived | `caseCount · contactCount · countries.length` |
+| BY COUNTRY tab | `country_stats` | full table sorted by severity |
+| Watchlist (right column alerts) | `events` | `significance >= 3`, ordered by `created_at` DESC |
+| Monitoring Cohort | `cases` | `status = 'monitoring'`, with ALL/CONTACTS/RETURNEES filter on `case_class` |
+| Posture Matrix (Countries Affected) | `country_stats` | full table sorted by deaths/cases/status |
+| Virus Profile | `facts` | rows with `category IN (pathogen, transmission, clinical)` and `key:*` tags |
+| Case dossier drawer | `cases` + `case_locations` + linked `events` | full dossier when a case is opened |
+| Intelligence feed (horizontal ticker) | `events` | filtered by tab (`?tab=`) |
+| OG image | `snapshots` | `total_cases`, `total_deaths`, `countries_affected`, `risk_level` |
+| `scrape_log` (operator-only) | `scrape_log` | per-cycle stats |
+
+**Rule of thumb:** if a cycle adds an event, write it. If it changes case classification or status, update the case row. If country totals shift, upsert `country_stats`. If aggregate totals or trend changes materially, insert a new `snapshots` row. If the threat picture shifted, insert a new `threat_assessments` row (per §4 of "Threat assessment cycle"). One cycle can write to all five tables; usually it writes to one or two.
 
 ## Source credibility tiers
 

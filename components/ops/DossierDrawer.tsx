@@ -101,46 +101,33 @@ export function DossierDrawer({
 
   const headerLabel = caseCode ? `DOSSIER · ${caseCode}` : countryCode ? `COUNTRY · ${countryCode}` : 'DETAILS';
 
-  // Pin the drawer's height directly to the viewport so its inner overflow
-  // scroll has a guaranteed bound. Outer chrome we exclude:
-  //   TopBar 36px + EventFeed strip 180px + TabStrip 32px = 248px
-  const DRAWER_HEIGHT = 'calc(100vh - 248px)';
-
   return (
     <aside
       data-testid="dossier-drawer"
       aria-hidden={!open}
-      className="pointer-events-none absolute right-0 top-0 z-10 w-full max-w-[420px] transition-transform duration-200"
+      className={`dossier-scroll fixed right-0 z-30 w-full max-w-[420px] overflow-y-scroll border-l border-border-strong bg-surface-2 transition-transform duration-200 ${open ? 'pointer-events-auto' : 'pointer-events-none'}`}
       style={{
-        height: DRAWER_HEIGHT,
+        top: '36px',
+        bottom: '0',
         transform: open ? 'translateX(0)' : 'translateX(100%)',
       }}
     >
-      <div
-        className={`flex h-full w-full flex-col overflow-hidden border-l border-border-strong bg-surface-2 ${open ? 'pointer-events-auto' : ''}`}
-      >
-        {open && (
-          <div className="flex shrink-0 items-center justify-between border-b border-border bg-bg-2 px-3 py-2">
-            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
-              {headerLabel}
-            </span>
-            <button
-              type="button"
-              onClick={close}
-              aria-label="Close drawer"
-              className="flex h-7 w-7 items-center justify-center rounded text-text-muted hover:bg-surface-3 hover:text-text"
-            >
-              <X size={16} />
-            </button>
-          </div>
-        )}
-        <div
-          className="dossier-scroll flex-1 overflow-y-scroll"
-          style={{ minHeight: 0 }}
-        >
-          {body}
+      {open && (
+        <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-bg-2 px-3 py-2">
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
+            {headerLabel}
+          </span>
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Close drawer"
+            className="flex h-7 w-7 items-center justify-center rounded text-text-muted hover:bg-surface-3 hover:text-text"
+          >
+            <X size={16} />
+          </button>
         </div>
-      </div>
+      )}
+      {body}
     </aside>
   );
 }

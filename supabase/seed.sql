@@ -117,8 +117,8 @@ INSERT INTO events (occurred_at, title, summary, source_type, source_url, source
 -- ============================================================
 -- snapshot (current situation as of 2026-05-07)
 -- ============================================================
-INSERT INTO snapshots (disease, total_cases, total_deaths, countries_affected, countries_list, fatality_rate, trend, trend_description, risk_level, key_developments, ai_analysis) VALUES
-  ('hantavirus', 8, 3, 5, ARRAY['AR','CL','NL','CH','CV'], 0.375, 'accelerating',
+INSERT INTO snapshots (disease, total_cases, total_contacts, total_deaths, countries_affected, countries_list, fatality_rate, trend, trend_description, risk_level, key_developments, ai_analysis) VALUES
+  ('hantavirus', 10, 4, 3, 5, ARRAY['AR','CL','NL','CH','CV'], 0.30, 'accelerating',
     'Cluster is expanding through passenger dispersion rather than community transmission. New countries appearing weekly as MV Hondius passengers return home.',
     'moderate',
     ARRAY[

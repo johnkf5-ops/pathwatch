@@ -43,6 +43,7 @@ export interface Snapshot {
   created_at: string;
   disease: string;
   total_cases: number | null;
+  total_contacts: number | null;
   total_deaths: number | null;
   countries_affected: number | null;
   countries_list: string[] | null;

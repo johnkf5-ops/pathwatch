@@ -134,7 +134,10 @@ export function DossierDrawer({
             </button>
           </div>
         )}
-        <div className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>
+        <div
+          className="dossier-scroll flex-1 overflow-y-scroll"
+          style={{ minHeight: 0 }}
+        >
           {body}
         </div>
       </div>

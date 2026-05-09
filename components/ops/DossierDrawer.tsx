@@ -99,23 +99,31 @@ export function DossierDrawer({
     );
   }
 
+  const headerLabel = caseCode ? `DOSSIER · ${caseCode}` : countryCode ? `COUNTRY · ${countryCode}` : 'DETAILS';
+
   return (
     <aside
       data-testid="dossier-drawer"
-      className={`pointer-events-none absolute inset-y-0 right-0 z-10 w-full max-w-[420px] transform overflow-y-auto border-l border-border-strong bg-surface-2 transition-transform duration-200 ${
+      className={`pointer-events-none absolute inset-y-0 right-0 z-10 flex w-full max-w-[420px] transform flex-col overflow-hidden border-l border-border-strong bg-surface-2 transition-transform duration-200 ${
         open ? 'pointer-events-auto translate-x-0' : 'translate-x-full'
       }`}
     >
       {open && (
-        <button
-          onClick={close}
-          aria-label="Close drawer"
-          className="absolute right-2 top-2 z-20 flex h-7 w-7 items-center justify-center text-text-muted hover:text-text"
-        >
-          <X size={16} />
-        </button>
+        <div className="flex shrink-0 items-center justify-between border-b border-border bg-bg-2 px-3 py-2">
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
+            {headerLabel}
+          </span>
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Close drawer"
+            className="flex h-7 w-7 items-center justify-center rounded text-text-muted hover:bg-surface-3 hover:text-text"
+          >
+            <X size={16} />
+          </button>
+        </div>
       )}
-      {body}
+      <div className="flex-1 overflow-y-scroll">{body}</div>
     </aside>
   );
 }

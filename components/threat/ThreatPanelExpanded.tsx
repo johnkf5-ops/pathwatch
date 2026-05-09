@@ -1,7 +1,6 @@
 import { formatDistanceToNowStrict, parseISO } from 'date-fns';
 import type { ThreatAssessment } from '@/lib/types';
 import { SignalIndicators } from './SignalIndicators';
-import { TriggerWatchlist } from './TriggerWatchlist';
 
 function pct(v: number | null) {
   return v == null ? '—' : `${(v * 100).toFixed(1)}%`;
@@ -35,10 +34,6 @@ export function ThreatPanelExpanded({ assessment: a }: { assessment: ThreatAsses
           {a.ai_vs_market_note && (
             <p className="mt-2 text-[11px] leading-snug text-text-secondary">{a.ai_vs_market_note}</p>
           )}
-        </div>
-        <div>
-          <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">TRIGGERS</div>
-          <TriggerWatchlist assessment={a} />
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import type { Case, CaseLocation, CaseStatus } from './types';
+import type { Case, CaseClass, CaseLocation, CaseStatus } from './types';
 
 export const STATUS_COLOR: Record<CaseStatus, string> = {
   monitoring: '#4cd6ff',
@@ -96,4 +96,26 @@ export function casesByCountry(
   return cases.filter(
     (c) => c.current_country === countryCode || c.exposure_country === countryCode,
   );
+}
+
+export const CASE_CLASS_LABEL: Record<CaseClass, string> = {
+  confirmed_case: 'CONFIRMED',
+  probable_case: 'PROBABLE',
+  suspected_case: 'SUSPECTED',
+  contact: 'CONTACT',
+  returnee: 'RETURNEE',
+};
+
+export const CASE_CLASSES_AS_CASES: readonly CaseClass[] = [
+  'confirmed_case',
+  'probable_case',
+  'suspected_case',
+];
+
+export function isCase(c: { case_class: CaseClass }): boolean {
+  return CASE_CLASSES_AS_CASES.includes(c.case_class);
+}
+
+export function isContact(c: { case_class: CaseClass }): boolean {
+  return c.case_class === 'contact' || c.case_class === 'returnee';
 }

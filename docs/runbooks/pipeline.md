@@ -317,6 +317,67 @@ The agent treats all dossier text and prior event summaries as **agent-authored 
 
 This is the operator-revise-loop in agent-actionable form. There is no marker convention for "operator-confirmed text" in v1 — the rule applies uniformly to all DB content the agent re-encounters.
 
+### D. Follow-up agency-channel checks (events tagged `binary-policy`)
+
+For any event tagged `binary-policy` with an agency-name tag (cdc, who, ecdc, ukhsa, rivm, rki, sanidad, etc.), the agent on every subsequent cycle within the re-check window performs follow-up channel checks against that agency.
+
+#### Re-check window
+
+Starts at original event's `created_at`, runs 7 days. Each Rule D clarification UPDATE on this event extends the window 7 days from the clarification's `created_at`. Window queryable from `events.created_at` and `clarifies:<uuid>` tag chains:
+
+```sql
+-- find in-window binary-policy events that need Rule D this cycle
+SELECT e.id, e.created_at, e.tags
+FROM events e
+WHERE 'binary-policy' = ANY(e.tags)
+  AND (
+    e.created_at > now() - INTERVAL '7 days'
+    OR EXISTS (
+      SELECT 1 FROM events c
+      WHERE 'clarifies:' || e.id::text = ANY(c.tags)
+        AND c.created_at > now() - INTERVAL '7 days'
+    )
+  );
+```
+
+#### Preflight (cost control)
+
+Before deep channel-check on an in-window event, query `scrape_log` for entries with the matching agency `source_type` since the last Rule D check on this event (or since original event creation if never Rule-D-checked). If nothing new from that agency, skip the deep check this cycle.
+
+This collapses Rule D's per-cycle cost from `~5 channels × ~10 in-window events = ~50 fetches` to "preflight read of `scrape_log` + only deep-check events with new agency activity."
+
+#### Channels checked when preflight indicates new activity
+
+- Press releases / official statements page
+- Periodic press-briefing transcripts
+- Press-conference video/audio coverage by Cred Tier 1-2 outlets within 48h
+- Official social media (X/Twitter primarily)
+- For US federal events:
+
+  ```
+  site:politico.com OR site:axios.com OR site:thehill.com
+    "<agency name>" "<policy keyword from original summary>"
+    after:<original_event.created_at>
+  ```
+
+  where `<policy keyword>` is the actual binary-policy term from the original summary ("quarantine", "mandatory", "ban", "withdrawn", etc.) that triggered Rule B.
+
+#### Action on detection
+
+If any channel surfaces a clarification, contradiction, softening, strengthening, or reversal:
+
+1. **Insert** a clarification event with tags `['policy-clarification', 'clarifies:<original-uuid>', <agency>, ...]`.
+2. **UPDATE** the original event reframing it to match the agency's most recent statement — softening, strengthening, or rephrasing as warranted.
+3. The original event already carries `binary-policy`; the clarification event does not need it unless the clarification is also a binary policy claim.
+
+#### Linking convention
+
+No `related_event_id` schema column. Clarification chains live in tags:
+
+- Clarification event tags include `clarifies:<uuid-of-original>`.
+- Reverse lookup: `SELECT * FROM events WHERE 'clarifies:' || $1 = ANY(tags)`.
+- Operator can grep `clarifies:` in feed view to spot chains.
+
 ### Explicit non-goals
 
 Future sessions reading this section will be tempted to extend the rules. The following extensions are deliberately out of scope:

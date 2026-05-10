@@ -123,7 +123,7 @@ For each unique item:
   - **2 (Low)**: local news coverage, useful social-media discussion
   - **1 (Routine)**: general discussion, speculation, reposts of known info
 - **Tag** with strain (`andes-virus`), context (`mv-hondius`), and topic (`transmission`, `cfr`, `human-to-human`, etc.)
-- For binary policy claims (mandatory/voluntary, banned/allowed, confirmed/denied, will/may, declared/withdrawn), see `## Write-time rigor for sig-4+ items` §B (opposing-search).
+- For binary policy claims (mandatory/voluntary, banned/allowed, confirmed/denied, will/may, declared/withdrawn), see `## Write-time rigor for sig-4+ items` §B (opposing-search) and §D (Rule D follow-up agency-channel checks on subsequent cycles).
 
 ### 4. Fact-check
 
@@ -243,7 +243,7 @@ If country-level case count changed:
 INSERT scrape_log row (source, results_found, events_created, duplicates_skipped, error?, duration_ms)
 ```
 
-For sig-4+ events, see `## Write-time rigor for sig-4+ items` §A (verbatim quote required) and §A.2 (`primary-source` vs `paraphrased` tagging).
+For sig-4+ events, see `## Write-time rigor for sig-4+ items` §A (verbatim quote required), §A.2 (`primary-source` vs `paraphrased` tagging), and §E (populate `events.agent_notes` for events carrying `binary-policy`, `policy-ambiguity`, `paraphrased`, or `policy-clarification`).
 
 After writing, **every 4th cycle** (or immediately on a sig-5 event):
 

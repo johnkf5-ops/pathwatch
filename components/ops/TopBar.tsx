@@ -47,7 +47,11 @@ export function TopBar({
         <span className="inline-flex h-4 w-4 items-center justify-center bg-green text-[10px] font-bold text-bg">P</span>
         <span className="font-bold tracking-[0.16em] text-text">PATHWATCH</span>
       </Link>
-      <span className="hidden text-text-muted lg:inline">OPS CONSOLE</span>
+      <nav className="hidden items-center gap-3 border-l border-border pl-3 text-text-muted lg:flex">
+        <Link href="/hantavirus" className="hover:text-text">HANTAVIRUS</Link>
+        <Link href="/faq" className="hover:text-text">FAQ</Link>
+        <Link href="/facts" className="hover:text-text">KNOWLEDGE</Link>
+      </nav>
       <span className="flex items-center gap-1.5 text-green">
         <span className="dot-pulse inline-block h-1.5 w-1.5 rounded-full bg-green" />
         LIVE

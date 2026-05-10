@@ -57,6 +57,15 @@ Named outlets within a group are illustrative — the agent picks 2-3 per fired 
 
 Capture for every event: URL, full text, author/handle, timestamp, engagement counts. Persist raw text in `events.raw_content`.
 
+#### Cadence rule (which groups fire each cycle)
+
+- **Every cycle:** groups 1-2 (primary surveillance + wires), **plus group 4 (US federal-policy specialists)**.
+- **At least once per 4 cycles:** groups 3, 5-9 (US national + UK + EU + LatAm + Asia/Oceania/Africa + scientific). Pool covered by rotation, not exhaustive per-cycle sweep.
+- **On surge or when story-type makes it relevant:** groups 10-11 (tabloid + aggregators).
+- **Always available:** groups 12-13 (social media + reference) for early signal. Sampled when other groups produce nothing new and weak-signal coverage is wanted.
+
+Group 4 is elevated because federal-policy specialists are the channel where agency verbal clarifications surface before wires pick them up; the CDC quarantine-clarification miss was directly traceable to group 4 not being part of the every-cycle pool.
+
 ### 2. Dedupe
 
 For each scraped item:

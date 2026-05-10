@@ -378,6 +378,20 @@ No `related_event_id` schema column. Clarification chains live in tags:
 - Reverse lookup: `SELECT * FROM events WHERE 'clarifies:' || $1 = ANY(tags)`.
 - Operator can grep `clarifies:` in feed view to spot chains.
 
+### Tags introduced by this section
+
+| Tag | Meaning |
+|---|---|
+| `primary-source` | Quote in `events.summary` is from the agency's own publication (press release, DON, statement, dashboard). See §A.2. |
+| `paraphrased` | Only a journalist's report exists; quote is "[Outlet]: 'agency said X'" rather than the agency's direct voice. Weakest-link tie-breaker per §A.2. |
+| `policy-ambiguity` | At original write time, two contradictory framings existed across Cred Tier 1-2 sources. Both quotes shown side-by-side. See §B. |
+| `binary-policy` | Rule B's opposing-search procedure fired on this event. Drives Rule D re-checks. See §B and §D. |
+| `policy-clarification` | This event clarifies, contradicts, softens, strengthens, or reverses an earlier event from the same agency. Linked via `clarifies:<uuid>`. See §D. |
+| `clarifies:<uuid>` | Linkage tag pointing from a clarification event to the original event. UUID matches `events.id`. See §D. |
+| `paywalled-source` | Event sourced from search snippet because Tier C verification (paywall) blocked full fetch. See §4.5. |
+| `tier-b-unavailable` | Tier B verification failed because the Playwright MCP server was unavailable in the operator session. Operator must rerun verification later. See §4.5. |
+| `requires-corroboration` | Cred Tier 3-4 source only; corroboration search returned nothing from Cred Tier 1-2. Held at sig-2. See §1 corroboration vs opposing search. |
+
 ### Explicit non-goals
 
 Future sessions reading this section will be tempted to extend the rules. The following extensions are deliberately out of scope:

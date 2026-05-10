@@ -251,7 +251,7 @@ export default async function HantavirusPage() {
         <section className="mb-10">
           <h2 className="mb-3 text-xl font-semibold text-text">Why ANDV is different</h2>
           <p className="leading-relaxed">
-            The molecular basis for ANDV's person-to-person transmission remains unknown.
+            The molecular basis for ANDV&apos;s person-to-person transmission remains unknown.
             Compared to Sin Nombre virus (SNV), ANDV produces higher mucosal viral burdens, is
             uniformly lethal in Syrian hamster models (SNV is not), and more effectively
             interferes with interferon signaling. The combination is what makes ANDV the only

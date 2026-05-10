@@ -264,6 +264,24 @@ If material change:
 
 **Always derive `total_cases` and `total_contacts` from the `case_class` filter on the live `cases` table** — never write arbitrary numbers. The UI also derives from `case_class` for live counts; if the snapshot disagrees with the derived number, panels disagree.
 
+#### Cycle output expectations (write density)
+
+Active-mode cycles typically write **5-15 events per loop**. Cycles writing fewer than 3 sig-3+ events should be re-examined for under-coverage before closing.
+
+**Per-URL evaluation rule.** For each unique URL surfaced via search that materially advances the story, the agent considers whether it warrants its own event row. **Default to writing rather than consolidating.** Per-country operational events (Spain flight to Madrid, Dutch charter, UK UKHSA flight, etc.) surface as distinct dashboard cards; one batched "multi-nation repatriation" row hides the operational detail the dashboard exists to surface. The verbatim-quote and agent_notes overhead from §A and §E does not justify consolidation — the dashboard prefers many lean cards over few fat rows.
+
+**End-of-cycle completeness check.** Before closing the write phase, query:
+
+```sql
+SELECT
+  (SELECT COUNT(*) FROM scrape_log WHERE created_at > <cycle_start> AND source_type NOT LIKE 'group:%') AS searches_logged,
+  (SELECT COUNT(*) FROM events    WHERE created_at > <cycle_start>) AS events_written;
+```
+
+The expected ratio depends on phase. During active-event phases (multi-country dispersal, surge weeks): events_written typically reaches 30-60% of distinct-URL count from the search results. During quiet phases: 10-20% is normal. **If events_written is below 10% of distinct URLs surfaced and the agent didn't explicitly note duplicates / out-of-scope reasoning per skipped URL, re-examine — the cycle is under-producing.**
+
+**Anti-pattern: verification-mode framing.** The agent has previously been observed treating cycles as "smoke tests" or "demonstrations of the rules" rather than full operational runs, leading to chronic under-production. If you find yourself reasoning about an event in terms of "does this demonstrate Rule X firing?" rather than "is this material to the story?" — recalibrate. Every cycle is a real run.
+
 ## Write-time rigor for sig-4+ items
 
 These rules apply when an event's `significance` is 4 or 5. They reduce framing drift; they do not eliminate it (see "Residual drift" below).

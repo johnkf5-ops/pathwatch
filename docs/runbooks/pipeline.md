@@ -99,17 +99,76 @@ Speculation, opinion, analysis → log as event with category `speculation` or `
 
 ### 4.5. URL verification (mandatory before any write)
 
-**Every candidate event must have a `source_url` that actually resolves.** Before INSERT, call WebFetch (or HEAD) on the URL. If the response is non-2xx, the URL is paywalled-redirected to a generic page, or the fetch errors:
+**Every candidate event must have a `source_url` that actually resolves.** Verify via the three-tier mechanism below before INSERT.
 
-- Skip the event entirely. Do **not** invent a different URL.
-- Do **not** approximate the URL based on the publication's typical slug format.
-- If the search snippet is interesting but no resolvable URL exists, log a `signal`-tagged event with `source_url = NULL` and a note in the summary that the URL was unverified — but only for content that's clearly identifiable from the snippet alone (e.g. an official press release where the agency name is the source).
+#### Tier A — curl (default)
 
-**`is_verified` semantics:** set `is_verified = true` for events written from a resolved URL (WebFetch returned 2xx and content matches the summary). Set `is_verified = false` for events written from search snippets without a resolvable URL (rare — see exception above). Do not set `is_verified = true` based on tier alone; the field tracks URL existence, not source authority.
+```
+curl -s -L -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36" \
+  -o /dev/null -w "%{http_code}\n" <url>
+```
 
-The `events.source_url_hash` unique index prevents duplicate URL inserts but does **not** validate that URLs resolve. URL verification is the agent's responsibility.
+Then a content sniff:
 
-The reason: past pipeline cycles accumulated dead links — both AI-hallucinated URLs (model guessed a plausible slug that never existed) and real-but-rotted URLs (paywall, deletion, slug change). The dashboard's intelligence feed is only useful if every "SOURCE ↗" link works. Verification at write time prevents the rot.
+```
+curl -s -L -A "<same UA>" <url> | head -c 8000
+```
+
+**Success:** HTTP 200 + body contains expected article markers (title, byline, body text). Set `is_verified = true`.
+
+**Escalate to Tier B (failure signatures):**
+- HTTP 401 or 403 with body length > 0
+- HTTP 200 with body containing any of:
+  - `Please enable JavaScript`
+  - `<title>Just a moment...</title>`
+  - `data-cf-beacon`
+  - `_Incapsula_Resource`
+  - `dd_async_token`
+  - `Access denied — DataDome`
+- HTTP 200 with body length < 5 KB (likely challenge page, not article — real challenge pages are typically 1-3 KB and would slip past a 500-byte filter)
+
+#### Tier B — Playwright MCP (escalation)
+
+When Tier A signatures match a bot-protection failure, call Playwright MCP server tools (`mcp__plugin_playwright_playwright__browser_navigate`, then `mcp__plugin_playwright_playwright__browser_snapshot` or `mcp__plugin_playwright_playwright__browser_evaluate` for body text extraction). Playwright runs a real browser and passes the bot challenge.
+
+Outlets typically requiring Tier B: Reuters, Bloomberg, WaPo, FT, Telegraph, some EU regional outlets (Le Monde, Der Spiegel articles behind dynamic loaders).
+
+**Success:** rendered article content matches expected markers. Set `is_verified = true`.
+
+**Escalate to Tier C (failure signatures):**
+- Rendered body does not contain any keyword from the search snippet
+- Body contains paywall markers:
+  - `Subscribe to read`
+  - `Sign in to continue`
+  - `This article is for subscribers`
+- Playwright returns timeout or error
+
+**If Playwright MCP server is unavailable** (operator missed the precondition — see `pipeline-operator.md` Prerequisites): record `is_verified = false` with tag `tier-b-unavailable`. **Do not silently fall through to Tier C** — the failure is operator-fixable and the tag flags it for rerun.
+
+#### Tier C — snippet-only (final fallback)
+
+True paywalls where Tier B's rendered content is gated. Use the search-result snippet text only, quote verbatim into `events.summary`, set `is_verified = false`, tag `paywalled-source`, and proceed.
+
+Outlets typically requiring Tier C: FT, WSJ behind hard paywall, Bloomberg article-level paywall, some Lancet/NEJM articles.
+
+#### `is_verified` semantics
+
+| Tier | `is_verified` | Why |
+|---|---|---|
+| Tier A success | `true` | URL resolved, content matches |
+| Tier B success | `true` | URL resolved (via real browser), content matches |
+| Tier C (snippet only) | `false` | URL not actually fetched at content level |
+| Any tier failure with no fallback | `false` | URL unverifiable |
+| Tier B unavailable (Playwright not installed) | `false` + tag `tier-b-unavailable` | Operator must rerun verification later |
+
+The `paywalled-source` tag distinguishes "intentionally fell back to snippet" from "verification failed entirely."
+
+#### Hard rules (carry over)
+
+- Skip the event entirely if no tier succeeds and no snippet is identifiable. Do **not** invent a different URL. Do **not** approximate based on the publication's typical slug format.
+- The `events.source_url_hash` unique index prevents duplicate URL inserts but does **not** validate that URLs resolve. URL verification is the agent's responsibility.
+
+The reason this matters: past pipeline cycles accumulated dead links — both AI-hallucinated URLs (model guessed a plausible slug that never existed) and real-but-rotted URLs (paywall, deletion, slug change), AND real-but-unfetchable URLs that the WebFetch-only mechanism silently excluded. The dashboard's intelligence feed is only useful if every "SOURCE ↗" link works and the source set is not silently narrowed by tool-layer limits. The three-tier mechanism prevents both rot and bot-protection exclusion.
 
 ### 5. Write
 

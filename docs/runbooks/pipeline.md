@@ -410,7 +410,7 @@ the agent populates the `events.agent_notes TEXT NULL` column with one paragraph
 
 Routine descriptive primary-source events (most WHO DONs, CDC HAN updates) do **not** get notes — `agent_notes` stays NULL. The trigger condition is narrow on purpose.
 
-`agent_notes` is internal-only. Public dashboard surfaces (EventCard, map drawer, OG image) project explicit columns and exclude this one. Operator reads via `supabase db query --linked`:
+`agent_notes` is internal-only at the REST layer. Public dashboard surfaces (EventCard, map drawer, OG image) project explicit columns via `EVENT_PUBLIC_COLUMNS` (`lib/types.ts`) and exclude this one. Operator reads via `supabase db query --linked`:
 
 ```bash
 supabase db query "SELECT id, summary, agent_notes FROM events WHERE id = '<uuid>';" --linked
@@ -454,6 +454,17 @@ events.agent_notes:
 ```
 
 The second example demonstrates the common case: Rule B fires (binary policy claim), opposing-search returns nothing, event proceeds normally with `binary-policy` tag (which arms Rule D). This is the failure mode the original CDC quarantine case missed entirely.
+
+#### Residual: Realtime broadcasts the full row
+
+`EVENT_PUBLIC_COLUMNS` narrows REST queries, but the `events` table is part of the `supabase_realtime` publication and that channel broadcasts every column on every INSERT/UPDATE — including `agent_notes` — to any anonymous WebSocket subscriber. The dashboard's TypeScript cast (`row as Event`) discards the field at runtime, but the data still crosses the wire.
+
+This is currently theoretical (no row has been written with non-NULL `agent_notes` yet), but it's a real channel the REST defense doesn't cover. Two paths to close it if the operator decides to:
+
+1. **Postgres column-filter on the publication** (Postgres 15+ syntax). One migration: `DROP TABLE events` from the publication then `ADD TABLE events (col1, col2, ...)` with the explicit column list. Atomic when run as a single migration transaction. This is the cleanest fix.
+2. **Drop `events` from the publication entirely** and switch the dashboard to a notify-on-change pattern that re-fetches via REST. More invasive; only worth doing if the column-filter approach hits a Supabase Realtime limitation.
+
+Until one of those paths lands, write `agent_notes` knowing that anyone subscribed to the realtime channel can read it. For sig-4+ trigger-tagged events the notes describe agent reasoning, not anything actively sensitive — but the residual is worth naming honestly so future amendments don't assume the REST narrowing is complete defense.
 
 ### Explicit non-goals
 

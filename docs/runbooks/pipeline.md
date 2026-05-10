@@ -463,7 +463,7 @@ Future sessions reading this section will be tempted to extend the rules. The fo
 - **UI signal for the `paraphrased` tag (v1).** The tag is operator-on-sight-in-the-feed only. No EventCard tone change, no inline footnote, no SIGNAL-tab integration. If drift turns out to need stronger visual surfacing, that's a separate frontend sub-project.
 - **Marker convention for operator-confirmed text.** Adds a convention the operator must remember; partial adoption is worse than uniform skepticism. Rule C ("agent treats all prior DB writes as agent-authored, re-verify on every cycle") is more honest about what's enforceable today.
 - **Machine-verification of verbatim quotes against source URLs.** Succeeds on plain HTML and silently fails on paywalls, dynamic content, PDFs, image-only documents, embedded video transcripts. False confidence on the cases where it works is more dangerous than uniform skepticism. The verbatim-quote rule's value is the side-by-side framing for the operator's eye, not a machine-checkable invariant.
-- **Schema changes.** No new columns, no new enum values, no migrations. The whole patch is markdown additions to this file plus tag-string conventions on `events.tags`.
+- **Further schema changes beyond §E.** The May-10 amendment introduced the `events.agent_notes` TEXT NULL column for §E (internal-only reasoning trail) and the `scrape_log.source_type` group:* convention for §1 rotation. No additional columns, no new enum values, no further migrations are contemplated by this section. Anyone reaching for `supabase/migrations/` to add more is over-extending.
 
 ### Residual drift, framed honestly
 

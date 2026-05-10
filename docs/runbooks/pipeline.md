@@ -34,21 +34,28 @@ A "cycle" = the 5 steps below. Aim for ~10–15 min wall-clock per cycle.
 
 ### 1. Scrape
 
-Sources, in order of priority:
+The agent picks 2-3 outlets per fired group per cycle. Cadence (which groups fire each cycle) is documented in §1 cadence below; rotation mechanism in §1 rotation.
 
-| Source | Endpoint / query |
-|---|---|
-| **WHO DON** | https://www.who.int/emergencies/disease-outbreak-news — read for any new entries since last cycle |
-| **CDC** | RSS https://tools.cdc.gov/api/v2/resources/media/rss — filter for hantavirus terms |
-| **ECDC** | https://www.ecdc.europa.eu/en — search "hantavirus" |
-| **Africa CDC** | https://africacdc.org/ — search "hantavirus" |
-| **Google News** | search `"hantavirus 2026"` and `"MV Hondius"` |
-| **Reddit** | https://www.reddit.com/r/{worldnews,medicine,epidemiology,health}/search.json?q=hantavirus&sort=new&t=day |
-| **BlueSky** | search API for "hantavirus" |
-| **X/Twitter** | via Chrome MCP — search `hantavirus OR "hanta virus" OR "MV Hondius" OR "andes virus"`, top 20–30 results since last scrape, 2–5 sec random delays between page loads |
-| **Wikipedia** | https://en.wikipedia.org/wiki/MV_Hondius_hantavirus_outbreak — check for substantive edits |
+#### Source groups (illustrative — agent picks 2-3 per group per cycle)
 
-Capture: URL, full text, author/handle, timestamp, engagement counts. Persist raw text in `events.raw_content`.
+1. **Primary outbreak surveillance (Credibility Tier 1):** WHO DON + WHO daily press briefings + WHO YouTube/X feeds, CDC (HAN + RSS https://tools.cdc.gov/api/v2/resources/media/rss + media releases + press briefings + press conferences), ECDC, Africa CDC, plus national health authorities — UKHSA, RIVM, RKI (incl. Kontaktpersonen guidance pages), Swiss FOPH, Spanish Sanidad / Moncloa press-conference page, Singapore CDA, PHAC, Sante Publique France
+2. **Wire services (Cred Tier 1-2):** AP News, AFP, UPI, DPA, EFE, Kyodo, Reuters
+3. **US national news (Cred Tier 2-3):** WaPo, NYT, NBC, ABC, CBS, CNN, NPR, USA Today
+4. **US federal-policy specialists (Cred Tier 2):** Politico, Axios, The Hill *(every-cycle priority — surface where federal-agency verbal clarifications surface first)*
+5. **UK national (Cred Tier 2-3):** BBC, Guardian, Sky News, ITV, Telegraph, Independent
+6. **EU regional (Cred Tier 2-3):** El País, El Mundo, NL Times, DutchNews, RTÉ, Irish Times, ANSA, Le Monde, France24, Euronews, Der Spiegel
+7. **Latin America (Cred Tier 2-3, critical for outbreak-source tracing):** Clarín, La Nación, Mercurio, Folha de São Paulo, Infobae
+8. **Asia / Oceania / Africa (Cred Tier 2-3):** SCMP, Mothership, Straits Times, RNZ, 1News, News24, IOL, Türkiye Today
+9. **Scientific / public health (Cred Tier 1-2):** virological.org, CIDRAP, STAT News, ProMED, Nature News, Science Magazine, The Lancet, NEJM, JAMA, medRxiv, bioRxiv
+10. **Tabloid / popular press (Cred Tier 3-4, requires corroboration search):** NY Post, Daily Mail, The Sun, Mirror, Daily Beast
+11. **Aggregators / firehose:** Google News (`"hantavirus 2026"` + `"MV Hondius"`), Bing News
+12. **Social media (Cred Tier 4, signal-only — never sole source for sig-3+):** X/Twitter (Chrome MCP, top 20-30 results since last scrape, 2-5 sec random delays), Reddit (https://www.reddit.com/r/{worldnews,medicine,epidemiology,health}/search.json?q=hantavirus&sort=new&t=day), BlueSky search API
+13. **Reference (Cred Tier 4, early-signal only — never confirmation):** Wikipedia https://en.wikipedia.org/wiki/MV_Hondius_hantavirus_outbreak — check for substantive edits
+14. **Prediction markets (context layer):** Polymarket gamma-api, Kalshi (covered by the threat-assessment cycle, not the scrape cycle)
+
+Named outlets within a group are illustrative — the agent picks 2-3 per fired group per cycle. The goal is breadth-over-time, not exhaustive depth-per-cycle.
+
+Capture for every event: URL, full text, author/handle, timestamp, engagement counts. Persist raw text in `events.raw_content`.
 
 ### 2. Dedupe
 

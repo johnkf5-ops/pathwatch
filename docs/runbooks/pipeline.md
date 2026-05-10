@@ -227,6 +227,8 @@ The reason this matters: past pipeline cycles accumulated dead links — both AI
 
 For each processed item:
 
+> **Always set `events.source_author` to the actual publication name** (e.g. `'Reuters'`, `'CNN'`, `'Politico'`, `'NPR'`, `'NL Times'`, `'WHO'`, `'CDC'`, `'PHAC'`). The dashboard's EventCard renders `source_author` as the source label; without it the feed falls back to `source_type`'s generic enum value (`'google_news'`) and the publication identity is lost. This applies to every event, not just sig-4+.
+
 ```
 INSERT events (with extracted fields)
 

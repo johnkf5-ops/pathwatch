@@ -17,7 +17,7 @@ export function RelatedEvents({ events }: { events: Event[] }) {
               <Link href={`/event/${e.id}`} className="block hover:bg-surface-hover -mx-2 rounded-md p-2">
                 <div className="mb-1 flex items-center gap-2">
                   <SignificanceDot level={e.significance} />
-                  <SourceIcon source={e.source_type} />
+                  <SourceIcon source={e.source_type} label={e.source_author} />
                   <TimeAgo iso={e.occurred_at ?? e.created_at} />
                 </div>
                 <p className="text-sm leading-snug text-text line-clamp-2">{e.title}</p>

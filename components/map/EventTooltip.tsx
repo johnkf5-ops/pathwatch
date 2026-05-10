@@ -11,7 +11,7 @@ export function EventTooltip({ event }: { event: Event }) {
     <div className="min-w-[220px] max-w-[260px] text-text">
       <div className="mb-1.5 flex items-center gap-2">
         <SignificanceDot level={event.significance} />
-        <SourceIcon source={event.source_type} />
+        <SourceIcon source={event.source_type} label={event.source_author} />
       </div>
       <h4 className="mb-1 text-sm font-semibold leading-snug">{event.title}</h4>
       <p className="text-xs text-text-secondary">{truncate(event.summary, 120)}</p>

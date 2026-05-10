@@ -14,7 +14,7 @@ export function EventCard({ event }: { event: Event }) {
     <article className="relative border border-border bg-surface p-3 transition-colors hover:bg-surface-2 focus-within:ring-2 focus-within:ring-green">
       <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.1em] text-text-muted">
         <SignificanceDot level={event.significance} />
-        <SourceIcon source={event.source_type} />
+        <SourceIcon source={event.source_type} label={event.source_author} />
         <span suppressHydrationWarning>{age} AGO</span>
       </div>
 

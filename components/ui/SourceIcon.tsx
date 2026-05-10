@@ -13,7 +13,7 @@ const ICONS: Record<SourceType, LucideIcon> = {
   wikipedia: BookOpen,
 };
 
-const LABEL: Record<SourceType, string> = {
+const TYPE_LABEL: Record<SourceType, string> = {
   who: 'WHO',
   cdc: 'CDC',
   ecdc: 'ECDC',
@@ -25,12 +25,17 @@ const LABEL: Record<SourceType, string> = {
   wikipedia: 'Wikipedia',
 };
 
-export function SourceIcon({ source }: { source: SourceType }) {
+// Shows the real publication when present (`label`, typically from
+// `events.source_author`), falling back to the source-type label.
+// The icon is always the source-type generic — the publication name
+// carries the specificity, the icon carries the kind-of-source signal.
+export function SourceIcon({ source, label }: { source: SourceType; label?: string | null }) {
   const Icon = ICONS[source];
+  const displayLabel = label?.trim() || TYPE_LABEL[source];
   return (
     <span className="inline-flex items-center gap-1.5 text-xs text-text-secondary">
       <Icon size={14} />
-      <span>{LABEL[source]}</span>
+      <span>{displayLabel}</span>
     </span>
   );
 }

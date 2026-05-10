@@ -21,7 +21,7 @@ export function EventDetail({ event, related }: { event: Event; related: Event[]
         <article>
           <div className="mb-3 flex flex-wrap items-center gap-3">
             <SignificanceDot level={event.significance} />
-            <SourceIcon source={event.source_type} />
+            <SourceIcon source={event.source_type} label={event.source_author} />
             <TimeAgo iso={event.occurred_at ?? event.created_at} />
             {event.is_verified && <Badge variant="outline">Verified</Badge>}
           </div>

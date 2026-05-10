@@ -96,6 +96,18 @@ Does it match an existing CONFIRMED fact?
 
 Speculation, opinion, analysis → log as event with category `speculation` or `research`. **Never** add to facts.
 
+### 4.5. URL verification (mandatory before any write)
+
+**Every candidate event must have a `source_url` that actually resolves.** Before INSERT, call WebFetch (or HEAD) on the URL. If the response is non-2xx, the URL is paywalled-redirected to a generic page, or the fetch errors:
+
+- Skip the event entirely. Do **not** invent a different URL.
+- Do **not** approximate the URL based on the publication's typical slug format.
+- If the search snippet is interesting but no resolvable URL exists, log a `signal`-tagged event with `source_url = NULL` and a note in the summary that the URL was unverified — but only for content that's clearly identifiable from the snippet alone (e.g. an official press release where the agency name is the source).
+
+The `events.source_url_hash` unique index prevents duplicate URL inserts but does **not** validate that URLs resolve. URL verification is the agent's responsibility.
+
+The reason: past pipeline cycles accumulated dead links — both AI-hallucinated URLs (model guessed a plausible slug that never existed) and real-but-rotted URLs (paywall, deletion, slug change). The dashboard's intelligence feed is only useful if every "SOURCE ↗" link works. Verification at write time prevents the rot.
+
 ### 5. Write
 
 For each processed item:

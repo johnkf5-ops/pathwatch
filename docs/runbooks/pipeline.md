@@ -66,6 +66,41 @@ Capture for every event: URL, full text, author/handle, timestamp, engagement co
 
 Group 4 is elevated because federal-policy specialists are the channel where agency verbal clarifications surface before wires pick them up; the CDC quarantine-clarification miss was directly traceable to group 4 not being part of the every-cycle pool.
 
+#### Rotation mechanism (deterministic, session-independent)
+
+The agent queries `scrape_log` at cycle start to determine which groups in the rotation pool have the oldest most-recent entry, and selects those for this cycle. The agent does not maintain rotation state in conversation context or across sessions — `scrape_log` is the source of truth.
+
+Per cycle, the agent writes both per-outlet `scrape_log` rows AND a per-group rollup row. Group rollup rows use `source_type` of the form `'group:<identifier>'`, e.g. `'group:eu-regional'`, `'group:scientific'`, `'group:us-national'`, `'group:federal-policy-specialists'`, `'group:uk-national'`, `'group:lat-am'`, `'group:asia-oceania-africa'`. (`scrape_log.source_type` is plain TEXT with no CHECK constraint enumerating values; the `group:*` convention is additive.)
+
+Rotation query at cycle start:
+
+```sql
+SELECT source_type, MAX(created_at) AS last_seen
+FROM scrape_log
+WHERE source_type LIKE 'group:%'
+  AND source_type IN ('group:us-national', 'group:uk-national',
+                      'group:eu-regional', 'group:lat-am',
+                      'group:asia-oceania-africa', 'group:scientific')
+GROUP BY source_type
+ORDER BY last_seen ASC NULLS FIRST
+LIMIT 2;
+```
+
+The two oldest groups are this cycle's rotation pick. If a group has never been written, it ranks first (NULLS FIRST). After the cycle, the agent inserts a `scrape_log` row with `source_type = 'group:<id>'` for each group it actually hit, alongside per-outlet rows.
+
+#### Corroboration search vs opposing search (distinct mechanisms)
+
+These are different tools with different inputs and different outputs. Both can fire on the same event when applicable.
+
+| | **Corroboration search** | **Opposing search (Rule B)** |
+|---|---|---|
+| **Trigger** | Unverified claim surfacing only on Cred Tier 3-4 outlet | Binary policy claim, any source tier |
+| **Question** | Does any Cred Tier 1-2 source confirm this? | Is the framing contested? |
+| **If yes** | Promote significance, update tags, drop `requires-corroboration` | Side-by-side both quotes, tag `policy-ambiguity`, agent doesn't pick a side |
+| **If no** | Hold at sig-2 with `requires-corroboration` tag; agent doesn't promote | Single-framing event proceeds normally |
+
+Tabloid (group 10) stories run **corroboration search**, not Rule B. Rule B's opposing search is unchanged — covers binary policy framings regardless of source tier.
+
 ### 2. Dedupe
 
 For each scraped item:

@@ -44,6 +44,7 @@ Each loop is called a **cycle**. The dashboard at https://pathwatch-phi.vercel.a
 | Claude session | Claude Code, Cowork, or any client with Supabase CLI | Where the pipeline runs |
 | `supabase` CLI authenticated | `supabase link` already run against the linked project | All writes go via `supabase db query --linked`; no service-role key needed |
 | Chrome with persistent profile (optional) | Logged into X/Twitter, BlueSky, Reddit | Lets the agent scrape without auth dialogs (only needed if Chrome MCP is in use) |
+| **Playwright MCP server (required)** | `claude mcp list \| grep playwright` returns a row | Tier B URL verification — needed for Reuters/Bloomberg/WaPo/FT class outlets behind DataDome / similar bot protection. If absent, agent records `is_verified=false` with tag `tier-b-unavailable` and operator must rerun. See pipeline.md §4.5. |
 | Vercel `NEXT_PUBLIC_*` env vars | Already in Vercel project settings | Production already pulls these on deploy |
 
 Verify the Supabase CLI link is working:

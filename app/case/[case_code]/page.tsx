@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { unstable_noStore as noStore } from 'next/cache';
 import { createServerClient } from '@/lib/supabase-server';
 import { CaseDossier } from '@/components/case/CaseDossier';
+import { EVENT_PUBLIC_COLUMNS } from '@/lib/types';
 import type { Case, CaseLocation, Event } from '@/lib/types';
 import { caseLabel } from '@/lib/case-helpers';
 
@@ -26,7 +27,7 @@ async function fetchCase(case_code: string): Promise<{
   const [locRes, eventRes] = await Promise.all([
     supabase.from('case_locations').select('*').eq('case_id', case_.id),
     case_.source_event_id
-      ? supabase.from('events').select('*').eq('id', case_.source_event_id).maybeSingle()
+      ? supabase.from('events').select(EVENT_PUBLIC_COLUMNS).eq('id', case_.source_event_id).maybeSingle()
       : Promise.resolve({ data: null }),
   ]);
 

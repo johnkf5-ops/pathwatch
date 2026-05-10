@@ -1,6 +1,7 @@
 import { unstable_noStore as noStore } from 'next/cache';
 import { createServerClient } from '@/lib/supabase-server';
 import { DashboardClient } from './DashboardClient';
+import { EVENT_PUBLIC_COLUMNS } from '@/lib/types';
 import type {
   Event, Snapshot, CountryStat, Case, CaseLocation, ThreatAssessment, Fact,
 } from '@/lib/types';
@@ -36,7 +37,7 @@ export default async function Home() {
       .limit(30),
     supabase
       .from('events')
-      .select('*')
+      .select(EVENT_PUBLIC_COLUMNS)
       .eq('disease', 'hantavirus')
       .is('duplicate_of', null)
       .order('created_at', { ascending: false })

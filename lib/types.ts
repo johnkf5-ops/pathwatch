@@ -12,6 +12,37 @@ export type RiskLevel = 'low' | 'moderate' | 'high' | 'critical';
 export type Trend = 'accelerating' | 'stable' | 'declining';
 export type CountryStatus = 'active' | 'contained' | 'monitoring' | 'clear';
 
+// Public projection columns — what the dashboard ever fetches.
+// agent_notes is intentionally absent: it's an internal-only column
+// (see docs/runbooks/pipeline.md §E) and must never be projected to
+// the public client. Use this constant in every .from('events').select(...)
+// call on the public surfaces.
+export const EVENT_PUBLIC_COLUMNS = [
+  'id',
+  'created_at',
+  'occurred_at',
+  'title',
+  'summary',
+  'raw_content',
+  'source_type',
+  'source_url',
+  'source_url_hash',
+  'source_author',
+  'significance',
+  'category',
+  'country_code',
+  'region',
+  'location_name',
+  'latitude',
+  'longitude',
+  'case_count',
+  'death_count',
+  'is_verified',
+  'tags',
+  'duplicate_of',
+  'disease',
+].join(', ');
+
 export interface Event {
   id: string;
   created_at: string;

@@ -59,21 +59,62 @@ If that returns a row count, the session can read and write the linked DB.
 
 ## Starting a session
 
-Open a new Claude Code session in `/Users/claude/Projects/project_contagion`. Paste this opening prompt (or your own variation — the key is the runbook reference + the cadence):
+Open a new Claude Code session in `/Users/claude/Projects/project_contagion`.
+
+**Do NOT enable auto mode for pipeline cycles.** The runtime safety classifier intermittently blocks `WebFetch` and `Playwright browser_evaluate` calls on outbreak content under auto mode — the same AUP false-positive pattern that killed the original SKILL-based pipeline. Standard interactive mode (the default) works cleanly: every tool call is reviewable and reads pass through. Verified 2026-05-10 during an end-to-end smoke cycle that hit the block under auto mode and ran cleanly after it was turned off.
+
+Paste this opening prompt (or your own variation — the key is the runbook reference + the cadence):
 
 ```
 You are now operating the Pathwatch pipeline.
 
 Read these in order before doing anything else:
-1. docs/runbooks/pipeline.md  — your spec
+1. docs/runbooks/pipeline.md  — your spec (source of truth)
 2. README.md                    — context
 
-Stay in active mode (cycle every 15–30 min). Surge to 5–10 min on:
+The 2026-05-10 write-time rigor amendment is in effect. Pay particular
+attention to:
+- §1 Scrape: 13-group source list with cadence rule. Every cycle hits
+  groups 1-2-4 (primary surveillance + wires + US federal-policy
+  specialists Politico/Axios/Hill). Groups 3, 5-9 rotate via
+  scrape_log recency — query at cycle start to pick the
+  longest-untouched groups for this cycle. Write per-outlet rows AND
+  per-group rollup rows (source_type='group:<id>') each cycle.
+- §4.5 URL verification: three-tier mechanism. Tier A curl (default).
+  Escalate to Tier B Playwright MCP on bot-protection signatures
+  (DataDome, Cloudflare challenge, body < 5 KB). Tier C snippet-only
+  fallback for true paywalls. Set is_verified per the table.
+- §B Rule B: when opposing-search procedure fires on a binary policy
+  claim, set the `binary-policy` tag at write time regardless of
+  whether contradiction surfaced. This arms Rule D.
+- §D Rule D: every cycle, re-check `binary-policy`-tagged events
+  within their 7-day window against agency channels. scrape_log
+  preflight first (skip if no new agency activity). On detection,
+  INSERT clarification with `clarifies:<original-uuid>` tag, UPDATE
+  original.
+- §E agent_notes: for sig-4+ events tagged binary-policy /
+  policy-ambiguity / paraphrased / policy-clarification, populate
+  `events.agent_notes` with a one-paragraph reasoning trail. Routine
+  primary-source events leave it NULL.
+
+Verify Playwright MCP is available before your first cycle: attempt
+`mcp__plugin_playwright_playwright__browser_navigate` against
+https://www.reuters.com/. If it fails with a permission error, stop
+and flag that the precondition was missed (events sourced from Tier
+B outlets in the meantime should record is_verified=false and tag
+`tier-b-unavailable` rather than silently fall back to Tier C).
+
+Stay in active mode (cycle every 15-30 min). Surge to 5-10 min on:
 - new country reports a case
 - WHO press briefing or new DON
 - death-count change
 - confirmed mutation
 - border closure / major travel advisory
+
+All writes via `supabase db query --linked` (no service-role key
+needed). Never mock data, never invent URLs. Every dossier addition
+cites sources inline. Demographics as ranges only on anonymized
+cases.
 
 Run a first cycle now.
 ```

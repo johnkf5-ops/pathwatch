@@ -455,16 +455,22 @@ events.agent_notes:
 
 The second example demonstrates the common case: Rule B fires (binary policy claim), opposing-search returns nothing, event proceeds normally with `binary-policy` tag (which arms Rule D). This is the failure mode the original CDC quarantine case missed entirely.
 
-#### Residual: Realtime broadcasts the full row
+#### Realtime publication: narrowed to match REST projection
 
-`EVENT_PUBLIC_COLUMNS` narrows REST queries, but the `events` table is part of the `supabase_realtime` publication and that channel broadcasts every column on every INSERT/UPDATE — including `agent_notes` — to any anonymous WebSocket subscriber. The dashboard's TypeScript cast (`row as Event`) discards the field at runtime, but the data still crosses the wire.
+`EVENT_PUBLIC_COLUMNS` narrows REST queries; the `supabase_realtime` publication's column filter on `events` (migration `20260510010000_realtime_publication_narrow_events.sql`) narrows the WebSocket broadcast to the same 22 columns. `agent_notes` is excluded from both channels.
 
-This is currently theoretical (no row has been written with non-NULL `agent_notes` yet), but it's a real channel the REST defense doesn't cover. Two paths to close it if the operator decides to:
+The publication's column list (Postgres 15+ column-filter syntax):
 
-1. **Postgres column-filter on the publication** (Postgres 15+ syntax). One migration: `DROP TABLE events` from the publication then `ADD TABLE events (col1, col2, ...)` with the explicit column list. Atomic when run as a single migration transaction. This is the cleanest fix.
-2. **Drop `events` from the publication entirely** and switch the dashboard to a notify-on-change pattern that re-fetches via REST. More invasive; only worth doing if the column-filter approach hits a Supabase Realtime limitation.
+```sql
+ALTER PUBLICATION supabase_realtime ADD TABLE public.events (
+  id, created_at, occurred_at, title, summary, raw_content,
+  source_type, source_url, source_author, significance, category,
+  country_code, region, location_name, latitude, longitude,
+  case_count, death_count, is_verified, tags, duplicate_of, disease
+);
+```
 
-Until one of those paths lands, write `agent_notes` knowing that anyone subscribed to the realtime channel can read it. For sig-4+ trigger-tagged events the notes describe agent reasoning, not anything actively sensitive — but the residual is worth naming honestly so future amendments don't assume the REST narrowing is complete defense.
+If a new public column is added to `events` later, both `EVENT_PUBLIC_COLUMNS` (REST projection in `lib/types.ts`) and the publication's column list (Realtime broadcast) must be updated together — they're two surfaces of the same "what's public" question. If you add an internal column like a future `internal_notes`, leave it out of both.
 
 ### Explicit non-goals
 

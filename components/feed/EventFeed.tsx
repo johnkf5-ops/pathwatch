@@ -15,9 +15,11 @@ export function EventFeed({ events }: { events: Event[] }) {
 
   const filtered = useMemo(() => {
     const predicate = EVENT_TAB_BY_ID[active].predicate;
-    return events
-      .filter(predicate)
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    // Sort by occurred_at when available (when the event actually happened),
+    // falling back to created_at (when we wrote the row). Matches the card's
+    // 'X hours ago' label which uses the same precedence.
+    const ts = (e: Event) => new Date(e.occurred_at ?? e.created_at).getTime();
+    return events.filter(predicate).sort((a, b) => ts(b) - ts(a));
   }, [events, active]);
 
   return (

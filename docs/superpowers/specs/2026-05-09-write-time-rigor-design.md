@@ -13,7 +13,7 @@ Reduce framing drift in agent-authored events and dossiers without bullet-proofi
 ## Non-goals
 
 - No schema migration. Pure markdown additions to `docs/runbooks/pipeline.md` plus tag-string conventions on `events.tags`.
-- No new column on `events`. The existing `is_verified BOOLEAN` continues to govern URL-existence (per §4.5); the new tags govern attribution.
+- No new column on `events`. The existing `is_verified BOOLEAN` governs URL existence; the new tags govern attribution. The implementation patch tightens §4.5 with one explicit line pinning what `is_verified` means: `set is_verified=true for resolved URLs, is_verified=false for events written from search snippets without a resolvable URL.`
 - No UI flow change in v1. The new tags are operator-on-sight-in-the-feed only.
 - No machine-verification of verbatim quotes against source URLs (rejected — see §3).
 - No marker convention for operator-confirmed dossier text (rejected — see §3).
@@ -43,11 +43,13 @@ Per CDC clarification (May 9): 'we are not quarantining anybody'.
 **Example (contested state, demonstrates A + A.2 + B firing together):**
 ```
 Summary:    CDC press release: 'CDC will coordinate the safe repatriation… American
-            citizens are being repatriated to Offutt Air Force Base'. Per CDC verbal
-            clarification (May 9): 'we are not quarantining anybody'.
+            citizens are being repatriated to Offutt Air Force Base'. Per ABC News
+            reporting a CDC clarification (May 9): 'we are not quarantining anybody'.
 Tags:       ['policy-ambiguity', 'paraphrased', 'cdc', 'mv-hondius', ...]
 Significance: 5  -- policy importance unchanged
 ```
+
+The verbal-clarification quote is attributed via ABC News (journalist-mediated), not directly to CDC. That's why the event carries `paraphrased`, not `primary-source`. **Tie-breaker:** if any quote in the summary is journalist-mediated, the event tags `paraphrased` (weakest-link attribution wins). An event with both an agency-direct quote AND a journalist-mediated quote tags `paraphrased`.
 
 ### A.2 Attribution tagging (metadata about the quote in A)
 
@@ -124,7 +126,7 @@ The CDC case that prompted this work had **two layers**:
 
 The first was an **over-extrapolation at write time** — the press release said "available for evaluation/monitoring" and the agent collapsed that into stronger "for quarantine and monitoring" framing. Rule A (verbatim quote required) is designed to make exactly that collapse structurally hard. With the rule in place, the agent's summary would have had to pin the source's actual neutral language next to whatever interpretation it added — and the over-extrapolation would have been visible to the operator on sight.
 
-The second was **source-internal contradiction across channels** — the verbal clarification reversed the mandatory tone hours after the press release. No write-time rule the pipeline could apply prevents that. At the moment of the agent's write, the press release was the only available source and reading it neutrally was the most defensible interpretation; the contradiction came from outside the pipeline's view.
+The second was **source-internal contradiction across channels** — the verbal clarification reversed the mandatory tone hours after the press release. No write-time rule the pipeline could apply prevents that. At the moment of the agent's write, the press release was the only available source and reading it neutrally was the most defensible interpretation; the contradiction was published after the agent's write.
 
 The operator feedback loop is the only cure for the second layer. Sessions that read this runbook should expect to revise their own past writes regularly — that's the system working as intended, not the system breaking.
 
@@ -139,7 +141,7 @@ Implementation is complete when, after the runbook patch lands and a fresh cycle
 - `### 5. Write` carries a one-line operator-revise-loop note at the top and a one-line cross-link to §A and A.2 in the per-item write block.
 - A spot-check of the next 10 sig-4+ events written in production:
   - Each summary contains at least one unicode-quoted string from the source.
-  - Each event has either `primary-source` or `paraphrased` (not both, not neither).
+  - Each event has exactly one of `primary-source` or `paraphrased` (weakest-link tie-breaker per §A.2).
   - Any binary policy claim with disagreement across Tier-1/2 sources carries `policy-ambiguity` and shows both quotes side-by-side.
 - A spot-check of the next case dossier UPDATE the agent issues:
   - The agent has cross-referenced current sources, not preserved older framing solely because the DB contained it.
@@ -179,7 +181,8 @@ Suggested task decomposition for the implementation plan:
 3. Add the `## Residual drift, framed honestly` closer to that same new section.
 4. Insert the cross-link line in `### 3. Process & score`.
 5. Insert the operator-revise-loop note and the cross-link line in `### 5. Write`.
-6. Commit and push.
+6. Patch `### 4.5. URL verification` with one explicit line on `is_verified` semantics: `set is_verified=true for resolved URLs, is_verified=false for events written from search snippets without a resolvable URL.`
+7. Commit and push.
 
 No verification step needed beyond `git diff` review — there is no code to typecheck, no tests to run, no DB to migrate.
 

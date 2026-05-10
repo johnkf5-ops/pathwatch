@@ -72,6 +72,7 @@ For each unique item:
   - **2 (Low)**: local news coverage, useful social-media discussion
   - **1 (Routine)**: general discussion, speculation, reposts of known info
 - **Tag** with strain (`andes-virus`), context (`mv-hondius`), and topic (`transmission`, `cfr`, `human-to-human`, etc.)
+- For binary policy claims (mandatory/voluntary, banned/allowed, confirmed/denied, will/may, declared/withdrawn), see `## Write-time rigor for sig-4+ items` §B (opposing-search).
 
 ### 4. Fact-check
 
@@ -104,11 +105,15 @@ Speculation, opinion, analysis → log as event with category `speculation` or `
 - Do **not** approximate the URL based on the publication's typical slug format.
 - If the search snippet is interesting but no resolvable URL exists, log a `signal`-tagged event with `source_url = NULL` and a note in the summary that the URL was unverified — but only for content that's clearly identifiable from the snippet alone (e.g. an official press release where the agency name is the source).
 
+**`is_verified` semantics:** set `is_verified = true` for events written from a resolved URL (WebFetch returned 2xx and content matches the summary). Set `is_verified = false` for events written from search snippets without a resolvable URL (rare — see exception above). Do not set `is_verified = true` based on tier alone; the field tracks URL existence, not source authority.
+
 The `events.source_url_hash` unique index prevents duplicate URL inserts but does **not** validate that URLs resolve. URL verification is the agent's responsibility.
 
 The reason: past pipeline cycles accumulated dead links — both AI-hallucinated URLs (model guessed a plausible slug that never existed) and real-but-rotted URLs (paywall, deletion, slug change). The dashboard's intelligence feed is only useful if every "SOURCE ↗" link works. Verification at write time prevents the rot.
 
 ### 5. Write
+
+> **Operator-revise loop:** any event the agent writes is a draft. The operator may revise it after publish. When the agent re-encounters its own past writes on subsequent cycles (reading `events`, `cases.dossier`, prior `snapshots`), it does **not** treat them as ground truth for interpretation — see `## Write-time rigor for sig-4+ items` §C.
 
 For each processed item:
 
@@ -128,6 +133,8 @@ If country-level case count changed:
 INSERT scrape_log row (source, results_found, events_created, duplicates_skipped, error?, duration_ms)
 ```
 
+For sig-4+ events, see `## Write-time rigor for sig-4+ items` §A (verbatim quote required) and §A.2 (`primary-source` vs `paraphrased` tagging).
+
 After writing, **every 4th cycle** (or immediately on a sig-5 event):
 
 ```
@@ -146,6 +153,77 @@ If material change:
 ```
 
 **Always derive `total_cases` and `total_contacts` from the `case_class` filter on the live `cases` table** — never write arbitrary numbers. The UI also derives from `case_class` for live counts; if the snapshot disagrees with the derived number, panels disagree.
+
+## Write-time rigor for sig-4+ items
+
+These rules apply when an event's `significance` is 4 or 5. They reduce framing drift; they do not eliminate it (see "Residual drift" below).
+
+### A. Verbatim quote requirement
+
+The agent's `events.summary` for any sig-4+ event must contain at least one direct quote from the source, in unicode quotes (`'…'`). The quote pins the source's actual language next to the agent's interpretation. SQL-escape concerns belong at the query-construction layer, not in the content convention.
+
+**Example (clean state):**
+
+> Per CDC clarification (May 9): 'we are not quarantining anybody'.
+
+**Example (contested state, demonstrates A + A.2 + B firing together):**
+
+> Summary: CDC press release: 'CDC will coordinate the safe repatriation… American citizens are being repatriated to Offutt Air Force Base'. Per ABC News reporting a CDC clarification (May 9): 'we are not quarantining anybody'.
+> Tags: `['policy-ambiguity', 'paraphrased', 'cdc', 'mv-hondius', ...]`
+> Significance: 5 (policy importance unchanged)
+
+The verbal-clarification quote is attributed via ABC News (journalist-mediated), not directly to CDC. That's why the event carries `paraphrased`, not `primary-source`.
+
+### A.2 Attribution tagging
+
+Every sig-4+ event also gets one attribution tag describing where the quote came from:
+
+- `tags: ['primary-source', ...]` — quote is from the agency's own publication (press release, DON, statement, dashboard).
+- `tags: ['paraphrased', ...]` — only a journalist's report exists; quote is framed as "[Outlet]: 'agency said X'" rather than the agency's direct voice.
+
+**Tie-breaker:** if any quote in the summary is journalist-mediated, the event tags `paraphrased` (weakest-link attribution wins). An event with both an agency-direct quote AND a journalist-mediated quote tags `paraphrased`.
+
+Attribution metadata only. URL verification is separate (handled by §4.5 — `is_verified` covers URL existence, the new tags govern attribution).
+
+### B. Opposing-search (binary policy claims)
+
+For any binary policy claim — mandatory/voluntary, banned/allowed, confirmed/denied, will/may, declared/withdrawn — the agent must run **two searches**: the affirmative and the negation.
+
+**"Substantive results"** means at least one Tier-1 or Tier-2 source making the opposing claim (per `## Source credibility tiers` below). Social-media speculation does not count.
+
+If the negation returns substantive results, **significance still reflects topic importance** (do not downgrade — that would hide a major policy story behind the SIGNAL tab). Instead the agent:
+
+1. Includes both verbatim quotes side-by-side in the summary.
+2. Tags `policy-ambiguity`.
+3. Does not pick a side without operator input.
+
+### C. Don't trust your own past writes
+
+The agent treats all dossier text and prior event summaries as **agent-authored prior writes** — never as ground truth for interpretation. On every cycle, re-verify framing against current sources. Do not preserve framing solely because the DB already contains it. If the source language has shifted, propose an UPDATE softening or correcting the prior dossier/summary.
+
+This is the operator-revise-loop in agent-actionable form. There is no marker convention for "operator-confirmed text" in v1 — the rule applies uniformly to all DB content the agent re-encounters.
+
+### Explicit non-goals
+
+Future sessions reading this section will be tempted to extend the rules. The following extensions are deliberately out of scope:
+
+- **Blanket multi-source corroboration.** Wire services routinely echo the same press release with the same framing; two outlets reporting the same agent-extracted summary is not independent corroboration. The rule also adds latency on Tier-1 primary statements (WHO DON, ECDC TAB, CDC HAN) which are themselves the source. Rules A and B handle the failure mode without this cost.
+- **UI signal for the `paraphrased` tag (v1).** The tag is operator-on-sight-in-the-feed only. No EventCard tone change, no inline footnote, no SIGNAL-tab integration. If drift turns out to need stronger visual surfacing, that's a separate frontend sub-project.
+- **Marker convention for operator-confirmed text.** Adds a convention the operator must remember; partial adoption is worse than uniform skepticism. Rule C ("agent treats all prior DB writes as agent-authored, re-verify on every cycle") is more honest about what's enforceable today.
+- **Machine-verification of verbatim quotes against source URLs.** Succeeds on plain HTML and silently fails on paywalls, dynamic content, PDFs, image-only documents, embedded video transcripts. False confidence on the cases where it works is more dangerous than uniform skepticism. The verbatim-quote rule's value is the side-by-side framing for the operator's eye, not a machine-checkable invariant.
+- **Schema changes.** No new columns, no new enum values, no migrations. The whole patch is markdown additions to this file plus tag-string conventions on `events.tags`.
+
+### Residual drift, framed honestly
+
+Three rules + a non-scope list will reduce framing drift. They will not eliminate it.
+
+The CDC framing miss that prompted this work had two layers:
+
+The first was an over-extrapolation at write time — the press release said "available for evaluation/monitoring" and the agent collapsed that into stronger "for quarantine and monitoring" framing. Rule A (verbatim quote required) is designed to make exactly that collapse structurally hard. With the rule in place, the agent's summary would have had to pin the source's actual neutral language next to whatever interpretation it added — and the over-extrapolation would have been visible to the operator on sight.
+
+The second was source-internal contradiction across channels — the verbal clarification reversed the mandatory tone hours after the press release. No write-time rule the pipeline could apply prevents that. At the moment of the agent's write, the press release was the only available source and reading it neutrally was the most defensible interpretation; the contradiction was published after the agent's write.
+
+The operator feedback loop is the only cure for the second layer. Sessions that read this runbook should expect to revise their own past writes regularly — that's the system working as intended, not the system breaking.
 
 ## UI output coverage map
 

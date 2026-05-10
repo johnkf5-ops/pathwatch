@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 import { createServerClient } from '@/lib/supabase-server';
 
-export const alt = 'Pathwatch — Real-Time Disease Outbreak Tracker';
+export const alt = 'Pathwatch — Live MV Hondius Hantavirus (Andes virus) Outbreak Tracker';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 // Skip build-time prerender — needs runtime Supabase env vars.
@@ -48,7 +48,7 @@ export default async function Image() {
         </div>
 
         <div style={{ marginTop: 48, fontSize: 28, color: '#8888A0' }}>
-          Real-Time Disease Outbreak Tracker
+          MV Hondius Hantavirus Outbreak — Live Tracker
         </div>
 
         <div

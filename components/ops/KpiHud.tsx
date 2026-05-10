@@ -64,7 +64,7 @@ export function KpiHud({ snapshot, prevSnapshot, cases }: Props) {
         aria-expanded={open}
         className="flex w-full items-center justify-between border-b border-white/10 px-3 py-1.5 text-left hover:bg-white/5"
       >
-        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted/80">KEY METRICS</span>
+        <h2 className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted/80">KEY METRICS</h2>
         {open ? <ChevronUp size={12} className="text-text-muted/70" /> : <ChevronDown size={12} className="text-text-muted/70" />}
       </button>
       {open && (

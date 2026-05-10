@@ -9,7 +9,13 @@ function pct(v: number | null) {
 export function ThreatPanelExpanded({ assessment: a }: { assessment: ThreatAssessment }) {
   const age = formatDistanceToNowStrict(parseISO(a.created_at)).toUpperCase();
   return (
-    <section className="space-y-4 border-t border-border bg-bg px-4 py-4">
+    <section
+      className="space-y-4 border-t border-border bg-bg px-4 py-4"
+      aria-labelledby="threat-assessment-heading"
+    >
+      <h2 id="threat-assessment-heading" className="sr-only">
+        Pandemic Threat Assessment
+      </h2>
       <div className="space-y-3">
         <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
           ASSESSMENT · <span suppressHydrationWarning>{age} AGO</span> · MODEL {a.model}
@@ -19,12 +25,12 @@ export function ThreatPanelExpanded({ assessment: a }: { assessment: ThreatAsses
       </div>
 
       <div>
-        <div className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">KEY SIGNALS</div>
+        <h3 className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">KEY SIGNALS</h3>
         <SignalIndicators assessment={a} />
       </div>
 
       <div>
-        <div className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">POLYMARKET</div>
+        <h3 className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">POLYMARKET</h3>
         <dl className="grid grid-cols-[1fr_auto] gap-y-0.5 font-mono text-[11px]">
           <dt className="text-text-muted">Pandemic 2026</dt>
           <dd className="text-right text-text">{pct(a.polymarket_pandemic_odds)}</dd>

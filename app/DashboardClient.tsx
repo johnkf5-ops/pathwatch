@@ -171,6 +171,9 @@ export function DashboardClient({
 
   return (
     <div className="flex min-h-screen flex-col lg:h-screen lg:min-h-0">
+      <h1 className="sr-only">
+        2026 MV Hondius Hantavirus (Andes Virus / ANDV) Outbreak — Live Tracker
+      </h1>
       <TopBar snapshot={snapshot} threat={threat} monitoringCount={monitoringCases.length} caseCount={caseRows.length} />
 
       {/* Mobile (< lg): single-column stack with collapsible map + bottom sheet */}

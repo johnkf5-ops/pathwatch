@@ -55,8 +55,50 @@ export async function generateMetadata({
 export default async function CasePage({ params }: { params: { case_code: string } }) {
   const { case_, locations, sourceEvent } = await fetchCase(params.case_code);
   if (!case_) notFound();
+  const label = caseLabel(case_);
+
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: `${label} — Hantavirus Case Dossier`,
+      description: case_.dossier?.slice(0, 240) ?? `Case dossier for ${label}`,
+      author: { '@type': 'Organization', name: 'Pathwatch' },
+      publisher: { '@type': 'Organization', name: 'Pathwatch' },
+      datePublished: case_.created_at,
+      dateModified: case_.updated_at ?? case_.created_at,
+      mainEntityOfPage: `https://hantavirustracer.com/case/${encodeURIComponent(case_.case_code)}`,
+      ...(case_.current_country
+        ? {
+            contentLocation: {
+              '@type': 'Place',
+              address: { '@type': 'PostalAddress', addressCountry: case_.current_country },
+            },
+          }
+        : {}),
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Pathwatch', item: 'https://hantavirustracer.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Cases', item: 'https://hantavirustracer.com/' },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          name: label,
+          item: `https://hantavirustracer.com/case/${encodeURIComponent(case_.case_code)}`,
+        },
+      ],
+    },
+  ];
+
   return (
     <main className="mx-auto max-w-[840px] px-6 py-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Link
         href="/"
         className="mb-6 inline-block font-mono text-xs uppercase tracking-[0.1em] text-accent hover:underline"

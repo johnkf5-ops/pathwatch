@@ -53,5 +53,56 @@ export default async function EventPage({ params }: { params: { id: string } }) 
   const event = await fetchEvent(params.id);
   if (!event) notFound();
   const related = await fetchRelated(event);
-  return <EventDetail event={event} related={related} />;
+
+  const eventDate = event.occurred_at ?? event.created_at;
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'NewsArticle',
+      headline: event.title,
+      description: event.summary ?? undefined,
+      datePublished: eventDate,
+      dateModified: event.created_at,
+      author: event.source_author
+        ? { '@type': 'Person', name: event.source_author }
+        : { '@type': 'Organization', name: event.source_type ?? 'Pathwatch' },
+      publisher: { '@type': 'Organization', name: 'Pathwatch' },
+      mainEntityOfPage: `https://hantavirustracer.com/event/${event.id}`,
+      isAccessibleForFree: true,
+      ...(event.source_url ? { sameAs: event.source_url } : {}),
+      ...(event.country_code
+        ? {
+            contentLocation: {
+              '@type': 'Place',
+              address: { '@type': 'PostalAddress', addressCountry: event.country_code },
+            },
+          }
+        : {}),
+      keywords: (event.tags ?? []).filter((t) => !t.startsWith('clarifies:')).join(', '),
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Pathwatch', item: 'https://hantavirustracer.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Events', item: 'https://hantavirustracer.com/' },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          name: event.title,
+          item: `https://hantavirustracer.com/event/${event.id}`,
+        },
+      ],
+    },
+  ];
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <EventDetail event={event} related={related} />
+    </>
+  );
 }

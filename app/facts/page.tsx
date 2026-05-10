@@ -8,8 +8,19 @@ import type { Fact, Snapshot } from '@/lib/types';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Knowledge Base — Pathwatch',
-  description: 'Verified facts about the 2026 MV Hondius hantavirus outbreak.',
+  title: 'Hantavirus Knowledge Base — Verified Facts (Pathwatch)',
+  description:
+    'Source-cited facts about hantavirus, Andes virus (ANDV), and the 2026 MV Hondius outbreak. Categories: pathogen, transmission, clinical, epidemiology, history, containment.',
+  alternates: { canonical: '/facts' },
+};
+
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Pathwatch', item: 'https://hantavirustracer.com/' },
+    { '@type': 'ListItem', position: 2, name: 'Knowledge Base', item: 'https://hantavirustracer.com/facts' },
+  ],
 };
 
 export default async function FactsPage() {
@@ -36,6 +47,10 @@ export default async function FactsPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
       <TopBar snapshot={snapshot} threat={null} monitoringCount={0} caseCount={0} />
       <FactsClient facts={facts} />
     </div>

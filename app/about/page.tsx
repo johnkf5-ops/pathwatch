@@ -52,7 +52,7 @@ export default function About() {
       <div className="mt-8 flex flex-wrap gap-4 text-sm">
         <Link href="/" className="text-accent hover:underline">← Back to dashboard</Link>
         <Link href="/hantavirus" className="text-accent hover:underline">Disease overview</Link>
-        <Link href="/faq" className="text-accent hover:underline">FAQ</Link>
+        <Link href="/hantavirus#faq" className="text-accent hover:underline">FAQ</Link>
         <Link href="/facts" className="text-accent hover:underline">Knowledge base</Link>
       </div>
     </main>

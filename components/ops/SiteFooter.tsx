@@ -10,7 +10,7 @@ export function SiteFooter() {
         </span>
         <Link href="/" className="hover:text-text">Tracker</Link>
         <Link href="/hantavirus" className="hover:text-text">Hantavirus</Link>
-        <Link href="/faq" className="hover:text-text">FAQ</Link>
+        <Link href="/hantavirus#faq" className="hover:text-text">FAQ</Link>
         <Link href="/facts" className="hover:text-text">Knowledge Base</Link>
         <Link href="/about" className="hover:text-text">About</Link>
         <span className="ml-auto normal-case tracking-normal text-text-muted/70">

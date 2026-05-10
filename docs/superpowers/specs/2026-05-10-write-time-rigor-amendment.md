@@ -10,7 +10,7 @@
 
 The 2026-05-09 spec landed rules A, A.2, B, and C and tightened §4.5 with one explicit `is_verified` semantics line. Within 24h of that spec landing, three operational gaps surfaced:
 
-1. **WebFetch-only verification cannot reach Reuters-class outlets.** Reuters, Bloomberg, WaPo, Bloomberg, and several other Tier 1-2 sources sit behind DataDome / similar bot-protection layers that return 401/403 to the WebFetch tool but render fine to a real browser. The original spec's `is_verified=true for resolved URLs, false otherwise` rule, applied to WebFetch alone, silently declares those outlets "dead URL" and excludes them. Real-world consequence: the 2026-05-08 events table repopulation excluded a real Reuters story (`new-hantavirus-case-suspected-remote-island-contact-tracing-continues`) as "dead" when it was simply unfetchable through the tool layer.
+1. **WebFetch-only verification cannot reach Reuters-class outlets.** Reuters, Bloomberg, WaPo, FT, and several other Tier 1-2 sources sit behind DataDome / similar bot-protection layers that return 401/403 to the WebFetch tool but render fine to a real browser. The original spec's `is_verified=true for resolved URLs, false otherwise` rule, applied to WebFetch alone, silently declares those outlets "dead URL" and excludes them. Real-world consequence: the 2026-05-08 events table repopulation excluded a real Reuters story (`new-hantavirus-case-suspected-remote-island-contact-tracing-continues`) as "dead" when it was simply unfetchable through the tool layer.
 
 2. **The Scrape source list is too sparse to enforce the rules.** Original §1 names ~9 outlets; in practice the agent searches dozens. Without an explicit catalog and cadence convention, different sessions over-rely on different outlets, and Tier 3-4 stories sometimes propagate unchecked because no Tier 1-2 outlet got searched in the same cycle. The CDC quarantine miss surfaced exactly this failure mode — the verbal clarification was on Politico/Axios within hours, but those weren't in the agent's surfaced source set.
 
@@ -102,7 +102,7 @@ The `paywalled-source` tag distinguishes "intentionally fell back to snippet" fr
 
 ### Cost notes
 
-Tier A is ~free (curl). Tier B costs ~1-3s per Playwright call plus MCP server overhead. Tier C costs nothing extra. Real-world distribution from operator experience: ~85% Tier A success, ~10% Tier B escalation, ~3% Tier C, ~2% unverifiable. Per-cycle Playwright overhead is bounded.
+Tier A is ~free (curl). Tier B costs ~1-3s per Playwright call plus MCP server overhead. Tier C costs nothing extra. Distribution across tiers depends on which outlets the cycle hit; once the amendment has run for ~24 cycles in production, operator review will yield real numbers worth pinning here. Until then no projected distribution is recorded — invented numbers calibrate future sessions to false expectations.
 
 ### Failure-pattern signatures, written form for the runbook
 
@@ -116,7 +116,7 @@ Tier A failure signatures (escalate to Tier B):
     "_Incapsula_Resource"
     "dd_async_token"
     "Access denied — DataDome"
-- HTTP 200 with body length < 500 bytes (likely challenge page, not article)
+- HTTP 200 with body length < 5 KB (likely challenge page, not article — real challenge pages typically 1-3 KB and would pass a 500-byte filter)
 
 Tier B failure signatures (escalate to Tier C):
 - Rendered body does not contain any keyword from the search snippet
@@ -352,33 +352,45 @@ The second example demonstrates the common case: Rule B fires (binary policy cla
 ### Dependency graph
 
 ```
-[Migration] events.agent_notes column          ──┐
-[Migration] scrape_log.source_type group ids   ──┼─→ [Tasks 1-2]
-                                                  │
-[Operator setup] Playwright MCP server         ──┴─→ [Task 3]
-                                                  │
-[Runbook patch] pipeline.md §4.5 verification   ──┐
-  - Tier A/B/C terminology                       ─┼─→ [Tasks 4-5]
-  - Three-tier mechanism + signatures           ─┘
-                                                  │
-[Runbook patch] pipeline.md §1 Scrape           ──┐
-  - source-list restructure                      ─┤
-  - cadence rule + every-cycle group 4          ─┼─→ [Tasks 6-8]
-  - rotation mechanism via scrape_log           ─┘   (depend on group identifiers)
-                                                  │
-[Runbook patch] pipeline.md write-time-rigor    ──┐
-  - Rule B: binary-policy tag at write time     ─┤
-  - Rule D: full mechanism                       ─┼─→ [Tasks 9-12]
-  - clarifies:<uuid> + tag definitions          ─┤
-  - agent_notes mechanism                        ─┘   (depend on agent_notes column)
-                                                  │
-[Frontend] Defensive column projection          ────→ [Task 13]
-  audit (excludes agent_notes)
-                                                  │
-[Spec hygiene] Cross-link updates              ────→ [Task 14]
-[Operator runbook] Playwright MCP precondition ────→ [Task 15]
-                                                  │
-[Verification] migrations + smoke test          ────→ [Tasks 16-17]
+Three independent prerequisites — can run in any order:
+
+  ┌─[Task 1]  Migration: events.agent_notes column
+  │
+  ├─[Task 2]  Migration (conditional): scrape_log.source_type
+  │            CHECK constraint extension — only if such a constraint
+  │            exists; otherwise runbook-only convention
+  │
+  └─[Task 3a] Operator-environment: install + authenticate
+              Playwright MCP server in pipeline operator profile
+
+All three gate ↓
+
+[Tasks 3b, 4-5]  Markdown patches to pipeline.md §4.5 (URL verification)
+                   - 3b: precondition + tag tier-b-unavailable in operator runbook
+                   - 4:  rename numeric → letter access tiers
+                   - 5:  three-tier mechanism + failure signatures
+
+[Tasks 6-8]      Markdown patches to pipeline.md §1 (Scrape)
+                   - 6: source-list restructure (13 groups, group 4 split)
+                   - 7: cadence rule (every-cycle pool + rotation pool)
+                   - 8: rotation mechanism via scrape_log + corroboration table
+
+[Tasks 9-12]     Markdown patches to pipeline.md write-time-rigor section
+                   - 9:  Rule B update (binary-policy tag at write time)
+                   - 10: Rule D full mechanism
+                   - 11: tag definition table
+                   - 12: agent_notes mechanism + worked examples
+
+[Task 13]        Defensive frontend audit (column projection,
+                  excludes agent_notes — file set determined by audit)
+
+[Task 14]        Cross-link updates in pipeline.md
+
+[Tasks 15-17]    Verification:
+                   - 15: apply migrations to remote, query-verify
+                   - 16: smoke verification cycle (functional rule fires)
+                   - 17: operator confirms Tier B availability from
+                          fresh session (browser_navigate without errors)
 ```
 
 ### Task table (for writing-plans)
@@ -388,8 +400,9 @@ Every task is prefixed with the file being patched to remove the section-naming 
 | # | Task | Files |
 |---|---|---|
 | 1 | Migration: add `events.agent_notes TEXT NULL` column with COMMENT | Create: `supabase/migrations/<ts>_events_agent_notes.sql` |
-| 2 | Migration: extend `scrape_log.source_type` value space + add group identifier convention to runbook | Create: `supabase/migrations/<ts>_scrape_log_source_groups.sql`. Modify: `docs/runbooks/pipeline.md` (source-type list section) |
-| 3 | Operator-environment setup: install + authenticate Playwright MCP server in pipeline operator session profile; document precondition | Modify: `docs/runbooks/pipeline-operator.md` (pre-cycle checklist) |
+| 2 | Migration (conditional): if `scrape_log.source_type` has a CHECK constraint enumerating allowed values, extend it to allow `group:*` prefix. If `source_type` is plain TEXT with no CHECK constraint, no migration is needed and this is a runbook-only convention. Implementer determines via `\d+ scrape_log` in `supabase db query --linked` before deciding to create the migration file. | Create (if needed): `supabase/migrations/<ts>_scrape_log_source_groups.sql` |
+| 3a | Operator-environment setup (no file change): install + authenticate Playwright MCP server in pipeline operator session profile. Performed by operator in their environment before running cycles; not committed to repo. | (no file changes — operator environment) |
+| 3b | Patch `pipeline-operator.md` (operator runbook): pre-cycle checklist updated with Playwright MCP precondition; tag `tier-b-unavailable` documented as "needs operator rerun later" | Modify: `docs/runbooks/pipeline-operator.md` |
 | 4 | Patch `pipeline.md` §4.5 (URL verification): rename any existing numeric "access tier" references to letter form (Tier A/B/C) | Modify: `docs/runbooks/pipeline.md` |
 | 5 | Patch `pipeline.md` §4.5 (URL verification): replace WebFetch-only verification with three-tier access mechanism (curl → Playwright → snippet), including failure-pattern signatures and `is_verified` semantics table from amendment §1 | Modify: `docs/runbooks/pipeline.md` |
 | 6 | Patch `pipeline.md` §1 (Scrape): source-list restructure — 13 groups, NPR/Telegraph re-placement, federal-policy subgroup as group 4, replace existing illustrative outlet list | Modify: `docs/runbooks/pipeline.md` |
@@ -399,28 +412,29 @@ Every task is prefixed with the file being patched to remove the section-naming 
 | 10 | Patch `pipeline.md` write-time-rigor: add §D (Rule D) full mechanism — trigger condition, re-check window, scrape_log preflight, channels checked, action list (insert clarification + UPDATE original) | Modify: `docs/runbooks/pipeline.md` |
 | 11 | Patch `pipeline.md` write-time-rigor: add tag definition table (binary-policy, policy-ambiguity, policy-clarification, clarifies:<uuid>, paywalled-source, tier-b-unavailable, requires-corroboration) | Modify: `docs/runbooks/pipeline.md` |
 | 12 | Patch `pipeline.md` write-time-rigor: add §E (agent_notes mechanism) — trigger condition, content structure, both worked examples | Modify: `docs/runbooks/pipeline.md` |
-| 13 | Defensive frontend audit: convert `SELECT *` (and implicit `*` via Supabase builder) to explicit column projection across all event-fetch sites in `app/`, `components/`, `lib/`. Exclude `agent_notes` from public projections. | Modify: every file matching `rg "from\('events'\)" -l` plus any direct `events` table SQL in `lib/` |
+| 13 | Defensive frontend audit: enumerate event-fetch sites via `rg "from\('events'\)" -l` plus any direct `events` table SQL across `app/`, `components/`, `lib/`. Convert each from `SELECT *` (or implicit `*` via Supabase builder) to explicit column projection that excludes `agent_notes`. Exact file set is determined by the audit, not pinned in advance. | Modify: file(s) determined by Task 13 audit |
 | 14 | Cross-link updates: add inline cross-links in `pipeline.md` §3 (Process & score) referencing Rule D for binary-policy claims; in §5 (Write) referencing agent_notes for trigger-tagged events | Modify: `docs/runbooks/pipeline.md` |
-| 15 | Patch `pipeline-operator.md` (operator runbook): pre-cycle checklist updated with Playwright MCP precondition; tag `tier-b-unavailable` documented as "needs operator rerun later" | Modify: `docs/runbooks/pipeline-operator.md` |
-| 16 | Apply both migrations to remote prod via `supabase db push --linked`; verify `events.agent_notes` and `scrape_log.source_type` group-id values via `supabase db query --linked` | (no file changes) |
-| 17 | Smoke verification cycle: run a manual pipeline cycle against the patched runbook, spot-check that next 5 sig-4+ events follow rules A/A.2/B (with `binary-policy` tag), populate `agent_notes` correctly per trigger-tag rules, AND that at least one Tier B and one Tier C escalation fires correctly within first 24 cycles | (no file changes) |
+| 15 | Apply migration(s) to remote prod via `supabase db push --linked`; verify `events.agent_notes` exists (and `scrape_log.source_type` group-id values, if Task 2 produced a migration) via `supabase db query --linked` | (no file changes) |
+| 16 | Smoke verification cycle: run a manual pipeline cycle against the patched runbook, spot-check that next 5 sig-4+ events follow rules A/A.2/B (with `binary-policy` tag set when Rule B fires), populate `agent_notes` correctly per trigger-tag rules, AND that at least one Tier B and one Tier C escalation fires correctly. If the 24-cycle window contains no eligible Tier B/C content, defer this criterion to the next 24-cycle window. | (no file changes) |
+| 17 | Operator confirms Tier B availability from a fresh pipeline session: run `mcp__plugin_playwright_playwright__browser_navigate` against a known Tier B outlet (e.g., `https://www.reuters.com/`) and verify it returns rendered content without permission errors. | (no file changes — operator verification) |
 
-17 tasks total. Tasks 1-3 (migrations + operator setup) and Task 13 (frontend audit) are the only code-touching / environment tasks; everything else is markdown additions or remote-DB application.
+17 tasks total (with 3a/3b counted together). Tasks 1, 2 (conditional), 3a (operator environment), and Task 13 (frontend audit) are the only code-touching / environment tasks; everything else is markdown additions, remote-DB application, or operator-side verification.
 
 ### Acceptance criteria
 
 In addition to the original 2026-05-09 spec's acceptance criteria:
 
 - `events.agent_notes` column exists in remote prod, NULL on all pre-amendment events.
-- `scrape_log.source_type` accepts and indexes `group:*` value forms.
-- `pipeline-operator.md` pre-cycle checklist includes Playwright MCP server precondition; operator following the runbook from a fresh session has Tier B available.
+- `scrape_log.source_type` accepts `group:*` value forms (either trivially because no CHECK constraint exists, or via the conditional Task 2 migration).
+- `pipeline-operator.md` pre-cycle checklist includes Playwright MCP server precondition.
+- **Operator verifies Tier B availability concretely:** from a fresh pipeline session, running `mcp__plugin_playwright_playwright__browser_navigate` against a known Tier B outlet returns rendered content without permission errors. Logged in operator runbook completion notes.
 - Spot-check of the next 5 sig-4+ events:
   - Events with binary policy claims carry `binary-policy` tag at original write time.
   - `agent_notes` populated for any event carrying any of the four trigger tags.
   - `agent_notes` NULL for routine descriptive sig-4+ events.
 - Spot-check of source-list groupings: agent's actual cycle hits show every-cycle pool covered every cycle, 4-cycle rotation pool fully covered within rolling 4-cycle window per `scrape_log` recency.
 - Spot-check of clarification chains: `clarifies:<uuid>` tag points to a real `events.id` UUID; reverse lookup query returns the chain correctly.
-- **Verification-mechanism functional test:** within first 24 cycles after amendment lands, at least one Tier B escalation and one Tier C escalation fire correctly, with appropriate `is_verified` and tag values logged.
+- **Verification-mechanism functional test:** at least one Tier B escalation and one Tier C escalation fire correctly, with appropriate `is_verified` and tag values logged, *where eligible Tier B/C content surfaces within the first 24 cycles*. If no eligible content surfaces in that window, this criterion is deferred to the next 24-cycle window — does not block the amendment landing.
 - Defensive frontend audit complete: no public-facing event query returns `agent_notes` to the client.
 
 ### Honest residual drift, framed for the amendment's scope
@@ -466,8 +480,8 @@ This is a moderately-sized patch: 17 tasks, two migrations, two operator-environ
 
 Scope at a glance:
 
-- **Files modified:** `docs/runbooks/pipeline.md`, `docs/runbooks/pipeline-operator.md`, `lib/queries.ts` (or wherever events are fetched — audit determines exact set), various component files
-- **Files created:** 2 migration files in `supabase/migrations/`
+- **Files modified:** `docs/runbooks/pipeline.md`, `docs/runbooks/pipeline-operator.md`, plus the file set produced by Task 13's defensive audit (event-fetch sites in `app/`, `components/`, `lib/`)
+- **Files created:** 1 migration file (`events.agent_notes` column) plus a conditional second migration only if Task 2's CHECK-constraint check determines one is needed
 - **Schema changes:** 1 nullable column on `events`, 1 value-space extension on `scrape_log.source_type`
 - **Environment changes:** Playwright MCP server installed in pipeline operator profile
 - **No frontend functional UI change** — the frontend audit is defensive (column projection), not a UX change

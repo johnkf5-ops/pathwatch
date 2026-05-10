@@ -264,7 +264,29 @@ If material change:
   )
 ```
 
-**Always derive `total_cases` and `total_contacts` from the `case_class` filter on the live `cases` table** — never write arbitrary numbers. The UI also derives from `case_class` for live counts; if the snapshot disagrees with the derived number, panels disagree.
+**Always derive snapshot counts from the live tables** — never write arbitrary numbers. Three derivations to do at snapshot time:
+
+```sql
+-- total_cases — confirmed/probable/suspected only
+SELECT COUNT(*) FROM cases
+WHERE disease='hantavirus' AND case_class IN ('confirmed_case','probable_case','suspected_case');
+
+-- total_contacts — contacts and returnees only
+SELECT COUNT(*) FROM cases
+WHERE disease='hantavirus' AND case_class IN ('contact','returnee');
+
+-- total_deaths — deceased status across any case_class
+SELECT COUNT(*) FROM cases
+WHERE disease='hantavirus' AND status='deceased';
+
+-- countries_affected + countries_list — every country touched, including
+-- contact-tracing reach (active + monitoring rows in country_stats)
+SELECT COUNT(*) AS countries_affected,
+       array_agg(country_code ORDER BY country_code) AS countries_list
+FROM country_stats WHERE disease='hantavirus';
+```
+
+The UI derives from these tables for live counts; if the snapshot disagrees with the derived number, panels disagree. **`countries_affected` includes contact-tracing reach** — it is NOT just countries with confirmed cases. Undercounting (e.g., listing only the 10 primary-affected countries when 20 total appear in `country_stats`) makes the KPI HUD lie. Past failure mode: a snapshot writer counted "primary affected" countries instead of all rows; observed 2026-05-10 with `countries_affected=10` while `country_stats` had 20 rows and the top header read 20 — KPI HUD and header disagreed by 2x.
 
 #### Cycle output expectations (write density)
 

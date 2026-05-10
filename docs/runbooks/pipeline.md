@@ -392,6 +392,69 @@ No `related_event_id` schema column. Clarification chains live in tags:
 | `tier-b-unavailable` | Tier B verification failed because the Playwright MCP server was unavailable in the operator session. Operator must rerun verification later. See §4.5. |
 | `requires-corroboration` | Cred Tier 3-4 source only; corroboration search returned nothing from Cred Tier 1-2. Held at sig-2. See §1 corroboration vs opposing search. |
 
+### E. agent_notes — internal reasoning trail
+
+For events carrying any of these tags:
+
+- `binary-policy`
+- `policy-ambiguity`
+- `paraphrased`
+- `policy-clarification`
+
+the agent populates the `events.agent_notes TEXT NULL` column with one paragraph of structured prose covering:
+
+- What searches the agent ran (Rule B opposing-search results, corroboration searches if applicable)
+- What tier of sources surfaced what
+- Why the agent picked this framing
+- What follow-up Rule D will perform (if applicable)
+
+Routine descriptive primary-source events (most WHO DONs, CDC HAN updates) do **not** get notes — `agent_notes` stays NULL. The trigger condition is narrow on purpose.
+
+`agent_notes` is internal-only. Public dashboard surfaces (EventCard, map drawer, OG image) project explicit columns and exclude this one. Operator reads via `supabase db query --linked`:
+
+```bash
+supabase db query "SELECT id, summary, agent_notes FROM events WHERE id = '<uuid>';" --linked
+```
+
+#### Example 1 — `policy-clarification` event (Rule D fire)
+
+```
+events.summary:
+  Per CDC clarification (May 9): 'we are not quarantining anybody'.
+
+events.tags:
+  ['policy-clarification', 'clarifies:7a3c-...', 'cdc', 'paraphrased',
+   'mv-hondius']
+
+events.agent_notes:
+  Original event 7a3c-... written from CDC press release language. Rule D
+  fired on cycle 14 (May 9 14:00 UTC) when ABC News surfaced verbal
+  clarification at White House gaggle. Group 4 (Politico) confirmed
+  within 4h. Cred Tier 1-2 corroboration satisfied; original event
+  UPDATEd, this clarification inserted.
+```
+
+#### Example 2 — `binary-policy` event with no Rule B contradiction at write time
+
+```
+events.summary:
+  Spanish Health Minister at press conference (May 8): 'Mandatory
+  monitoring will be implemented for all returnees from the affected
+  region for 14 days'.
+
+events.tags:
+  ['binary-policy', 'sanidad', 'primary-source', 'mv-hondius']
+
+events.agent_notes:
+  Rule B opposing-search ran "voluntary monitoring Spain MV Hondius" -
+  no Cred Tier 1-2 contradicting framing surfaced. Single primary-source
+  framing held. Event tagged binary-policy so Rule D will re-check
+  Sanidad's channels for 7 days from now. No policy-ambiguity tag
+  (no contradiction at write time).
+```
+
+The second example demonstrates the common case: Rule B fires (binary policy claim), opposing-search returns nothing, event proceeds normally with `binary-policy` tag (which arms Rule D). This is the failure mode the original CDC quarantine case missed entirely.
+
 ### Explicit non-goals
 
 Future sessions reading this section will be tempted to extend the rules. The following extensions are deliberately out of scope:

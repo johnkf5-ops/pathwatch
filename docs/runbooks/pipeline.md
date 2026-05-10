@@ -299,13 +299,17 @@ Attribution metadata only. URL verification is separate (handled by §4.5 — `i
 
 For any binary policy claim — mandatory/voluntary, banned/allowed, confirmed/denied, will/may, declared/withdrawn — the agent must run **two searches**: the affirmative and the negation.
 
-**"Substantive results"** means at least one Tier-1 or Tier-2 source making the opposing claim (per `## Source credibility tiers` below). Social-media speculation does not count.
+**"Substantive results"** means at least one Cred Tier-1 or Cred Tier-2 source making the opposing claim (per `## Source credibility tiers` below). Social-media speculation does not count.
+
+**Tag at write time, regardless of search outcome:** the event gets the `binary-policy` tag whenever Rule B's opposing-search procedure fires. This is the trigger for Rule D (follow-up agency-channel checks) on subsequent cycles. The tag is set whether or not the negation returned substantive results — `binary-policy` means "Rule B procedure ran on this event," not "framing was contested."
 
 If the negation returns substantive results, **significance still reflects topic importance** (do not downgrade — that would hide a major policy story behind the SIGNAL tab). Instead the agent:
 
 1. Includes both verbatim quotes side-by-side in the summary.
-2. Tags `policy-ambiguity`.
+2. Tags `policy-ambiguity` (in addition to `binary-policy`).
 3. Does not pick a side without operator input.
+
+If the negation returns nothing substantive: event proceeds with `binary-policy` tag only (no `policy-ambiguity`).
 
 ### C. Don't trust your own past writes
 

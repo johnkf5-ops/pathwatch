@@ -266,21 +266,11 @@ If material change:
 
 #### Cycle output expectations (write density)
 
-Active-mode cycles typically write **5-15 events per loop**. Cycles writing fewer than 3 sig-3+ events should be re-examined for under-coverage before closing.
-
 **Per-URL evaluation rule.** For each unique URL surfaced via search that materially advances the story, the agent considers whether it warrants its own event row. **Default to writing rather than consolidating.** Per-country operational events (Spain flight to Madrid, Dutch charter, UK UKHSA flight, etc.) surface as distinct dashboard cards; one batched "multi-nation repatriation" row hides the operational detail the dashboard exists to surface. The verbatim-quote and agent_notes overhead from §A and §E does not justify consolidation — the dashboard prefers many lean cards over few fat rows.
 
-**End-of-cycle completeness check.** Before closing the write phase, query:
+**Floor (not target):** if a cycle writes **fewer than ~3 sig-3+ events during an active-event phase**, re-examine the search results before closing — the cycle is likely under-producing. There is no upper-bound target; pushing thin events to hit a count is the opposite failure mode.
 
-```sql
-SELECT
-  (SELECT COUNT(*) FROM scrape_log WHERE created_at > <cycle_start> AND source_type NOT LIKE 'group:%') AS searches_logged,
-  (SELECT COUNT(*) FROM events    WHERE created_at > <cycle_start>) AS events_written;
-```
-
-The expected ratio depends on phase. During active-event phases (multi-country dispersal, surge weeks): events_written typically reaches 30-60% of distinct-URL count from the search results. During quiet phases: 10-20% is normal. **If events_written is below 10% of distinct URLs surfaced and the agent didn't explicitly note duplicates / out-of-scope reasoning per skipped URL, re-examine — the cycle is under-producing.**
-
-**Anti-pattern: verification-mode framing.** The agent has previously been observed treating cycles as "smoke tests" or "demonstrations of the rules" rather than full operational runs, leading to chronic under-production. If you find yourself reasoning about an event in terms of "does this demonstrate Rule X firing?" rather than "is this material to the story?" — recalibrate. Every cycle is a real run.
+**Anti-pattern: verification-mode framing.** Pipeline cycles have historically under-produced when the agent treats them as "smoke tests" or "demonstrations of the rules" rather than full operational runs. If you find yourself reasoning about an event in terms of "does this demonstrate Rule X firing?" rather than "is this material to the story?" — recalibrate. Every cycle is a real run.
 
 ## Write-time rigor for sig-4+ items
 
@@ -419,12 +409,13 @@ For events carrying any of these tags:
 - `paraphrased`
 - `policy-clarification`
 
-the agent populates the `events.agent_notes TEXT NULL` column with one paragraph of structured prose covering:
+the agent populates the `events.agent_notes TEXT NULL` column with **one sentence** capturing whatever the operator most needs to evaluate this row on sight — typically: what tier the source verified at, what Rule B's opposing-search returned, and (for binary-policy events) what Rule D will re-check. Aim for a single line; if you find yourself writing a paragraph, the §E note has drifted into rationale-for-the-record territory and needs trimming. Lean notes preserve density without forcing thin writes.
 
-- What searches the agent ran (Rule B opposing-search results, corroboration searches if applicable)
-- What tier of sources surfaced what
-- Why the agent picked this framing
-- What follow-up Rule D will perform (if applicable)
+**Examples of the right length:**
+
+- `Tier A curl 200; Rule B opposing-search nothing; binary-policy tagged for Rule D 7-day window.`
+- `Tier C snippet — Hill blocked at A (403) and B (Access denied); paywalled-source.`
+- `Newsweek (Tier 2) corroborates earlier tabloid surfacing; requires-corroboration not applied.`
 
 Routine descriptive primary-source events (most WHO DONs, CDC HAN updates) do **not** get notes — `agent_notes` stays NULL. The trigger condition is narrow on purpose.
 

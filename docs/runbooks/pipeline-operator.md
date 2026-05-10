@@ -96,14 +96,14 @@ attention to:
   policy-ambiguity / paraphrased / policy-clarification, populate
   `events.agent_notes` with a one-paragraph reasoning trail. Routine
   primary-source events leave it NULL.
-- §5 Cycle output expectations: active-mode cycles typically write
-  5-15 events per loop. Treat each unique URL surfaced as a candidate
-  event — DO NOT consolidate per-country operational events into
-  single rows; the dashboard surfaces individual cards better. Run
-  the end-of-cycle completeness check before closing: events_written
-  should be 30-60% of distinct-URL count during active phases. If
-  below 10%, you are under-producing — re-examine the search results.
-  Every cycle is a real run, not a demonstration.
+- §5 Cycle output expectations: treat each unique URL surfaced as a
+  candidate event — DO NOT consolidate per-country operational events
+  into single rows; the dashboard surfaces individual cards better.
+  Floor (not target): if you wrote fewer than ~3 sig-3+ events during
+  an active phase, re-examine for under-coverage. Every cycle is a
+  real run, not a demonstration. agent_notes is one SENTENCE, not a
+  paragraph — keep notes lean so density doesn't fight per-event
+  cost.
 
 Verify Playwright MCP is available before your first cycle: attempt
 `mcp__plugin_playwright_playwright__browser_navigate` against

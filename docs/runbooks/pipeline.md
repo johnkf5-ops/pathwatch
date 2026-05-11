@@ -260,9 +260,19 @@ If material change:
     countries_affected,  -- count of distinct countries involved (incl. contact-tracing reach)
     countries_list,      -- ISO codes of involved countries
     fatality_rate,       -- total_deaths / total_cases (use cases denominator, not all-tracked)
-    trend, trend_description, risk_level, key_developments[], ai_analysis
+    trend, trend_description, risk_level,
+    headline,            -- ONE SHORT LINE (~100 char) sit-rep headline, surfaces top of SituationBrief
+    ai_analysis,         -- 2-4 paragraph prose narrative — what changed, what to watch
+    key_developments[]   -- bullet facts (existing pattern)
   )
 ```
+
+**SituationBrief renders three tiers — fill all three:**
+- `headline` is the one-line punch. "Day 11 — Dispersal monitoring phase begins. Three U.S. confirmed (Omaha + Atlanta), all isolated, none critical." Not the same as `trend_description` (which is a short trend label like "stable / accelerating / declining + brief context").
+- `ai_analysis` is the prose body — 2-4 short paragraphs in plain language (no tech jargon, no Cred-Tier-2 / binary-policy / amplification). Closes with a "what we're watching" paragraph.
+- `key_developments` is the bullet list of concrete facts (existing pattern — what most snapshot writers already produce well).
+
+Avoid duplication: the headline names the phase; the prose explains what's happening and what to watch; the bullets give the concrete facts that ground both.
 
 **Always derive snapshot counts from the live tables** — never write arbitrary numbers. Three derivations to do at snapshot time:
 

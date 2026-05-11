@@ -84,6 +84,7 @@ export interface Snapshot {
   risk_level: RiskLevel | null;
   key_developments: string[] | null;
   ai_analysis: string | null;
+  headline: string | null;
 }
 
 export interface CountryStat {

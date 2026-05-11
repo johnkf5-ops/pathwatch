@@ -29,29 +29,41 @@ export function SituationBrief({ snapshot }: { snapshot: Snapshot | null }) {
         </span>
       </div>
 
-      {(trendLabel || snapshot.trend_description) && (
-        <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-[0.14em]">
-          {trendLabel && <span className="text-text-muted">TREND <span className="text-text">{trendLabel}</span></span>}
-          {snapshot.trend_description && (
-            <span className="text-text-secondary normal-case tracking-normal">{snapshot.trend_description}</span>
-          )}
+      {trendLabel && (
+        <div className="mt-2 font-mono text-[11px] uppercase tracking-[0.14em] text-text-muted">
+          TREND <span className="text-text">{trendLabel}</span>
+        </div>
+      )}
+
+      {snapshot.headline && (
+        <h3 className="mt-3 font-mono text-[14px] font-semibold leading-snug text-text">
+          {snapshot.headline}
+        </h3>
+      )}
+
+      {snapshot.ai_analysis && (
+        <div className="mt-3 space-y-2 text-[13px] leading-relaxed text-text-secondary">
+          {snapshot.ai_analysis.split(/\n\n+/).map((para, i) => (
+            <p key={i}>{para}</p>
+          ))}
         </div>
       )}
 
       {developments.length > 0 && (
-        <ul className="mt-3 space-y-1.5">
-          {developments.map((dev, i) => (
-            <li key={i} className="flex gap-2 font-mono text-[13px] leading-snug text-text">
-              <span className="select-none text-green">▸</span>
-              <span>{dev}</span>
-            </li>
-          ))}
-        </ul>
+        <>
+          <div className="mt-4 font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
+            KEY DEVELOPMENTS
+          </div>
+          <ul className="mt-2 space-y-1.5">
+            {developments.map((dev, i) => (
+              <li key={i} className="flex gap-2 font-mono text-[13px] leading-snug text-text">
+                <span className="select-none text-green">▸</span>
+                <span>{dev}</span>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
-
-      {/* ai_analysis is intentionally NOT rendered — it duplicates the
-          trend_description headline above the bullets. The pipeline still
-          writes the field (kept for historic data); the UI just hides it. */}
     </section>
   );
 }

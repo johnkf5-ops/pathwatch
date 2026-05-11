@@ -286,36 +286,51 @@ If material change:
 
 Avoid duplication: the headline names the phase; the prose explains what's happening and what to watch; the bullets give the concrete facts that ground both.
 
-### Country attribution: treatment site vs outbreak country
+### Country attribution: nationality-based counts
 
-`country_stats.cases` and `country_stats.deaths` count **outbreak-country activity only**, not every patient physically located in the country. A foreign national hospitalized in a country purely for medical care — because the ship docked there, a flight diverted there, etc. — is a **treatment site** for that country, not an outbreak case.
+`country_stats.cases` and `country_stats.deaths` are derived by **grouping cases on `cases.nationality`** (ISO 3166-1 alpha-2), not on `current_country`. The previous current-country-based count was a category error: a Dutch crew member hospitalized in Spain isn't a Spanish outbreak case, he's a Dutch outbreak case who happens to be receiving care in a Spanish hospital.
 
-**The rule:**
+**Schema:**
 
-- A case counts toward `country_stats.cases` for country X if the patient is a resident of X (returnee or local) OR acquired the disease via local transmission in X.
-- A case does **not** count toward `country_stats.cases` for country X if the patient is a foreign national hospitalized there only for treatment (typically: `exposure_country ≠ current_country` AND the patient is not a resident of `current_country`). Such cases are still tracked individually in the `cases` table; they just don't drive country-level outbreak metrics.
-- Same rule applies to `country_stats.deaths`: a death physically occurring in country X but of a foreign national patient (no local exposure) does not count toward X's death tally. `snapshots.total_deaths` is derived independently from `cases.status='deceased'` so the overall death count is unaffected.
+`cases.nationality TEXT` — patient nationality / primary residence. Nullable for cases where nationality is genuinely unknown; operator backfills from dossier or source reporting when possible. See migration `20260511030000_cases_nationality.sql`.
 
-**Identifying treatment-site cases without a nationality field:** the `cases` schema has no structured nationality column. Use the `display_name` convention (e.g., "Dutch Crew Member, 41" → Dutch national; "Catalan Woman, 45" → Spanish national) plus the case dossier to infer residence. When in doubt, default to outbreak-country attribution unless the dossier explicitly establishes the patient is in `current_country` only for medical care.
+**Setting nationality on new cases:**
 
-**Treatment-site row pattern:**
+When writing a new case row, set `nationality` to the ISO code of the patient's home country / primary residence. Infer from source reporting (e.g., "Dutch crew member" → `NL`, "Georgia resident" → `US`, "Catalan woman" → `ES`). For ambiguous cases (e.g., a flight attendant on a Dutch carrier with unspecified nationality), use the dossier and default to the most-likely value with a `[nationality-uncertain]` note in the dossier.
+
+**Recounting country_stats:**
+
+After any `cases` INSERT/UPDATE that changes `case_class`, `status`, or `nationality`, recompute the relevant country_stats rows:
 
 ```sql
+-- Zero out the affected countries (or all hantavirus rows) first
 UPDATE country_stats
-SET cases = 0,
-    deaths = 0,
-    status = 'monitoring',
-    notes = 'TREATMENT SITE — not a community outbreak country. Hosts <case codes and short descriptions>. No locally-acquired cases; no community transmission detected.'
-WHERE country_code = '<XX>' AND disease = '<disease>';
+SET cases = 0, deaths = 0,
+    status = CASE WHEN status = 'active' THEN 'monitoring' ELSE status END
+WHERE disease = 'hantavirus';
+
+-- Then rebuild from cases grouped by nationality
+UPDATE country_stats cs
+SET cases = c.case_count,
+    deaths = c.death_count,
+    status = CASE WHEN c.case_count > 0 THEN 'active' ELSE cs.status END
+FROM (
+  SELECT
+    nationality AS country_code,
+    COUNT(*) FILTER (WHERE case_class IN ('confirmed_case','probable_case','suspected_case')) AS case_count,
+    COUNT(*) FILTER (WHERE status = 'deceased') AS death_count
+  FROM cases
+  WHERE disease = 'hantavirus' AND nationality IS NOT NULL
+  GROUP BY nationality
+) c
+WHERE cs.country_code = c.country_code AND cs.disease = 'hantavirus';
 ```
 
-The `monitoring` status keeps the country visible on the map (teal choropleth) so its hosting role is still surfaced. Map color logic (`lib/map-colors.ts → countryBucket`) already treats `cases=0 + status='monitoring'` as the monitoring bucket — no code change required.
+Treatment-site countries (foreign nationals hospitalized for care only) automatically end up with `cases = 0` because no patient has that country as their nationality. No special `treatment_site` flag or manual override needed — the nationality grouping does the work.
 
-**Current treatment sites (2026 MV Hondius outbreak):**
-- ES (Spain) — hosts MVH-008 (Dutch crew, ship-dock disembark). Spanish local contact ES-CAT-002 is monitoring.
-- ZA (South Africa) — hosts MVH-002 (Dutch, deceased after JNB deplane) and MVH-006 (Dutch crew, hospitalized Cape Town).
+`snapshots.total_deaths` continues to derive directly from `cases.status='deceased'` aggregation, independent of country_stats — the overall death count is decoupled from country attribution.
 
-Pipeline cycles must not recount these back to `cases > 0` without operator review — the treatment-site classification is intentional and persists across cycles.
+**Active outbreak countries (2026 MV Hondius, current):** NL (4 cases, 2 deaths), US (3 cases), GB (2 cases), DE (1 case, 1 death), CH (1 case), SH (1 case). All other tracked countries have `cases = 0` and `status = 'monitoring'`.
 
 ### Snapshot counts from live tables
 

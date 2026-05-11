@@ -3,6 +3,7 @@ import type { Case, CaseLocation, Event } from '@/lib/types';
 import { caseLocationsFor, caseLabel } from '@/lib/case-helpers';
 import { CaseStatusPill } from './CaseStatusPill';
 import { TravelTimeline } from './TravelTimeline';
+import { DossierBody } from './DossierBody';
 import { SectionHeader } from '@/components/ops/SectionHeader';
 
 export function CaseDossier({
@@ -45,7 +46,9 @@ export function CaseDossier({
       {case_.dossier && (
         <section>
           <SectionHeader>DOSSIER</SectionHeader>
-          <p className="mt-2 text-sm leading-[1.55] text-text-secondary">{case_.dossier}</p>
+          <div className="mt-3">
+            <DossierBody text={case_.dossier} />
+          </div>
         </section>
       )}
 

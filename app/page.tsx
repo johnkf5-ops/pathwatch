@@ -136,6 +136,41 @@ export default async function Home() {
         { '@type': 'MedicalSignOrSymptom', name: 'Gastrointestinal symptoms' },
       ],
     },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'SpecialAnnouncement',
+      name: '2026 MV Hondius Hantavirus Outbreak — Public Health Update',
+      text:
+        snapshot?.ai_analysis ??
+        'A multi-country cluster of Andes hantavirus (ANDV) infections traced to the cruise ship MV Hondius is under active surveillance. WHO currently assesses global risk as low. Person-to-person transmission of ANDV requires close, prolonged contact; casual or brief contact is insufficient.',
+      datePosted: snapshot?.created_at ?? new Date().toISOString(),
+      expires: snapshot?.created_at
+        ? new Date(new Date(snapshot.created_at).getTime() + 60 * 24 * 60 * 60 * 1000).toISOString()
+        : undefined,
+      category: 'https://www.wikidata.org/wiki/Q166231',
+      url: 'https://hantavirustracer.com',
+      audience: { '@type': 'Audience', audienceType: 'General Public' },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Pathwatch',
+        url: 'https://hantavirustracer.com',
+      },
+      about: {
+        '@type': 'MedicalCondition',
+        name: 'Hantavirus Pulmonary Syndrome (Andes virus)',
+        code: { '@type': 'MedicalCode', code: 'B33.4', codingSystem: 'ICD-10' },
+      },
+      announcementLocation: snapshot?.countries_list?.length
+        ? snapshot.countries_list.map((code) => ({
+            '@type': 'AdministrativeArea',
+            name: code,
+            address: { '@type': 'PostalAddress', addressCountry: code },
+          }))
+        : undefined,
+      diseasePreventionInfo: 'https://hantavirustracer.com/hantavirus#how-it-spreads',
+      diseaseSpreadStatistics: 'https://hantavirustracer.com/',
+      quarantineGuidelines: 'https://www.cdc.gov/han/php/notices/han00528.html',
+    },
   ];
 
   return (

@@ -65,7 +65,7 @@ Grid: `lg:grid-cols-[540px_1fr_300px] lg:grid-rows-[1fr_180px]`. Each panel has 
 Tables in production Supabase, all with public-read RLS:
 - `events` — scraped news/intelligence items
 - `cases` + `case_locations` — outbreak cases and their travel timeline. **`cases.case_class`** disambiguates `confirmed_case` / `probable_case` / `suspected_case` / `contact` / `returnee` from the lifecycle `status` field. Counts toward "cases" only when `case_class IN ('confirmed_case','probable_case','suspected_case')`. Contacts and returnees count toward "contacts" only.
-- `country_stats` — per-country case/death totals + status. `cases` recounted on `current_country` after the case_class migration.
+- `country_stats` — per-country case/death totals + status. **Location-based**: `cases` and `deaths` derive from `cases.current_country` (where the patient physically is), not nationality. Map color rule: `deaths > 0` → red, `cases > 0` → orange, `status='monitoring'` with no cases/deaths → teal, nothing → no color. See `docs/runbooks/pipeline.md` "Country attribution: location-based counts" for the recount SQL and conventions. The `cases.nationality` column exists as metadata but does not drive country_stats.
 - `snapshots` — outbreak snapshots (totals + ai_analysis paragraph + key_developments + `total_contacts` for the contacts-and-returnees count).
 - `threat_assessments` — pandemic_probability + threat_level + reasoning + Polymarket comparison + triggers
 - `facts` — verified facts with `key:*`-tagged subset surfaced in VirusProfile

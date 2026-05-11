@@ -252,6 +252,7 @@ If case-related (new MVH-### or CH-### or contact dossier):
 
 If country-level case count changed:
   UPSERT country_stats (cases, deaths, latest_case_date)
+  -- TREATMENT-SITE RULE: see "Country attribution: treatment site vs outbreak country" below.
 
 INSERT scrape_log row (source, results_found, events_created, duplicates_skipped, error?, duration_ms)
 ```
@@ -284,6 +285,39 @@ If material change:
 - `key_developments` is the bullet list of concrete facts (existing pattern — what most snapshot writers already produce well).
 
 Avoid duplication: the headline names the phase; the prose explains what's happening and what to watch; the bullets give the concrete facts that ground both.
+
+### Country attribution: treatment site vs outbreak country
+
+`country_stats.cases` and `country_stats.deaths` count **outbreak-country activity only**, not every patient physically located in the country. A foreign national hospitalized in a country purely for medical care — because the ship docked there, a flight diverted there, etc. — is a **treatment site** for that country, not an outbreak case.
+
+**The rule:**
+
+- A case counts toward `country_stats.cases` for country X if the patient is a resident of X (returnee or local) OR acquired the disease via local transmission in X.
+- A case does **not** count toward `country_stats.cases` for country X if the patient is a foreign national hospitalized there only for treatment (typically: `exposure_country ≠ current_country` AND the patient is not a resident of `current_country`). Such cases are still tracked individually in the `cases` table; they just don't drive country-level outbreak metrics.
+- Same rule applies to `country_stats.deaths`: a death physically occurring in country X but of a foreign national patient (no local exposure) does not count toward X's death tally. `snapshots.total_deaths` is derived independently from `cases.status='deceased'` so the overall death count is unaffected.
+
+**Identifying treatment-site cases without a nationality field:** the `cases` schema has no structured nationality column. Use the `display_name` convention (e.g., "Dutch Crew Member, 41" → Dutch national; "Catalan Woman, 45" → Spanish national) plus the case dossier to infer residence. When in doubt, default to outbreak-country attribution unless the dossier explicitly establishes the patient is in `current_country` only for medical care.
+
+**Treatment-site row pattern:**
+
+```sql
+UPDATE country_stats
+SET cases = 0,
+    deaths = 0,
+    status = 'monitoring',
+    notes = 'TREATMENT SITE — not a community outbreak country. Hosts <case codes and short descriptions>. No locally-acquired cases; no community transmission detected.'
+WHERE country_code = '<XX>' AND disease = '<disease>';
+```
+
+The `monitoring` status keeps the country visible on the map (teal choropleth) so its hosting role is still surfaced. Map color logic (`lib/map-colors.ts → countryBucket`) already treats `cases=0 + status='monitoring'` as the monitoring bucket — no code change required.
+
+**Current treatment sites (2026 MV Hondius outbreak):**
+- ES (Spain) — hosts MVH-008 (Dutch crew, ship-dock disembark). Spanish local contact ES-CAT-002 is monitoring.
+- ZA (South Africa) — hosts MVH-002 (Dutch, deceased after JNB deplane) and MVH-006 (Dutch crew, hospitalized Cape Town).
+
+Pipeline cycles must not recount these back to `cases > 0` without operator review — the treatment-site classification is intentional and persists across cycles.
+
+### Snapshot counts from live tables
 
 **Always derive snapshot counts from the live tables** — never write arbitrary numbers. Three derivations to do at snapshot time:
 

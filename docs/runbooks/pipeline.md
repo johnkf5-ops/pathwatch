@@ -286,51 +286,61 @@ If material change:
 
 Avoid duplication: the headline names the phase; the prose explains what's happening and what to watch; the bullets give the concrete facts that ground both.
 
-### Country attribution: nationality-based counts
+### Country attribution: location-based counts
 
-`country_stats.cases` and `country_stats.deaths` are derived by **grouping cases on `cases.nationality`** (ISO 3166-1 alpha-2), not on `current_country`. The previous current-country-based count was a category error: a Dutch crew member hospitalized in Spain isn't a Spanish outbreak case, he's a Dutch outbreak case who happens to be receiving care in a Spanish hospital.
+`country_stats.cases` and `country_stats.deaths` are derived by **grouping cases on `cases.current_country`** — where the patient physically is. Where a patient holds citizenship is not the question; the map colors what's happening *inside* each country. A confirmed-case patient in a JNB hospital is a South African outbreak data point because the disease is physically present there, full stop.
 
-**Schema:**
+**The rule:**
 
-`cases.nationality TEXT` — patient nationality / primary residence. Nullable for cases where nationality is genuinely unknown; operator backfills from dossier or source reporting when possible. See migration `20260511030000_cases_nationality.sql`.
+| What the country has | country_stats | Map color |
+|---|---|---|
+| At least one death (cases.status='deceased') | `deaths > 0` | **Red** |
+| At least one case (case_class IN confirmed/probable/suspected), no deaths | `cases > 0`, `deaths = 0` | **Orange** |
+| Only contacts/returnees (case_class IN contact/returnee), no case | `cases = 0`, `status = 'monitoring'` | **Teal** |
+| Nothing | absent or all zeros | no color |
 
-**Setting nationality on new cases:**
+Deaths beat cases beat contacts. The map color logic is in `lib/map-colors.ts → countryBucket()` and mirrors this exactly. No heat-bucket scaling by case count — the user-facing distinction that matters is presence vs absence, not magnitude.
 
-When writing a new case row, set `nationality` to the ISO code of the patient's home country / primary residence. Infer from source reporting (e.g., "Dutch crew member" → `NL`, "Georgia resident" → `US`, "Catalan woman" → `ES`). For ambiguous cases (e.g., a flight attendant on a Dutch carrier with unspecified nationality), use the dossier and default to the most-likely value with a `[nationality-uncertain]` note in the dossier.
-
-**Recounting country_stats:**
-
-After any `cases` INSERT/UPDATE that changes `case_class`, `status`, or `nationality`, recompute the relevant country_stats rows:
+**Recounting country_stats after a cases write:**
 
 ```sql
--- Zero out the affected countries (or all hantavirus rows) first
+-- Zero out first
 UPDATE country_stats
 SET cases = 0, deaths = 0,
     status = CASE WHEN status = 'active' THEN 'monitoring' ELSE status END
 WHERE disease = 'hantavirus';
 
--- Then rebuild from cases grouped by nationality
+-- Then rebuild from cases.current_country
 UPDATE country_stats cs
 SET cases = c.case_count,
     deaths = c.death_count,
-    status = CASE WHEN c.case_count > 0 THEN 'active' ELSE cs.status END
+    status = CASE
+      WHEN c.death_count > 0 THEN 'active'
+      WHEN c.case_count > 0 THEN 'active'
+      ELSE cs.status
+    END
 FROM (
   SELECT
-    nationality AS country_code,
+    current_country AS country_code,
     COUNT(*) FILTER (WHERE case_class IN ('confirmed_case','probable_case','suspected_case')) AS case_count,
     COUNT(*) FILTER (WHERE status = 'deceased') AS death_count
   FROM cases
-  WHERE disease = 'hantavirus' AND nationality IS NOT NULL
-  GROUP BY nationality
+  WHERE disease = 'hantavirus' AND current_country IS NOT NULL
+  GROUP BY current_country
 ) c
 WHERE cs.country_code = c.country_code AND cs.disease = 'hantavirus';
 ```
 
-Treatment-site countries (foreign nationals hospitalized for care only) automatically end up with `cases = 0` because no patient has that country as their nationality. No special `treatment_site` flag or manual override needed — the nationality grouping does the work.
+When a patient transfers between countries (e.g., medevac, repatriation flight), update `cases.current_country` and re-run the recount. The country they left now reflects their absence; the country they arrived at reflects their presence.
 
-`snapshots.total_deaths` continues to derive directly from `cases.status='deceased'` aggregation, independent of country_stats — the overall death count is decoupled from country attribution.
+`snapshots.total_deaths` continues to derive directly from `cases.status='deceased'` aggregation. Country attribution doesn't affect the headline death count.
 
-**Active outbreak countries (2026 MV Hondius, current):** NL (4 cases, 2 deaths), US (3 cases), GB (2 cases), DE (1 case, 1 death), CH (1 case), SH (1 case). All other tracked countries have `cases = 0` and `status = 'monitoring'`.
+**Note on the `cases.nationality` column:** the column exists (per migration `20260511030000_cases_nationality.sql`) and is backfilled, but country_stats does **not** use it. It's available as descriptive metadata if a future view wants to break down cases by nationality, but the map and the case counts are location-based.
+
+**Active outbreak countries (2026 MV Hondius, current):**
+- Red (deaths): SH (2 cases, 1 death), ZA (2 cases, 1 death), CV (1 case, 1 death)
+- Orange (cases): US (3 cases), NL (2 cases), CH (1 case), ES (1 case)
+- Teal (monitoring): all others with contacts/returnees only
 
 ### Snapshot counts from live tables
 

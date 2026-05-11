@@ -96,9 +96,8 @@ export function MapPanel({ countries, cases, caseLocations, selectedCaseId }: Pr
           'fill-color': [
             'match',
             ['get', 'bucket'],
-            'low', BUCKET_COLOR.low,
-            'mid', BUCKET_COLOR.mid,
-            'high', BUCKET_COLOR.high,
+            'death', BUCKET_COLOR.death,
+            'case', BUCKET_COLOR.case,
             'monitoring', BUCKET_COLOR.monitoring,
             BUCKET_COLOR.none,
           ],
@@ -106,7 +105,7 @@ export function MapPanel({ countries, cases, caseLocations, selectedCaseId }: Pr
             'match',
             ['get', 'bucket'],
             'monitoring', 0.75,
-            0.45,
+            0.55,
           ],
         },
       });

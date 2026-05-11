@@ -1,27 +1,31 @@
-export type CaseBucket = 'low' | 'mid' | 'high' | 'monitoring' | 'none';
+// Country choropleth coloring — location-based, deaths-beats-cases-beats-monitoring.
+//
+//   country has deaths > 0           → red    (death)
+//   country has cases > 0, no deaths → orange (case)
+//   country only has surveillance    → teal   (monitoring)
+//   country has nothing              → none
+//
+// "country has X" means cases physically located there (current_country),
+// regardless of patient nationality. country_stats.cases and .deaths are
+// computed from cases.current_country grouping; see pipeline.md "Country
+// attribution: location-based counts" for the runbook rule.
 
-export const BUCKET_COLOR: Record<CaseBucket, string> = {
-  low: '#FFB800',
-  mid: '#FF6B35',
-  high: '#FF3B3B',
-  monitoring: '#2d7a8f', // teal — present-but-not-active surveillance (lightened so small countries still register)
+export type CountryBucket = 'death' | 'case' | 'monitoring' | 'none';
+
+export const BUCKET_COLOR: Record<CountryBucket, string> = {
+  death: '#FF3B3B',      // red
+  case: '#FF6B35',       // orange
+  monitoring: '#2d7a8f', // teal — surveillance / contacts / returnees only
   none: 'transparent',
 };
 
-// Thresholds tuned for the current MV Hondius outbreak (1–2 cases per country
-// in seed). Bump these as the outbreak grows.
-export function caseBucket(cases: number | null | undefined): CaseBucket {
-  if (cases == null || cases <= 0) return 'none';
-  if (cases === 1) return 'low';
-  if (cases <= 9) return 'mid';
-  return 'high';
-}
-
-// Combines case-count heat scale with surveillance status: countries with
-// zero cases but an active monitoring posture still show on the map.
-export function countryBucket(c: { cases: number | null; status: string | null }): CaseBucket {
-  const heat = caseBucket(c.cases);
-  if (heat !== 'none') return heat;
+export function countryBucket(c: {
+  cases: number | null;
+  deaths: number | null;
+  status: string | null;
+}): CountryBucket {
+  if ((c.deaths ?? 0) > 0) return 'death';
+  if ((c.cases ?? 0) > 0) return 'case';
   if (c.status === 'monitoring' || c.status === 'active' || c.status === 'contained') {
     return 'monitoring';
   }

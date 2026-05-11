@@ -197,7 +197,7 @@ export function DashboardClient({
       <h1 className="sr-only">
         2026 MV Hondius Hantavirus (Andes Virus / ANDV) Outbreak — Live Tracker
       </h1>
-      <TopBar snapshot={snapshot} threat={threat} monitoringCount={monitoringCases.length} caseCount={caseRows.length} />
+      <TopBar snapshot={snapshot} threat={threat} monitoringCount={sumPersons(monitoringCases)} caseCount={sumPersons(caseRows)} />
 
       {/* Mobile (< lg): single-column stack with collapsible map + bottom sheet */}
       <div className="lg:hidden">

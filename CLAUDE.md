@@ -3,6 +3,22 @@
 Real-time outbreak tracker for the 2026 MV Hondius hantavirus / ANDV cluster.
 Production: https://pathwatch-phi.vercel.app and https://hantavirustracer.com (auto-deploy from `main`).
 
+## Fresh session — pick a workflow
+
+When the user opens a session in this repo without a specific task, ask which workflow they want to run:
+
+> *"Do you want to run a pipeline cycle, update case dossiers, or work on something else?"*
+
+Then follow the relevant runbook:
+
+| Workflow | What it does | Read this |
+|---|---|---|
+| **Run a pipeline cycle** | Scrape sources → write new events / cases / country_stats / snapshots / threat_assessments. Active mode every 15–30 min. | `docs/runbooks/pipeline-operator.md` (operator setup) then `docs/runbooks/pipeline.md` (agent runbook). Execute one cycle. |
+| **Update case dossiers** | Research existing cases for fresh public reporting, append `[Updated YYYY-MM-DD]` blocks with sources, surface correction flags for operator review. | `docs/runbooks/case-dossier-update.md`. Phase 1 dispatches parallel research agents; Phase 2 triages structured corrections with operator confirmation. |
+| **General build / feature work** | Code changes, schema migrations, UI work, etc. | No specific runbook — read the rest of this file for project context, then proceed normally. |
+
+If the user opens with a specific task that fits one of the above, jump straight to the relevant runbook. If unclear, ask.
+
 ## Stack
 
 - **Next.js 14 App Router** (TypeScript, strict mode)

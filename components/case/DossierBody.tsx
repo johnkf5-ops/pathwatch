@@ -4,14 +4,26 @@ export function DossierBody({ text }: { text: string | null | undefined }) {
   const blocks = parseDossier(text);
   if (blocks.length === 0) return null;
 
+  // Render newest first. The dossier is append-only in the DB (older entries on
+  // top, newest at the bottom of the raw text). For the reader's eye, the most
+  // recent update is what matters; reverse the order so it leads. The original
+  // lead block (no timestamp) ends up at the bottom as the foundational entry.
+  const orderedBlocks = [...blocks].reverse();
+
   return (
     <div className="flex flex-col gap-5">
-      {blocks.map((block, bi) => (
+      {orderedBlocks.map((block, bi) => (
         <div key={bi} className="flex flex-col gap-3">
-          {block.timestamp && (
+          {block.timestamp ? (
             <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-accent">
               UPDATED · {block.timestamp}
             </div>
+          ) : (
+            bi !== 0 && (
+              <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
+                ORIGINAL ENTRY
+              </div>
+            )
           )}
           {block.sections.map((section, si) => (
             <SectionBlock key={si} label={section.label} body={section.body} />

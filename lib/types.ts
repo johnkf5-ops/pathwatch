@@ -87,6 +87,16 @@ export interface Snapshot {
   headline: string | null;
 }
 
+export interface OutbreakTimelineEntry {
+  id: string;
+  disease: string;
+  day_num: number;
+  occurred_on: string;
+  snippet: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CountryStat {
   id: string;
   updated_at: string;

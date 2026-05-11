@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type {
   Event, Snapshot, CountryStat, Case, CaseLocation, ThreatAssessment, Fact,
+  OutbreakTimelineEntry,
 } from '@/lib/types';
 import { getBrowserClient } from '@/lib/supabase-browser';
 import { TopBar } from '@/components/ops/TopBar';
@@ -19,6 +20,7 @@ import { EventFeed } from '@/components/feed/EventFeed';
 import { ThreatPanelExpanded } from '@/components/threat/ThreatPanelExpanded';
 import { KpiHud } from '@/components/ops/KpiHud';
 import { VirusProfile } from '@/components/profile/VirusProfile';
+import { OutbreakTimeline } from '@/components/ops/OutbreakTimeline';
 import { isCase } from '@/lib/case-helpers';
 
 interface Props {
@@ -30,6 +32,7 @@ interface Props {
   initialCaseLocations: CaseLocation[];
   initialThreat: ThreatAssessment | null;
   initialFacts: Fact[];
+  initialTimeline: OutbreakTimelineEntry[];
 }
 
 export function DashboardClient({
@@ -41,6 +44,7 @@ export function DashboardClient({
   initialCaseLocations,
   initialThreat,
   initialFacts,
+  initialTimeline,
 }: Props) {
   const searchParams = useSearchParams();
   const caseCode = searchParams.get('case');
@@ -54,6 +58,7 @@ export function DashboardClient({
   const [caseLocations, setCaseLocations] = useState(initialCaseLocations);
   const [threat, setThreat] = useState(initialThreat);
   const [facts, setFacts] = useState(initialFacts);
+  const [timeline, setTimeline] = useState(initialTimeline);
   const [activeTab, setActiveTab] = useState<'map' | 'country'>('map');
 
   useEffect(() => { setSnapshot(initialSnapshot); }, [initialSnapshot]);
@@ -64,6 +69,7 @@ export function DashboardClient({
   useEffect(() => { setCaseLocations(initialCaseLocations); }, [initialCaseLocations]);
   useEffect(() => { setThreat(initialThreat); }, [initialThreat]);
   useEffect(() => { setFacts(initialFacts); }, [initialFacts]);
+  useEffect(() => { setTimeline(initialTimeline); }, [initialTimeline]);
 
   useEffect(() => {
     const supabase = getBrowserClient();
@@ -147,6 +153,22 @@ export function DashboardClient({
       )
       .subscribe();
 
+    const ch7 = supabase
+      .channel('timeline-rt')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'outbreak_timeline', filter: 'disease=eq.hantavirus' },
+        (p) => {
+          const row = (p.new ?? p.old) as OutbreakTimelineEntry;
+          setTimeline((prev) => {
+            const next = prev.filter((r) => r.day_num !== row.day_num);
+            if (p.eventType !== 'DELETE') next.push(row);
+            return next.sort((a, b) => b.day_num - a.day_num);
+          });
+        },
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(ch1);
       supabase.removeChannel(ch2);
@@ -154,6 +176,7 @@ export function DashboardClient({
       supabase.removeChannel(ch4);
       supabase.removeChannel(ch5);
       supabase.removeChannel(ch6);
+      supabase.removeChannel(ch7);
     };
   }, []);
 
@@ -190,6 +213,7 @@ export function DashboardClient({
           monitoringCases={monitoringCases}
           selectedCaseId={selectedCaseId}
           caseCode={caseCode}
+          timeline={timeline}
         />
       </div>
 
@@ -201,6 +225,7 @@ export function DashboardClient({
         {/* Left: narrative context */}
         <div className="overflow-y-auto border-r border-border">
           <SituationBrief snapshot={snapshot} />
+          <OutbreakTimeline entries={timeline} />
           {threat && <ThreatPanelExpanded assessment={threat} />}
           <VirusProfile facts={facts} />
         </div>

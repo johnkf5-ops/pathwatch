@@ -225,6 +225,17 @@ The reason this matters: past pipeline cycles accumulated dead links — both AI
 
 > **Operator-revise loop:** any event the agent writes is a draft. The operator may revise it after publish. When the agent re-encounters its own past writes on subsequent cycles (reading `events`, `cases.dossier`, prior `snapshots`), it does **not** treat them as ground truth for interpretation — see `## Write-time rigor for sig-4+ items` §C.
 
+**Always upsert today's `outbreak_timeline` row at the end of each cycle.** The dashboard's left-rail timeline reads from this table — one row per day, `(disease, day_num)` is the unique key. `day_num` increments daily from Day 1 (the cluster-surfacing day; MV Hondius outbreak Day 1 = 2026-05-01). `snippet` is one short line (~70 chars) summarizing what happened that day. Pattern:
+
+```sql
+INSERT INTO outbreak_timeline (disease, day_num, occurred_on, snippet)
+VALUES ('hantavirus', <day_num>, '<YYYY-MM-DD>', '<short snippet>')
+ON CONFLICT (disease, day_num)
+DO UPDATE SET snippet = EXCLUDED.snippet, updated_at = now();
+```
+
+The cycle can revise the snippet as the day progresses; the rail surfaces the latest version. Goal: at-a-glance Day-N chronology of the outbreak, distinct from event-level detail (which the EventFeed handles) and snapshot prose (SituationBrief headline + ai_analysis).
+
 For each processed item:
 
 > **Always set `events.source_author` to the actual publication name** (e.g. `'Reuters'`, `'CNN'`, `'Politico'`, `'NPR'`, `'NL Times'`, `'WHO'`, `'CDC'`, `'PHAC'`). The dashboard's EventCard renders `source_author` as the source label; without it the feed falls back to `source_type`'s generic enum value (`'google_news'`) and the publication identity is lost. This applies to every event, not just sig-4+.

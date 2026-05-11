@@ -2,8 +2,10 @@
 import { useMediaQuery } from '@/lib/use-media-query';
 import type {
   Event, Snapshot, CountryStat, Case, CaseLocation, ThreatAssessment, Fact,
+  OutbreakTimelineEntry,
 } from '@/lib/types';
 import { SituationBrief } from './SituationBrief';
+import { OutbreakTimeline } from './OutbreakTimeline';
 import { KpiGrid } from './KpiGrid';
 import { PostureMatrix } from './PostureMatrix';
 import { Watchlist } from './Watchlist';
@@ -27,6 +29,7 @@ interface Props {
   monitoringCases: Case[];
   selectedCaseId: string | null;
   caseCode: string | null;
+  timeline: OutbreakTimelineEntry[];
 }
 
 export function MobileLayout({
@@ -41,6 +44,7 @@ export function MobileLayout({
   monitoringCases,
   selectedCaseId,
   caseCode,
+  timeline,
 }: Props) {
   // Only mount the vaul-based bottom sheet when the viewport is actually
   // mobile. lg:hidden alone doesn't prevent the React component from
@@ -63,6 +67,7 @@ export function MobileLayout({
         contactCount={contactRows.length}
       />
       <SituationBrief snapshot={snapshot} />
+      <OutbreakTimeline entries={timeline} />
       <KpiGrid snapshot={snapshot} prevSnapshot={prevSnapshot} cases={cases} />
       {threat && <ThreatPanelExpanded assessment={threat} />}
       <Watchlist events={events} />

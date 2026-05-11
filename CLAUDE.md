@@ -42,6 +42,7 @@ Grid: `lg:grid-cols-[540px_1fr_300px] lg:grid-rows-[1fr_180px]`. Each panel has 
 | `app/DashboardClient.tsx` | The desktop+mobile orchestrator with the grid layout and Realtime subscriptions |
 | `components/ops/TopBar.tsx` | Slim header — branding, LIVE pulse, threat indicator chip, VisitorStats, UTC, risk |
 | `components/ops/SituationBrief.tsx` | Three-tier sit-rep: `snapshots.headline` (one line) + `snapshots.ai_analysis` (narrative prose, 2-4 paragraphs) + `snapshots.key_developments` (bullet facts) |
+| `components/ops/OutbreakTimeline.tsx` | Day-by-day chronology rail (left column under SituationBrief). Reads `outbreak_timeline` table; one row per day with a short snippet; latest day highlighted green |
 | `components/threat/ThreatPanelExpanded.tsx` | Always-visible assessment narrative + reasoning + signals + Polymarket |
 | `components/profile/VirusProfile.tsx` | 4×3 KPI grid driven by `key:*`-tagged facts |
 | `components/ops/Watchlist.tsx` | Right-column alerts feed (filtered events, sig ≥ 3) |

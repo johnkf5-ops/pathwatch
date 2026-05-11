@@ -286,6 +286,20 @@ If material change:
 
 Avoid duplication: the headline names the phase; the prose explains what's happening and what to watch; the bullets give the concrete facts that ground both.
 
+**Audience — non-negotiable:** the SituationBrief is read by visitors of hantavirustracer.com (the public-facing dashboard), not by the agent operating the pipeline. Write `headline`, `ai_analysis`, and `key_developments` as a **public-health brief for a curious member of the public** — what's happening with the outbreak today, what changed, what to watch. NEVER write about pipeline internals, schema changes, dashboard refactors, count formulas, runbook updates, or anything else that describes operator-side work. If a sentence would read at home in a `git commit` message or a code-review comment, it does NOT belong in the snapshot.
+
+Bad (snapshot once contained these — DO NOT repeat):
+- "Monitoring math fix: the dashboard now counts SUM(person_count) instead of COUNT(*)..."
+- "Map color rule corrected: deaths now bump to red regardless of case count..."
+- "New cohort row ES-MAD-NEG-GROUP added to track 13 negative Spanish returnees..."
+
+Good (what the headline should sound like):
+- "May 11 — Spain confirms its first national case; 12 Dutch hospital staff quarantined after protocol breach"
+- "May 10 — MV Hondius docks at Tenerife; managed disembarkation underway in nationality groups"
+- "May 8 — WHO upgrades global risk from very low to low; Switzerland reports first European confirmed case"
+
+If you fix data or schema in the same write that touches a snapshot, the snapshot prose should describe **what the data now says about the outbreak**, never **what you changed about how it's stored**.
+
 ### Country attribution: location-based counts
 
 `country_stats.cases` and `country_stats.deaths` are derived by **grouping cases on `cases.current_country`** — where the patient physically is. Where a patient holds citizenship is not the question; the map colors what's happening *inside* each country. A confirmed-case patient in a JNB hospital is a South African outbreak data point because the disease is physically present there, full stop.

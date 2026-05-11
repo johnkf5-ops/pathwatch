@@ -34,10 +34,13 @@ function parseSections(chunk: string): DossierSection[] {
   const re = new RegExp(LABEL_REGEX.source, 'g');
   let m: RegExpExecArray | null;
   while ((m = re.exec(chunk)) !== null) {
-    const labelStart = m.index + m[1].length;
+    const prefix = m[1] ?? '';
+    const labelText = m[2];
+    if (!labelText) continue;
+    const labelStart = m.index + prefix.length;
     const body = chunk.slice(lastEnd, labelStart).trim().replace(/\.\s*$/, '');
     if (body) sections.push({ label: lastLabel, body });
-    lastLabel = m[3].trim();
+    lastLabel = labelText.trim();
     lastEnd = m.index + m[0].length;
   }
 

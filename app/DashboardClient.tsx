@@ -21,7 +21,7 @@ import { ThreatPanelExpanded } from '@/components/threat/ThreatPanelExpanded';
 import { KpiHud } from '@/components/ops/KpiHud';
 import { VirusProfile } from '@/components/profile/VirusProfile';
 import { OutbreakTimeline } from '@/components/ops/OutbreakTimeline';
-import { isCase } from '@/lib/case-helpers';
+import { isCase, sumPersons } from '@/lib/case-helpers';
 
 interface Props {
   initialSnapshot: Snapshot | null;

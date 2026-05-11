@@ -15,7 +15,7 @@ import { VirusProfile } from '@/components/profile/VirusProfile';
 import { EventFeed } from '@/components/feed/EventFeed';
 import { ThreatPanelExpanded } from '@/components/threat/ThreatPanelExpanded';
 import { CaseDossierSheet } from '@/components/case/CaseDossierSheet';
-import { isCase, isContact } from '@/lib/case-helpers';
+import { isCase, isContact, sumPersons } from '@/lib/case-helpers';
 
 interface Props {
   snapshot: Snapshot | null;
@@ -63,8 +63,8 @@ export function MobileLayout({
         cases={cases}
         caseLocations={caseLocations}
         selectedCaseId={selectedCaseId}
-        caseCount={caseRows.length}
-        contactCount={contactRows.length}
+        caseCount={sumPersons(caseRows)}
+        contactCount={sumPersons(contactRows)}
       />
       <SituationBrief snapshot={snapshot} />
       <OutbreakTimeline entries={timeline} />

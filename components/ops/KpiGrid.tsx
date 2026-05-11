@@ -1,6 +1,6 @@
 import type { Snapshot, Case } from '@/lib/types';
 import { formatNumber, formatPercent } from '@/lib/format';
-import { isCase, isContact } from '@/lib/case-helpers';
+import { isCase, isContact, sumPersons } from '@/lib/case-helpers';
 import { SectionHeader } from './SectionHeader';
 import { KpiTile } from './KpiTile';
 
@@ -29,8 +29,8 @@ export function KpiGrid({
   prevSnapshot: Snapshot | null;
   cases: Case[];
 }) {
-  const cases = caseRows.filter(isCase).length;
-  const contacts = caseRows.filter(isContact).length;
+  const cases = sumPersons(caseRows.filter(isCase));
+  const contacts = sumPersons(caseRows.filter(isContact));
   const deaths = snapshot?.total_deaths ?? null;
   const cfr = snapshot?.fatality_rate ?? null;
   const countries = snapshot?.countries_affected ?? null;

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import type { Snapshot, Case } from '@/lib/types';
 import { formatNumber, formatPercent } from '@/lib/format';
-import { isCase, isContact } from '@/lib/case-helpers';
+import { isCase, isContact, sumPersons } from '@/lib/case-helpers';
 
 interface Props {
   snapshot: Snapshot | null;
@@ -46,8 +46,8 @@ function Row({
 
 export function KpiHud({ snapshot, prevSnapshot, cases }: Props) {
   const [open, setOpen] = useState(true);
-  const caseCount = cases.filter(isCase).length;
-  const contactCount = cases.filter(isContact).length;
+  const caseCount = sumPersons(cases.filter(isCase));
+  const contactCount = sumPersons(cases.filter(isContact));
   const deaths = snapshot?.total_deaths ?? null;
   const cfr = snapshot?.fatality_rate ?? null;
   const countries = snapshot?.countries_affected ?? null;

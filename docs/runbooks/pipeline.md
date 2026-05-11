@@ -347,12 +347,12 @@ When a patient transfers between countries (e.g., medevac, repatriation flight),
 **Always derive snapshot counts from the live tables** — never write arbitrary numbers. Three derivations to do at snapshot time:
 
 ```sql
--- total_cases — confirmed/probable/suspected only
-SELECT COUNT(*) FROM cases
+-- total_cases — confirmed/probable/suspected only, person-count-aware
+SELECT SUM(person_count) FROM cases
 WHERE disease='hantavirus' AND case_class IN ('confirmed_case','probable_case','suspected_case');
 
--- total_contacts — contacts and returnees only
-SELECT COUNT(*) FROM cases
+-- total_contacts — contacts and returnees only, person-count-aware
+SELECT SUM(person_count) FROM cases
 WHERE disease='hantavirus' AND case_class IN ('contact','returnee');
 
 -- total_deaths — deceased status across any case_class
@@ -365,6 +365,8 @@ SELECT COUNT(*) AS countries_affected,
        array_agg(country_code ORDER BY country_code) AS countries_list
 FROM country_stats WHERE disease='hantavirus';
 ```
+
+**Person-count-aware counting:** `total_cases` and `total_contacts` use `SUM(person_count)` rather than `COUNT(*)`. Most case rows have `person_count = 1`, but cohort rows like `US-NE-GROUP` (15 Americans), `NL-RAD-GROUP` (12 Radboud staff), `ES-MAD-NEG-GROUP` (13 Spanish returnees) represent multiple individuals in a single row. Without `SUM(person_count)`, the TopBar chips and KPI tiles dramatically undercount the actual population under monitoring. The dashboard's TopBar and KpiHud / KpiGrid use `lib/case-helpers.ts → sumPersons()` for the same rollup. See migration `20260511040000_cases_person_count.sql`.
 
 The UI derives from these tables for live counts; if the snapshot disagrees with the derived number, panels disagree. **`countries_affected` includes contact-tracing reach** — it is NOT just countries with confirmed cases. Undercounting (e.g., listing only the 10 primary-affected countries when 20 total appear in `country_stats`) makes the KPI HUD lie. Past failure mode: a snapshot writer counted "primary affected" countries instead of all rows; observed 2026-05-10 with `countries_affected=10` while `country_stats` had 20 rows and the top header read 20 — KPI HUD and header disagreed by 2x.
 

@@ -131,3 +131,8 @@ export function isCase(c: { case_class: CaseClass }): boolean {
 export function isContact(c: { case_class: CaseClass }): boolean {
   return c.case_class === 'contact' || c.case_class === 'returnee';
 }
+
+/** Sum person_count across a list of cases. Cohort rows (US-NE-GROUP=15, NL-RAD-GROUP=12, etc.) represent multiple individuals but only one DB row; dashboard counts use this rollup so chips and tiles reflect actual people, not rows. Falls back to 1 if person_count is missing (legacy data). */
+export function sumPersons(cases: Array<{ person_count?: number | null }>): number {
+  return cases.reduce((sum, c) => sum + (c.person_count ?? 1), 0);
+}

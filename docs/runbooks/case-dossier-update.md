@@ -132,6 +132,12 @@ For an append to render well, write it like:
 
 Avoid commas inside URLs (the parser uses `[^\s,)]+` to terminate). Separate multiple URLs with ` ; `.
 
+**Two gotchas the 2026-05-11 run hit — surface to the next session:**
+
+1. **`events.occurred_at` must reflect the actual news cycle, not arbitrary time.** The EventFeed ticker sorts by `occurred_at` first (`COALESCE(occurred_at, created_at) DESC` — see commit 972100a). If you write a new event with `occurred_at` set to an early-morning hour, it will slot below same-day events with later announcement times and look stale even though it's brand-new in the DB. **Set `occurred_at` to when the press cycle actually published the story** — for ministerial announcements that's typically mid-to-late afternoon UTC. When writing the operator-driven event for a story that just broke, set `occurred_at = now() - INTERVAL '1 hour'` (or your best estimate of the actual announcement time) so it surfaces at the top of the feed.
+
+2. **`case_locations` must be inserted alongside the new `cases` row.** Country choropleth color comes from `country_stats` (which the recount handles automatically), but the per-case markers/dots on the map come from `case_locations`. Without a `case_locations` row, the country fills but no dot renders. After every new case INSERT, INSERT at least one `case_locations` row with `case_id`, `country_code`, `location_name`, `latitude`, `longitude`, `arrived_at`, optional `context`. For cohort cases (e.g., 12 hospital staff at a single facility) one location row covering the facility is sufficient.
+
 **Applying the SQL.** The `supabase db query` CLI doesn't tolerate SQL comments or multi-line strings well. Strip `^--` lines before passing the file:
 
 ```bash

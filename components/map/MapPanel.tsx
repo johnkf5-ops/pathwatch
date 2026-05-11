@@ -105,9 +105,21 @@ export function MapPanel({ countries, cases, caseLocations, selectedCaseId }: Pr
           'fill-opacity': [
             'match',
             ['get', 'bucket'],
-            'monitoring', 0.55,
+            'monitoring', 0.75,
             0.45,
           ],
+        },
+      });
+      // Outline for monitoring countries — helps small ones (Singapore, KN, etc.) register at world zoom.
+      map.addLayer({
+        id: 'countries-monitoring-outline',
+        type: 'line',
+        source: 'countries',
+        filter: ['==', ['get', 'bucket'], 'monitoring'],
+        paint: {
+          'line-color': BUCKET_COLOR.monitoring,
+          'line-width': 1.5,
+          'line-opacity': 0.95,
         },
       });
       map.on('click', 'countries-fill', (e) => {

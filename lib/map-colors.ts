@@ -4,7 +4,7 @@ export const BUCKET_COLOR: Record<CaseBucket, string> = {
   low: '#FFB800',
   mid: '#FF6B35',
   high: '#FF3B3B',
-  monitoring: '#1e4a5b', // muted dark teal — present-but-not-active surveillance
+  monitoring: '#2d7a8f', // teal — present-but-not-active surveillance (lightened so small countries still register)
   none: 'transparent',
 };
 

@@ -795,6 +795,8 @@ Compose:
 - `reasoning` — paragraph including R0, mutation status, SAR, key historical comparators (El Bolsón 1996, Epuyén 2018), and an explicit note about why you diverge from Polymarket consensus if you do.
 - `r0_estimate`, `mutation_status`, `secondary_attack_rate`, `case_doubling_days`, `containment_effectiveness` — pin from current data.
 
+**Audience — same rule as snapshot.ai_analysis.** `summary` and `reasoning` are read by visitors of hantavirustracer.com via the ThreatPanelExpanded component, not by the agent operating the pipeline. Write them as **public-health epidemiology prose for a curious member of the public**: what's happening with the outbreak, how dangerous it actually is, why we think so, how it compares to past ANDV outbreaks. NEVER write about pipeline internals, schema changes, snapshot derivations, count formulas, or anything else describing operator-side work. The audience rule from `## SituationBrief` applies here verbatim.
+
 ### 4. Decide whether to insert
 
 Compare new `pandemic_probability` to the previous row's. INSERT a new `threat_assessments` row **only if**:

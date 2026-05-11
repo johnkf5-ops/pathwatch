@@ -98,6 +98,18 @@ export function casesByCountry(
   );
 }
 
+/** Cases physically located in this country right now. */
+export function casesCurrentlyIn(countryCode: string, cases: Case[]): Case[] {
+  return cases.filter((c) => c.current_country === countryCode);
+}
+
+/** Cases exposed in this country but currently elsewhere — useful for exposure-source countries (e.g., Argentina's Ushuaia landfill). */
+export function casesExposedIn(countryCode: string, cases: Case[]): Case[] {
+  return cases.filter(
+    (c) => c.exposure_country === countryCode && c.current_country !== countryCode,
+  );
+}
+
 export const CASE_CLASS_LABEL: Record<CaseClass, string> = {
   confirmed_case: 'CONFIRMED',
   probable_case: 'PROBABLE',

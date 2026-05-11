@@ -7,7 +7,7 @@ import { CountryFlag } from '@/components/ui/CountryFlag';
 import { CaseStatusPill } from '@/components/case/CaseStatusPill';
 import { CaseDossier } from '@/components/case/CaseDossier';
 import { SectionHeader } from './SectionHeader';
-import { casesByCountry, caseLabel } from '@/lib/case-helpers';
+import { casesCurrentlyIn, casesExposedIn, caseLabel } from '@/lib/case-helpers';
 
 export function DossierDrawer({
   cases,
@@ -50,7 +50,25 @@ export function DossierDrawer({
     }
   } else if (countryCode) {
     const country = countries.find((c) => c.country_code === countryCode);
-    const list = casesByCountry(countryCode, cases);
+    const here = casesCurrentlyIn(countryCode, cases);
+    const exposedHere = casesExposedIn(countryCode, cases);
+    const renderList = (items: Case[]) => (
+      <ul className="mt-2 flex flex-col">
+        {items.map((c) => (
+          <li key={c.id}>
+            <Link
+              href={`?case=${c.case_code}`}
+              replace
+              scroll={false}
+              className="flex items-center justify-between border-b border-border-soft py-2 last:border-0 hover:bg-surface-2"
+            >
+              <span className="font-mono text-[11.5px] text-text">{caseLabel(c)}</span>
+              <CaseStatusPill status={c.status} />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    );
     body = (
       <div className="flex flex-col gap-4 p-4">
         <header className="flex items-center gap-2">
@@ -73,28 +91,25 @@ export function DossierDrawer({
             <dd className="text-text">{country.latest_case_date ?? '—'}</dd>
           </dl>
         )}
+
         <section>
-          <SectionHeader>CASES IN {countryCode}</SectionHeader>
-          {list.length === 0 ? (
-            <p className="mt-2 text-sm text-text-muted">No known cases linked to this country.</p>
+          <SectionHeader>CURRENTLY IN {countryCode}</SectionHeader>
+          {here.length === 0 ? (
+            <p className="mt-2 text-sm text-text-muted">No cases currently located here.</p>
           ) : (
-            <ul className="mt-2 flex flex-col">
-              {list.map((c) => (
-                <li key={c.id}>
-                  <Link
-                    href={`?case=${c.case_code}`}
-                    replace
-                    scroll={false}
-                    className="flex items-center justify-between border-b border-border-soft py-2 last:border-0 hover:bg-surface-2"
-                  >
-                    <span className="font-mono text-[11.5px] text-text">{caseLabel(c)}</span>
-                    <CaseStatusPill status={c.status} />
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            renderList(here)
           )}
         </section>
+
+        {exposedHere.length > 0 && (
+          <section>
+            <SectionHeader>EXPOSED IN {countryCode} · NOW ELSEWHERE</SectionHeader>
+            <p className="mt-1 text-[11px] text-text-muted">
+              Cases linked to an exposure event here who are now in another country.
+            </p>
+            {renderList(exposedHere)}
+          </section>
+        )}
       </div>
     );
   }

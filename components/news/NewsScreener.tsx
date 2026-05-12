@@ -96,6 +96,18 @@ export function NewsScreener({ items }: { items: NewsLogEntry[] }) {
     if (oneCopyWidth > 0) setDuration(oneCopyWidth / pxPerSec);
   }, [ordered.length, pxPerSec]);
 
+  // Anchor the loop to wall-clock time so refreshes resume mid-stream and
+  // every viewer worldwide sees the same headline pass at the same moment.
+  // Negative animation-delay tells CSS to start partway through the loop.
+  // SSR-safe: undefined on first render, set in useEffect once we're client-
+  // side. Recomputes only when duration changes (i.e. when cron inserts new
+  // rows every 15 min) — no feedback loop from ResizeObserver here.
+  const [animationDelay, setAnimationDelay] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    if (duration == null) return;
+    setAnimationDelay(`-${(Date.now() / 1000) % duration}s`);
+  }, [duration]);
+
   if (ordered.length === 0) {
     return (
       <div
@@ -122,7 +134,14 @@ export function NewsScreener({ items }: { items: NewsLogEntry[] }) {
       <div
         ref={trackRef}
         className="news-screener-track relative z-0 flex shrink-0 items-stretch whitespace-nowrap"
-        style={duration != null ? { animationDuration: `${duration}s` } : undefined}
+        style={
+          duration != null
+            ? {
+                animationDuration: `${duration}s`,
+                ...(animationDelay ? { animationDelay } : {}),
+              }
+            : undefined
+        }
       >
         {ordered.map((item) => (
           <ItemCard

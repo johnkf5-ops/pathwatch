@@ -10,7 +10,7 @@ const BREAKING_WINDOW_MS = 10 * 60 * 1000;
 // Constant scroll speed in CSS pixels per second. Loop duration falls out of
 // the actual rendered track width, so the strip always moves at this pace
 // regardless of how many headlines news_log holds.
-const PX_PER_SEC = 60;
+const PX_PER_SEC = 120;
 
 function isFresh(iso: string | null, now: number): boolean {
   if (!iso) return false;

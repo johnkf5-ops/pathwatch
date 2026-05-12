@@ -4,13 +4,16 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { formatDistanceToNowStrict, parseISO } from 'date-fns';
 import { Radio } from 'lucide-react';
 import type { NewsLogEntry } from '@/lib/types';
+import { useMediaQuery } from '@/lib/use-media-query';
 
 const BREAKING_WINDOW_MS = 10 * 60 * 1000;
 
-// Constant scroll speed in CSS pixels per second. Loop duration falls out of
-// the actual rendered track width, so the strip always moves at this pace
-// regardless of how many headlines news_log holds.
-const PX_PER_SEC = 500;
+// Scroll speed in CSS pixels per second. Mobile viewports are narrower so
+// items pass the visible window faster at the same px/sec — bumping the
+// rate there keeps the perceived movement comparable. Loop duration falls
+// out of (actualTrackWidth / pxPerSec).
+const PX_PER_SEC_DESKTOP = 500;
+const PX_PER_SEC_MOBILE = 800;
 
 function isFresh(iso: string | null, now: number): boolean {
   if (!iso) return false;
@@ -61,6 +64,11 @@ export function NewsScreener({ items }: { items: NewsLogEntry[] }) {
     return () => clearInterval(id);
   }, []);
 
+  // Same breakpoint the rest of the dashboard uses (DashboardClient's
+  // lg:hidden / lg:grid switch is at 1024px).
+  const isMobile = useMediaQuery('(max-width: 1023.98px)');
+  const pxPerSec = isMobile ? PX_PER_SEC_MOBILE : PX_PER_SEC_DESKTOP;
+
   const ordered = useMemo(() => {
     return [...items]
       .filter((it) => it.published_at != null)
@@ -81,13 +89,13 @@ export function NewsScreener({ items }: { items: NewsLogEntry[] }) {
     if (!el) return;
     const update = () => {
       const oneCopyWidth = el.scrollWidth / 2;
-      if (oneCopyWidth > 0) setDuration(oneCopyWidth / PX_PER_SEC);
+      if (oneCopyWidth > 0) setDuration(oneCopyWidth / pxPerSec);
     };
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [ordered.length]);
+  }, [ordered.length, pxPerSec]);
 
   // Anchor the loop to wall-clock time so every viewer sees the same frame
   // and refreshes resume mid-stream. Recomputes when duration changes.

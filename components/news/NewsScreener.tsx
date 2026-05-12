@@ -49,26 +49,20 @@ function ItemCard({ item, breaking }: ItemCardProps) {
   );
 }
 
-// Anchor the scroll position to wall-clock time so every client sees the
-// same frame of the loop and refreshes pick up mid-stream instead of
-// restarting from 0. SCROLL_LOOP_S must match the animation duration in
-// app/globals.css (`.news-screener-track { animation: scroll-news <N>s ... }`).
-const SCROLL_LOOP_S = 40;
+// Scroll speed is governed by SECONDS_PER_ITEM, not a fixed loop duration.
+// With ~60 items in the track a fixed 40s loop translates to ~750 px/sec —
+// items zip past unreadably and the same first items reappear every 40s.
+// Holding seconds-per-item constant lets readers actually finish a headline
+// and ensures the loop is long enough that the first items don't return
+// before everything else has been seen.
+const SECONDS_PER_ITEM = 4;
+const MIN_LOOP_S = 30;
 
 export function NewsScreener({ items }: { items: NewsLogEntry[] }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(id);
-  }, []);
-
-  // animationDelay is undefined on first render (SSR + hydration), then set
-  // in useEffect once we're client-side. Tiny one-frame settle, no hydration
-  // mismatch. The negative delay tells CSS to start the loop at the wall-clock
-  // offset, syncing every viewer.
-  const [animationDelay, setAnimationDelay] = useState<string | undefined>(undefined);
-  useEffect(() => {
-    setAnimationDelay(`-${(Date.now() / 1000) % SCROLL_LOOP_S}s`);
   }, []);
 
   const ordered = useMemo(() => {
@@ -81,6 +75,16 @@ export function NewsScreener({ items }: { items: NewsLogEntry[] }) {
       })
       .slice(0, 60);
   }, [items]);
+
+  const loopDuration = Math.max(MIN_LOOP_S, ordered.length * SECONDS_PER_ITEM);
+
+  // animationDelay anchors the loop to wall-clock time so every viewer sees
+  // the same frame and refreshes resume mid-stream. Recomputed whenever the
+  // loop duration changes (i.e. when new items arrive).
+  const [animationDelay, setAnimationDelay] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    setAnimationDelay(`-${(Date.now() / 1000) % loopDuration}s`);
+  }, [loopDuration]);
 
   if (ordered.length === 0) {
     return (
@@ -107,7 +111,10 @@ export function NewsScreener({ items }: { items: NewsLogEntry[] }) {
       </span>
       <div
         className="news-screener-track relative z-0 flex min-w-0 flex-1 items-stretch whitespace-nowrap"
-        style={animationDelay ? { animationDelay } : undefined}
+        style={{
+          animationDuration: `${loopDuration}s`,
+          ...(animationDelay ? { animationDelay } : {}),
+        }}
       >
         {ordered.map((item) => (
           <ItemCard

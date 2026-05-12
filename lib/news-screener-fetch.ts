@@ -66,6 +66,14 @@ export function parseRssFeed(xml: string): RawNewsItem[] {
   return out;
 }
 
+// Title-content filter. Google News broad queries (e.g. `"Andes virus"`,
+// `hantavirus 2026`) silently pad the RSS with trending unrelated stories
+// from trusted domains — Beatles articles from AP, NBA news from Reuters,
+// etc. Domain allowlist alone caught the source; this regex catches the
+// topic. Conservative substring match on the 4 canonical names; anything
+// outside these is dropped.
+export const TOPIC_PATTERN = /(hantavirus|andes\s+virus|mv\s+hondius|\bandv\b)/i;
+
 export function filterItems(
   items: RawNewsItem[],
   opts: { allowedDomains: ReadonlySet<string>; maxAgeHours: number; now?: Date },
@@ -75,6 +83,7 @@ export function filterItems(
   return items.filter((it) => {
     if (!opts.allowedDomains.has(it.source_domain)) return false;
     if (it.published_at == null) return false;
+    if (!TOPIC_PATTERN.test(it.title)) return false;
     const age = now - new Date(it.published_at).getTime();
     return age >= 0 && age <= maxAgeMs;
   });

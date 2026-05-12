@@ -81,29 +81,20 @@ export function NewsScreener({ items }: { items: NewsLogEntry[] }) {
 
   // Measure the track's rendered width and let it dictate the loop length.
   // The track contains two copies of `ordered`, so the keyframe slides by
-  // -50% (one copy width) over `oneCopyWidth / PX_PER_SEC` seconds.
+  // -50% (one copy width) over `oneCopyWidth / pxPerSec` seconds. We only
+  // remeasure when ordered.length or pxPerSec changes — we explicitly DO
+  // NOT subscribe to ResizeObserver here. A live ResizeObserver feedback
+  // loop with React state causes the inline `animation-duration` to flicker
+  // whenever a BREAKING badge appears/disappears, which Chromium treats as
+  // an animation reset. One stable duration per content shape = smooth loop.
   const trackRef = useRef<HTMLDivElement>(null);
   const [duration, setDuration] = useState<number | null>(null);
   useLayoutEffect(() => {
     const el = trackRef.current;
     if (!el) return;
-    const update = () => {
-      const oneCopyWidth = el.scrollWidth / 2;
-      if (oneCopyWidth > 0) setDuration(oneCopyWidth / pxPerSec);
-    };
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
+    const oneCopyWidth = el.scrollWidth / 2;
+    if (oneCopyWidth > 0) setDuration(oneCopyWidth / pxPerSec);
   }, [ordered.length, pxPerSec]);
-
-  // Anchor the loop to wall-clock time so every viewer sees the same frame
-  // and refreshes resume mid-stream. Recomputes when duration changes.
-  const [animationDelay, setAnimationDelay] = useState<string | undefined>(undefined);
-  useEffect(() => {
-    if (duration == null) return;
-    setAnimationDelay(`-${(Date.now() / 1000) % duration}s`);
-  }, [duration]);
 
   if (ordered.length === 0) {
     return (
@@ -131,14 +122,7 @@ export function NewsScreener({ items }: { items: NewsLogEntry[] }) {
       <div
         ref={trackRef}
         className="news-screener-track relative z-0 flex min-w-0 flex-1 items-stretch whitespace-nowrap"
-        style={
-          duration != null
-            ? {
-                animationDuration: `${duration}s`,
-                ...(animationDelay ? { animationDelay } : {}),
-              }
-            : undefined
-        }
+        style={duration != null ? { animationDuration: `${duration}s` } : undefined}
       >
         {ordered.map((item) => (
           <ItemCard

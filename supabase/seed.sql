@@ -277,3 +277,24 @@ INSERT INTO cases (case_code, case_class, status, is_index_case, role, exposure_
    'KLM cabin crew member, partial-shift contact with the symptomatic MV Hondius returnee on KL592, 2026-04-25 (earlier flight than KL-001 attendant). Asymptomatic; under occupational health monitoring.',
    'GGD monitoring; not a confirmed case.',
    '2026-05-19');
+
+-- ============================================================
+-- news_log seed (so the dashboard NewsScreener strip renders in dev)
+-- Timestamps relative to seed time so items always appear "recent" in tests.
+-- ============================================================
+INSERT INTO news_log (published_at, source_domain, title, url, query_term, disease) VALUES
+  (now() - interval '6 hours',  'who.int',       'WHO updates global risk assessment for MV Hondius hantavirus cluster',
+    'https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON599-update-1',
+    'site:who.int hantavirus', 'hantavirus'),
+  (now() - interval '14 hours', 'cdc.gov',       'CDC updates HAN advisory; active monitoring continues for MV Hondius returnees',
+    'https://www.cdc.gov/han/han00528.html',
+    'site:cdc.gov hantavirus', 'hantavirus'),
+  (now() - interval '22 hours', 'reuters.com',   'Cape Verde port closure extended as MV Hondius evacuation continues',
+    'https://www.reuters.com/world/africa/cape-verde-mv-hondius-2026-05-11',
+    '"MV Hondius" hantavirus', 'hantavirus'),
+  (now() - interval '32 hours', 'apnews.com',    'Andes virus: what we know about the only person-to-person hantavirus',
+    'https://apnews.com/article/andes-virus-hantavirus-explainer-2026-05-11',
+    '"Andes virus"', 'hantavirus'),
+  (now() - interval '48 hours', 'bbc.com',       'Swiss confirm secondary hantavirus case linked to MV Hondius returnee',
+    'https://www.bbc.com/news/health-2026-05-10',
+    'hantavirus 2026', 'hantavirus');

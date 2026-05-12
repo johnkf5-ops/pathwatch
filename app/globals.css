@@ -110,3 +110,23 @@ body {
   background: rgba(214, 218, 230, 0.32);
 }
 
+/* News screener — continuous right-to-left scroll. The track is duplicated
+   in the component so the animation can loop with no visible jump. */
+@keyframes scroll-news {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.news-screener-track {
+  animation: scroll-news 60s linear infinite;
+}
+.news-screener-track:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .news-screener-track {
+    animation: none;
+    transform: none;
+  }
+}

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type {
   Event, Snapshot, CountryStat, Case, CaseLocation, ThreatAssessment, Fact,
-  OutbreakTimelineEntry,
+  OutbreakTimelineEntry, NewsLogEntry,
 } from '@/lib/types';
 import { getBrowserClient } from '@/lib/supabase-browser';
 import { TopBar } from '@/components/ops/TopBar';
@@ -21,6 +21,7 @@ import { ThreatPanelExpanded } from '@/components/threat/ThreatPanelExpanded';
 import { KpiHud } from '@/components/ops/KpiHud';
 import { VirusProfile } from '@/components/profile/VirusProfile';
 import { OutbreakTimeline } from '@/components/ops/OutbreakTimeline';
+import { NewsScreener } from '@/components/news/NewsScreener';
 import { isCase, sumPersons } from '@/lib/case-helpers';
 
 interface Props {
@@ -33,6 +34,7 @@ interface Props {
   initialThreat: ThreatAssessment | null;
   initialFacts: Fact[];
   initialTimeline: OutbreakTimelineEntry[];
+  initialNews: NewsLogEntry[];
 }
 
 export function DashboardClient({
@@ -45,6 +47,7 @@ export function DashboardClient({
   initialThreat,
   initialFacts,
   initialTimeline,
+  initialNews,
 }: Props) {
   const searchParams = useSearchParams();
   const caseCode = searchParams.get('case');
@@ -59,6 +62,7 @@ export function DashboardClient({
   const [threat, setThreat] = useState(initialThreat);
   const [facts, setFacts] = useState(initialFacts);
   const [timeline, setTimeline] = useState(initialTimeline);
+  const [news, setNews] = useState(initialNews);
   const [activeTab, setActiveTab] = useState<'map' | 'country'>('map');
 
   useEffect(() => { setSnapshot(initialSnapshot); }, [initialSnapshot]);
@@ -70,6 +74,7 @@ export function DashboardClient({
   useEffect(() => { setThreat(initialThreat); }, [initialThreat]);
   useEffect(() => { setFacts(initialFacts); }, [initialFacts]);
   useEffect(() => { setTimeline(initialTimeline); }, [initialTimeline]);
+  useEffect(() => { setNews(initialNews); }, [initialNews]);
 
   useEffect(() => {
     const supabase = getBrowserClient();
@@ -169,6 +174,18 @@ export function DashboardClient({
       )
       .subscribe();
 
+    const ch8 = supabase
+      .channel('news-rt')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'news_log', filter: 'disease=eq.hantavirus' },
+        (p) => {
+          const row = p.new as NewsLogEntry;
+          setNews((prev) => (prev.find((n) => n.id === row.id) ? prev : [row, ...prev].slice(0, 80)));
+        },
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(ch1);
       supabase.removeChannel(ch2);
@@ -177,6 +194,7 @@ export function DashboardClient({
       supabase.removeChannel(ch5);
       supabase.removeChannel(ch6);
       supabase.removeChannel(ch7);
+      supabase.removeChannel(ch8);
     };
   }, []);
 
@@ -198,6 +216,7 @@ export function DashboardClient({
         2026 MV Hondius Hantavirus (Andes Virus / ANDV) Outbreak — Live Tracker
       </h1>
       <TopBar snapshot={snapshot} threat={threat} monitoringCount={sumPersons(monitoringCases)} caseCount={sumPersons(caseRows)} />
+      <NewsScreener items={news} />
 
       {/* Mobile (< lg): single-column stack with collapsible map + bottom sheet */}
       <div className="lg:hidden">

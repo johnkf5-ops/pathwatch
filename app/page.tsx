@@ -4,7 +4,7 @@ import { DashboardClient } from './DashboardClient';
 import { EVENT_PUBLIC_COLUMNS } from '@/lib/types';
 import type {
   Event, Snapshot, CountryStat, Case, CaseLocation, ThreatAssessment, Fact,
-  OutbreakTimelineEntry,
+  OutbreakTimelineEntry, NewsLogEntry,
 } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -23,6 +23,7 @@ export default async function Home() {
     threatRes,
     factsRes,
     timelineRes,
+    newsRes,
   ] = await Promise.all([
     supabase
       .from('snapshots')
@@ -65,6 +66,13 @@ export default async function Home() {
       .select('*')
       .eq('disease', 'hantavirus')
       .order('day_num', { ascending: false }),
+    supabase
+      .from('news_log')
+      .select('*')
+      .eq('disease', 'hantavirus')
+      .gte('published_at', new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString())
+      .order('published_at', { ascending: false, nullsFirst: false })
+      .limit(50),
   ]);
 
   const snapshot = (snapshotRes.data as Snapshot | null) ?? null;
@@ -189,6 +197,7 @@ export default async function Home() {
         initialThreat={threat}
         initialFacts={(factsRes.data as Fact[] | null) ?? []}
         initialTimeline={(timelineRes.data as OutbreakTimelineEntry[] | null) ?? []}
+        initialNews={(newsRes.data as NewsLogEntry[] | null) ?? []}
       />
     </>
   );

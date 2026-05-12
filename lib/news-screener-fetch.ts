@@ -31,6 +31,15 @@ export function extractDomain(url: string): string | null {
   }
 }
 
+// Google News RSS appends " - <Publisher>" to virtually every title (e.g.
+// "Hantavirus breach at hospital - Reuters"). We render the publisher
+// separately as the card prefix, so the trailing suffix is pure duplication.
+// Strip it: the publisher segment is short, comes after the LAST " - " or
+// " – ", and contains no terminal punctuation.
+export function cleanTitle(title: string): string {
+  return title.replace(/\s+[-–—]\s+[^-–—.!?]{1,40}$/u, '').trim();
+}
+
 // Google News RSS wraps the publisher URL with a news.google.com redirect.
 // The publisher domain is exposed in the <source url="..."> element on each
 // item. Fall back to extracting from the <link> if the source attr is absent.
@@ -61,7 +70,7 @@ export function parseRssFeed(xml: string): RawNewsItem[] {
     if (!domain) continue;
 
     const published_at = pubDate ? new Date(pubDate).toISOString() : null;
-    out.push({ title, url: link, published_at, source_domain: domain });
+    out.push({ title: cleanTitle(title), url: link, published_at, source_domain: domain });
   }
   return out;
 }

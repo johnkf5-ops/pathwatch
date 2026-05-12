@@ -241,27 +241,34 @@ export function MapPanel({ countries, cases, caseLocations, selectedCaseId }: Pr
     }
 
     // Auto-fit camera to the selected case's path so the trace is on screen.
-    if (stops.length === 1) {
-      map.flyTo({
-        center: [stops[0].longitude as number, stops[0].latitude as number],
-        zoom: 4,
-        duration: 700,
-      });
-    } else {
-      const bounds = new maplibregl.LngLatBounds(
-        [stops[0].longitude as number, stops[0].latitude as number],
-        [stops[0].longitude as number, stops[0].latitude as number],
-      );
-      for (const s of stops) {
-        bounds.extend([s.longitude as number, s.latitude as number]);
+    // Defer until the style/tiles are loaded — calling flyTo/fitBounds on a
+    // freshly-created map can be silently overwritten by the style-load pass,
+    // which is why deep-linking to /?case=X never zoomed on initial page load.
+    const applyCamera = () => {
+      if (stops.length === 1) {
+        map.flyTo({
+          center: [stops[0].longitude as number, stops[0].latitude as number],
+          zoom: 4,
+          duration: 700,
+        });
+      } else {
+        const bounds = new maplibregl.LngLatBounds(
+          [stops[0].longitude as number, stops[0].latitude as number],
+          [stops[0].longitude as number, stops[0].latitude as number],
+        );
+        for (const s of stops) {
+          bounds.extend([s.longitude as number, s.latitude as number]);
+        }
+        // Right padding accounts for the inline DossierDrawer (~420px).
+        map.fitBounds(bounds, {
+          padding: { top: 80, bottom: 80, left: 80, right: 460 },
+          maxZoom: 6,
+          duration: 700,
+        });
       }
-      // Right padding accounts for the inline DossierDrawer (~420px).
-      map.fitBounds(bounds, {
-        padding: { top: 80, bottom: 80, left: 80, right: 460 },
-        maxZoom: 6,
-        duration: 700,
-      });
-    }
+    };
+    if (map.loaded()) applyCamera();
+    else map.once('load', applyCamera);
 
     const rgb = statusRgb(sel.status);
     // Path encoded as [lon, lat, t]; we use stop-index as the time axis.

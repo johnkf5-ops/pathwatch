@@ -49,11 +49,26 @@ function ItemCard({ item, breaking }: ItemCardProps) {
   );
 }
 
+// Anchor the scroll position to wall-clock time so every client sees the
+// same frame of the loop and refreshes pick up mid-stream instead of
+// restarting from 0. SCROLL_LOOP_S must match the animation duration in
+// app/globals.css (`.news-screener-track { animation: scroll-news <N>s ... }`).
+const SCROLL_LOOP_S = 60;
+
 export function NewsScreener({ items }: { items: NewsLogEntry[] }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(id);
+  }, []);
+
+  // animationDelay is undefined on first render (SSR + hydration), then set
+  // in useEffect once we're client-side. Tiny one-frame settle, no hydration
+  // mismatch. The negative delay tells CSS to start the loop at the wall-clock
+  // offset, syncing every viewer.
+  const [animationDelay, setAnimationDelay] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    setAnimationDelay(`-${(Date.now() / 1000) % SCROLL_LOOP_S}s`);
   }, []);
 
   const ordered = useMemo(() => {
@@ -90,7 +105,10 @@ export function NewsScreener({ items }: { items: NewsLogEntry[] }) {
         <span className="inline-block h-1.5 w-1.5 rounded-full bg-cyan" />
         NEWS WIRE
       </span>
-      <div className="news-screener-track relative z-0 flex min-w-0 flex-1 items-stretch whitespace-nowrap">
+      <div
+        className="news-screener-track relative z-0 flex min-w-0 flex-1 items-stretch whitespace-nowrap"
+        style={animationDelay ? { animationDelay } : undefined}
+      >
         {ordered.map((item) => (
           <ItemCard
             key={`a-${item.id}`}

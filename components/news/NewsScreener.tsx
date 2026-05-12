@@ -12,7 +12,7 @@ const BREAKING_WINDOW_MS = 10 * 60 * 1000;
 // items pass the visible window faster at the same px/sec — bumping the
 // rate there keeps the perceived movement comparable. Loop duration falls
 // out of (actualTrackWidth / pxPerSec).
-const PX_PER_SEC_DESKTOP = 650;
+const PX_PER_SEC_DESKTOP = 180;
 const PX_PER_SEC_MOBILE = 950;
 
 function isFresh(iso: string | null, now: number): boolean {

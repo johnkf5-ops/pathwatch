@@ -1,0 +1,39 @@
+name: News screener cron
+
+# Drives the news screener fetch every 15 minutes. We use GitHub Actions
+# rather than Vercel cron because the project is on Vercel Hobby (one-per-day
+# cron limit). Actions hits the same Vercel route, so swapping back to a
+# Vercel cron later is a one-line change.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: news-screener-cron
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Hit /api/news-screener/cron
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          ENDPOINT: https://hantavirustracer.com/api/news-screener/cron
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET:-}" ]; then
+            echo "CRON_SECRET secret is not set on the repo." >&2
+            exit 1
+          fi
+          # -f makes curl exit non-zero on 4xx/5xx; -sS keeps logs quiet but
+          # surfaces errors. -w prints the HTTP status at the end for visibility.
+          curl -fsSL -X GET "$ENDPOINT" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "User-Agent: github-actions-news-screener" \
+            -w "\nHTTP %{http_code} in %{time_total}s\n"

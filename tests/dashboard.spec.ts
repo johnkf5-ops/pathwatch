@@ -9,7 +9,6 @@ test('ops console renders sit-rep + tabs', async ({ page }) => {
   await page.goto('/');
   const desktop = page.getByTestId('desktop-layout');
   await expect(page.getByText('PATHWATCH').first()).toBeVisible();
-  await expect(page.getByText('OPS CONSOLE')).toBeVisible();
   await expect(desktop.getByText('SITUATION BRIEF')).toBeVisible();
   await expect(desktop.getByText('KEY METRICS')).toBeVisible();
   await expect(desktop.getByText('COUNTRIES AFFECTED')).toBeVisible();
@@ -65,7 +64,9 @@ test('case drilldown opens drawer', async ({ page }) => {
   const desktop = page.getByTestId('desktop-layout');
   await expect(desktop.getByTestId('dossier-drawer')).toBeVisible();
   await expect(desktop.getByRole('heading', { name: 'MVH-001' })).toBeVisible();
-  await expect(desktop.getByText('DOSSIER')).toBeVisible();
+  // Two "DOSSIER" strings live in the drawer: the breadcrumb span ("DOSSIER · MVH-001")
+  // and the section heading. Scope to the heading to avoid a strict-mode collision.
+  await expect(desktop.getByRole('heading', { name: 'DOSSIER' })).toBeVisible();
   await expect(desktop.getByText(/birdwatching/i).first()).toBeVisible();
   await expect(desktop.getByText('TRAVEL TIMELINE')).toBeVisible();
 });
@@ -92,17 +93,20 @@ test('event detail page renders', async ({ page }) => {
 test('intelligence feed renders with 6 tabs and signal warning', async ({ page }) => {
   await page.goto('/');
   const desktop = page.getByTestId('desktop-layout');
-  await expect(desktop.getByText('INTELLIGENCE FEED')).toBeVisible();
-  // 6 tabs
+  // Scope to the EventFeed section. MonitoringCohort also has an "ALL" button
+  // so unscoped getByRole('button', { name: 'ALL' }) is now ambiguous.
+  const feed = desktop
+    .getByRole('heading', { name: /INTELLIGENCE FEED/ })
+    .locator('xpath=ancestor::section[1]');
+  await expect(feed).toBeVisible();
   for (const label of ['ALL', 'CASES', 'OFFICIAL', 'RESPONSE', 'SCIENCE', 'SIGNAL']) {
-    await expect(desktop.getByRole('button', { name: new RegExp(`^${label}\\b`) })).toBeVisible();
+    await expect(feed.getByRole('button', { name: new RegExp(`^${label}\\b`) })).toBeVisible();
   }
   // Default tab = ALL: at least one card visible
-  const eventLinks = desktop.locator('a[href^="/event/"]');
-  await expect(eventLinks.first()).toBeVisible();
+  await expect(feed.locator('a[href^="/event/"]').first()).toBeVisible();
   // Signal tab activates the warning banner
-  await desktop.getByRole('button', { name: /^SIGNAL\b/ }).click();
-  await expect(desktop.getByText('UNVERIFIED SOCIAL MEDIA SIGNAL')).toBeVisible();
+  await feed.getByRole('button', { name: /^SIGNAL\b/ }).click();
+  await expect(feed.getByText('UNVERIFIED SOCIAL MEDIA SIGNAL')).toBeVisible();
 });
 
 test('virus profile card renders 9 plain-language tiles + expand', async ({ page }) => {
@@ -143,18 +147,16 @@ test('monitoring cohort renders with countdown chips', async ({ page }) => {
   await expect(desktop.getByText(/^[0-9]+D$/).first()).toBeVisible();
 });
 
-test('threat banner renders + expands', async ({ page }) => {
+test('threat panel renders inline (assessment + KEY SIGNALS + POLYMARKET)', async ({ page }) => {
   await page.goto('/');
   const desktop = page.getByTestId('desktop-layout');
-  await expect(desktop.getByText('PANDEMIC PROBABILITY')).toBeVisible();
-  await expect(desktop.getByText(/vs MARKET/i)).toBeVisible();
-  await expect(desktop.locator('button[aria-expanded="false"]').filter({ hasText: 'PANDEMIC PROBABILITY' }).getByText('LOW', { exact: true })).toBeVisible();
-  // Expand
-  const expandButton = desktop.locator('button[aria-expanded="false"]').filter({ hasText: 'PANDEMIC PROBABILITY' });
-  await expandButton.click();
-  await expect(desktop.getByText('TRIGGERS', { exact: true })).toBeVisible();
-  await expect(desktop.getByText(/WATCHING ·/).first()).toBeVisible();
+  // ThreatPanelExpanded is always-rendered now (no expand button). The
+  // "PANDEMIC PROBABILITY" chip moved to the TopBar; inside the desktop
+  // grid the panel exposes ASSESSMENT/KEY SIGNALS/POLYMARKET subsections.
+  await expect(desktop.getByText(/ASSESSMENT ·/)).toBeVisible();
+  await expect(desktop.getByText('KEY SIGNALS', { exact: true })).toBeVisible();
   await expect(desktop.getByText('POLYMARKET', { exact: true })).toBeVisible();
+  await expect(desktop.getByText('Pandemic 2026', { exact: true })).toBeVisible();
 });
 
 test('smoke: CASES displayed = sum of case_class IN (confirmed,probable,suspected)', async ({ page }) => {

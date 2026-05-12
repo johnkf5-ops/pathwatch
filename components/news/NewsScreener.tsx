@@ -1,11 +1,16 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { formatDistanceToNowStrict, parseISO } from 'date-fns';
 import { Radio } from 'lucide-react';
 import type { NewsLogEntry } from '@/lib/types';
 
 const BREAKING_WINDOW_MS = 10 * 60 * 1000;
+
+// Constant scroll speed in CSS pixels per second. Loop duration falls out of
+// the actual rendered track width, so the strip always moves at this pace
+// regardless of how many headlines news_log holds.
+const PX_PER_SEC = 60;
 
 function isFresh(iso: string | null, now: number): boolean {
   if (!iso) return false;
@@ -49,15 +54,6 @@ function ItemCard({ item, breaking }: ItemCardProps) {
   );
 }
 
-// Scroll speed is governed by SECONDS_PER_ITEM, not a fixed loop duration.
-// With ~60 items in the track a fixed 40s loop translates to ~750 px/sec —
-// items zip past unreadably and the same first items reappear every 40s.
-// Holding seconds-per-item constant lets readers actually finish a headline
-// and ensures the loop is long enough that the first items don't return
-// before everything else has been seen.
-const SECONDS_PER_ITEM = 4;
-const MIN_LOOP_S = 30;
-
 export function NewsScreener({ items }: { items: NewsLogEntry[] }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -72,19 +68,34 @@ export function NewsScreener({ items }: { items: NewsLogEntry[] }) {
         const ta = a.published_at ? new Date(a.published_at).getTime() : 0;
         const tb = b.published_at ? new Date(b.published_at).getTime() : 0;
         return tb - ta;
-      })
-      .slice(0, 60);
+      });
   }, [items]);
 
-  const loopDuration = Math.max(MIN_LOOP_S, ordered.length * SECONDS_PER_ITEM);
+  // Measure the track's rendered width and let it dictate the loop length.
+  // The track contains two copies of `ordered`, so the keyframe slides by
+  // -50% (one copy width) over `oneCopyWidth / PX_PER_SEC` seconds.
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [duration, setDuration] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    const update = () => {
+      const oneCopyWidth = el.scrollWidth / 2;
+      if (oneCopyWidth > 0) setDuration(oneCopyWidth / PX_PER_SEC);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ordered.length]);
 
-  // animationDelay anchors the loop to wall-clock time so every viewer sees
-  // the same frame and refreshes resume mid-stream. Recomputed whenever the
-  // loop duration changes (i.e. when new items arrive).
+  // Anchor the loop to wall-clock time so every viewer sees the same frame
+  // and refreshes resume mid-stream. Recomputes when duration changes.
   const [animationDelay, setAnimationDelay] = useState<string | undefined>(undefined);
   useEffect(() => {
-    setAnimationDelay(`-${(Date.now() / 1000) % loopDuration}s`);
-  }, [loopDuration]);
+    if (duration == null) return;
+    setAnimationDelay(`-${(Date.now() / 1000) % duration}s`);
+  }, [duration]);
 
   if (ordered.length === 0) {
     return (
@@ -110,11 +121,16 @@ export function NewsScreener({ items }: { items: NewsLogEntry[] }) {
         NEWS WIRE
       </span>
       <div
+        ref={trackRef}
         className="news-screener-track relative z-0 flex min-w-0 flex-1 items-stretch whitespace-nowrap"
-        style={{
-          animationDuration: `${loopDuration}s`,
-          ...(animationDelay ? { animationDelay } : {}),
-        }}
+        style={
+          duration != null
+            ? {
+                animationDuration: `${duration}s`,
+                ...(animationDelay ? { animationDelay } : {}),
+              }
+            : undefined
+        }
       >
         {ordered.map((item) => (
           <ItemCard

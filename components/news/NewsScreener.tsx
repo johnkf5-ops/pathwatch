@@ -121,7 +121,7 @@ export function NewsScreener({ items }: { items: NewsLogEntry[] }) {
       </span>
       <div
         ref={trackRef}
-        className="news-screener-track relative z-0 flex min-w-0 flex-1 items-stretch whitespace-nowrap"
+        className="news-screener-track relative z-0 flex shrink-0 items-stretch whitespace-nowrap"
         style={duration != null ? { animationDuration: `${duration}s` } : undefined}
       >
         {ordered.map((item) => (

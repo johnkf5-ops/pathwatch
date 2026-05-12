@@ -13,7 +13,7 @@ const BREAKING_WINDOW_MS = 10 * 60 * 1000;
 // rate there keeps the perceived movement comparable. Loop duration falls
 // out of (actualTrackWidth / pxPerSec).
 const PX_PER_SEC_DESKTOP = 180;
-const PX_PER_SEC_MOBILE = 950;
+const PX_PER_SEC_MOBILE = 180;
 
 function isFresh(iso: string | null, now: number): boolean {
   if (!iso) return false;

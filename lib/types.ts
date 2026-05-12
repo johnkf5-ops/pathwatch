@@ -222,3 +222,15 @@ export interface ThreatAssessment {
   triggers_watching: string[];
   triggers_tripped: string[];
 }
+
+export interface NewsLogEntry {
+  id: string;
+  fetched_at: string;
+  published_at: string | null;
+  source_domain: string;
+  title: string;
+  url: string;
+  url_hash: string;
+  query_term: string | null;
+  disease: string;
+}

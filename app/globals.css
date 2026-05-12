@@ -118,7 +118,7 @@ body {
 }
 
 .news-screener-track {
-  animation: scroll-news 90s linear infinite;
+  animation: scroll-news 60s linear infinite;
 }
 .news-screener-track:hover {
   animation-play-state: paused;

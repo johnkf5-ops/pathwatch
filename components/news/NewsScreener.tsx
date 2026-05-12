@@ -84,13 +84,13 @@ export function NewsScreener({ items }: { items: NewsLogEntry[] }) {
       className="relative flex h-9 items-stretch overflow-hidden border-b border-border bg-bg-2"
     >
       <span
-        className="flex shrink-0 items-center gap-1.5 border-r border-border bg-bg px-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-text-muted"
+        className="relative z-10 flex shrink-0 items-center gap-1.5 border-r border-border bg-bg px-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-text-muted"
         aria-hidden
       >
         <span className="inline-block h-1.5 w-1.5 rounded-full bg-cyan" />
         NEWS WIRE
       </span>
-      <div className="news-screener-track flex items-stretch whitespace-nowrap">
+      <div className="news-screener-track relative z-0 flex min-w-0 flex-1 items-stretch whitespace-nowrap">
         {ordered.map((item) => (
           <ItemCard
             key={`a-${item.id}`}

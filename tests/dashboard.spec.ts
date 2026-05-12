@@ -180,3 +180,16 @@ test('OG image generates', async ({ request }) => {
   expect(res.status()).toBe(200);
   expect(res.headers()['content-type']).toContain('image/png');
 });
+
+test('NewsScreener strip renders seeded headlines', async ({ page }) => {
+  await page.goto('/');
+  const strip = page.getByTestId('news-screener').first();
+  await expect(strip).toBeVisible();
+  await expect(strip.getByText('NEWS WIRE')).toBeVisible();
+  // Seed has WHO + CDC + Reuters + AP + BBC. Assert WHO since it's the most recent.
+  await expect(
+    strip.getByText(/WHO updates global risk assessment/i).first(),
+  ).toBeVisible();
+  // Source domains render uppercase in each card.
+  await expect(strip.getByText('WHO.INT').first()).toBeVisible();
+});

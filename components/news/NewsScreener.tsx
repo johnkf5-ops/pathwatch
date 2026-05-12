@@ -53,7 +53,7 @@ function ItemCard({ item, breaking }: ItemCardProps) {
 // same frame of the loop and refreshes pick up mid-stream instead of
 // restarting from 0. SCROLL_LOOP_S must match the animation duration in
 // app/globals.css (`.news-screener-track { animation: scroll-news <N>s ... }`).
-const SCROLL_LOOP_S = 60;
+const SCROLL_LOOP_S = 40;
 
 export function NewsScreener({ items }: { items: NewsLogEntry[] }) {
   const [now, setNow] = useState(() => Date.now());

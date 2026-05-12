@@ -36,6 +36,10 @@ A "cycle" = the 5 steps below. Aim for ~10–15 min wall-clock per cycle.
 
 The agent picks 2-3 outlets per fired group per cycle. Cadence (which groups fire each cycle) is documented in §1 cadence below; rotation mechanism in §1 rotation.
 
+#### Source denylist — never cite these
+
+Before the source groups, the hard rule: never cite competitor outbreak trackers, personal blogs, Substack newsletters, Medium posts, Blogspot, or press-release aggregators (medicalxpress, news.google.com article URLs). Full list with rationale and the post-cycle audit query: `docs/runbooks/source-denylist.md`. If a claim is supported only by a denylisted domain, find a primary source or drop the claim.
+
 #### Source groups (illustrative — agent picks 2-3 per group per cycle)
 
 1. **Primary outbreak surveillance (Credibility Tier 1):** WHO DON + WHO daily press briefings + WHO YouTube/X feeds, CDC (HAN + RSS https://tools.cdc.gov/api/v2/resources/media/rss + media releases + press briefings + press conferences), ECDC, Africa CDC, plus national health authorities — UKHSA, RIVM, RKI (incl. Kontaktpersonen guidance pages), Swiss FOPH, Spanish Sanidad / Moncloa press-conference page, Singapore CDA, PHAC, Sante Publique France

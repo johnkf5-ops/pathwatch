@@ -38,6 +38,11 @@ When reporting evolves (e.g., WHO upgrades suspected → probable), update the s
 - For US/anonymized passengers (`US-*`, `NJ-*`), do NOT add real names even if reporting reveals them. Keep the "Texas Resident #1" framing.
 - For named cases (e.g. MVH-004 Martin Anstee, MVH-001 Dutch Man), the existing `display_name` field is the source of truth — don't escalate beyond what's already there.
 
+**Source denylist — non-negotiable:**
+- Never cite competitor outbreak trackers, personal blogs, Substack newsletters, Medium posts, Blogspot, or press-release aggregators (medicalxpress, news.google.com article URLs).
+- Full list + audit query: `docs/runbooks/source-denylist.md`.
+- If a research agent surfaces only denylisted sources for a claim, drop the claim — do not write it into the dossier with a "best available" note.
+
 ---
 
 ## The pattern

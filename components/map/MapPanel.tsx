@@ -245,10 +245,27 @@ export function MapPanel({ countries, cases, caseLocations, selectedCaseId }: Pr
     // freshly-created map can be silently overwritten by the style-load pass,
     // which is why deep-linking to /?case=X never zoomed on initial page load.
     const applyCamera = () => {
+      // Measure how much of the map canvas the DossierDrawer actually covers
+      // on its right edge. The drawer is position:fixed and may extend beyond
+      // the map's right edge, so its overlap is usually much less than its
+      // full width. Falling back to 24 (just a small breathing margin) when
+      // the drawer isn't mounted.
+      const mapRect = map.getContainer().getBoundingClientRect();
+      const drawerEl = document.querySelector<HTMLElement>('[data-testid="dossier-drawer"]');
+      const drawerRect = drawerEl?.getBoundingClientRect();
+      const rightPad = drawerRect
+        ? Math.max(24, Math.round(mapRect.right - drawerRect.left + 16))
+        : 24;
+
       if (stops.length === 1) {
+        // Shift the camera left by half the drawer overlap so the single
+        // marker lands in the visible (non-drawer) portion of the map.
+        const effectiveWidth = mapRect.width - rightPad;
+        const shiftPx = (mapRect.width - effectiveWidth) / 2;
         map.flyTo({
           center: [stops[0].longitude as number, stops[0].latitude as number],
           zoom: 4,
+          offset: [-shiftPx, 0],
           duration: 700,
         });
       } else {
@@ -259,9 +276,8 @@ export function MapPanel({ countries, cases, caseLocations, selectedCaseId }: Pr
         for (const s of stops) {
           bounds.extend([s.longitude as number, s.latitude as number]);
         }
-        // Right padding accounts for the inline DossierDrawer (~420px).
         map.fitBounds(bounds, {
-          padding: { top: 80, bottom: 80, left: 80, right: 460 },
+          padding: { top: 60, bottom: 60, left: 40, right: rightPad },
           maxZoom: 6,
           duration: 700,
         });

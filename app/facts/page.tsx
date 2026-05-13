@@ -8,7 +8,7 @@ import type { Fact, Snapshot } from '@/lib/types';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Hantavirus Knowledge Base — Verified Facts (Pathwatch)',
+  title: 'Hantavirus Knowledge Base — Verified Facts',
   description:
     'Source-cited facts about hantavirus, Andes virus (ANDV), and the 2026 MV Hondius outbreak. Categories: pathogen, transmission, clinical, epidemiology, history, containment.',
   alternates: { canonical: '/facts' },
@@ -18,7 +18,7 @@ const breadcrumbLd = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Pathwatch', item: 'https://hantavirustracer.com/' },
+    { '@type': 'ListItem', position: 1, name: 'Hantavirus Tracker', item: 'https://hantavirustracer.com/' },
     { '@type': 'ListItem', position: 2, name: 'Knowledge Base', item: 'https://hantavirustracer.com/facts' },
   ],
 };

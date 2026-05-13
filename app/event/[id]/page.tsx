@@ -37,9 +37,9 @@ export async function generateMetadata({
   params: { id: string };
 }): Promise<Metadata> {
   const event = await fetchEvent(params.id);
-  if (!event) return { title: 'Event not found — Pathwatch' };
+  if (!event) return { title: 'Event not found — Hantavirus Tracker' };
   return {
-    title: `${event.title} — Pathwatch`,
+    title: `${event.title} — Hantavirus Tracker`,
     description: event.summary,
     openGraph: {
       title: event.title,
@@ -65,8 +65,8 @@ export default async function EventPage({ params }: { params: { id: string } }) 
       dateModified: event.created_at,
       author: event.source_author
         ? { '@type': 'Person', name: event.source_author }
-        : { '@type': 'Organization', name: event.source_type ?? 'Pathwatch' },
-      publisher: { '@type': 'Organization', name: 'Pathwatch' },
+        : { '@type': 'Organization', name: event.source_type ?? 'Hantavirus Tracker' },
+      publisher: { '@type': 'Organization', name: 'Hantavirus Tracker' },
       mainEntityOfPage: `https://hantavirustracer.com/event/${event.id}`,
       isAccessibleForFree: true,
       ...(event.source_url ? { sameAs: event.source_url } : {}),
@@ -84,7 +84,7 @@ export default async function EventPage({ params }: { params: { id: string } }) 
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Pathwatch', item: 'https://hantavirustracer.com/' },
+        { '@type': 'ListItem', position: 1, name: 'Hantavirus Tracker', item: 'https://hantavirustracer.com/' },
         { '@type': 'ListItem', position: 2, name: 'Events', item: 'https://hantavirustracer.com/' },
         {
           '@type': 'ListItem',

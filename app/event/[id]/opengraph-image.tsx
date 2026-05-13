@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og';
 import { createServerClient } from '@/lib/supabase-server';
 import { countryFlag } from '@/lib/format';
 
-export const alt = 'Pathwatch event';
+export const alt = 'Hantavirus Tracker — Event';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 // Skip build-time prerender — needs runtime Supabase env vars.
@@ -54,7 +54,7 @@ export default async function Image({ params }: { params: { id: string } }) {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{ width: 14, height: 14, borderRadius: 7, background: '#4ADE80' }} />
-          <div style={{ fontSize: 28, fontWeight: 700 }}>Pathwatch</div>
+          <div style={{ fontSize: 28, fontWeight: 700 }}>Hantavirus Tracker</div>
           <div style={{ marginLeft: 'auto', fontSize: 18, color: '#8888A0' }}>{source}</div>
         </div>
 

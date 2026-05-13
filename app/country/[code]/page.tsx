@@ -96,8 +96,8 @@ export default async function CountryPage({ params }: { params: { code: string }
       '@type': 'Article',
       headline: `Hantavirus in ${country.country_name}`,
       description: `Outbreak data for ${country.country_name}: ${country.cases} cases, ${country.deaths} deaths, status ${country.status ?? 'unknown'}.`,
-      author: { '@type': 'Organization', name: 'Pathwatch' },
-      publisher: { '@type': 'Organization', name: 'Pathwatch' },
+      author: { '@type': 'Organization', name: 'Hantavirus Tracker' },
+      publisher: { '@type': 'Organization', name: 'Hantavirus Tracker' },
       datePublished: country.first_case_date ?? '2026-05-01',
       dateModified: country.updated_at,
       mainEntityOfPage: `https://hantavirustracer.com/country/${code}`,
@@ -111,7 +111,7 @@ export default async function CountryPage({ params }: { params: { code: string }
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Pathwatch', item: 'https://hantavirustracer.com/' },
+        { '@type': 'ListItem', position: 1, name: 'Hantavirus Tracker', item: 'https://hantavirustracer.com/' },
         { '@type': 'ListItem', position: 2, name: 'Countries', item: 'https://hantavirustracer.com/' },
         {
           '@type': 'ListItem',
@@ -132,7 +132,7 @@ export default async function CountryPage({ params }: { params: { code: string }
       />
       <main className="mx-auto w-full max-w-[840px] px-6 py-10 text-text-secondary">
         <nav className="mb-4 font-mono text-[10.5px] uppercase tracking-[0.14em] text-text-muted">
-          <Link href="/" className="hover:text-text">Pathwatch</Link>
+          <Link href="/" className="hover:text-text">Hantavirus Tracker</Link>
           <span className="mx-2">›</span>
           <Link href={`/?country=${code}`} className="hover:text-text" scroll={false}>
             Countries

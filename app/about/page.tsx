@@ -2,9 +2,9 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'About Pathwatch — Real-Time Hantavirus Outbreak Tracker',
+  title: 'About Hantavirus Tracker — Real-Time 2026 MV Hondius Outbreak',
   description:
-    'About Pathwatch: how the 2026 MV Hondius hantavirus tracker works, data sources (WHO, CDC, ECDC), and pipeline architecture.',
+    'About Hantavirus Tracker: how the 2026 MV Hondius hantavirus tracker works, data sources (WHO, CDC, ECDC), and pipeline architecture.',
   alternates: { canonical: '/about' },
 };
 
@@ -12,7 +12,7 @@ const breadcrumbLd = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Pathwatch', item: 'https://hantavirustracer.com/' },
+    { '@type': 'ListItem', position: 1, name: 'Hantavirus Tracker', item: 'https://hantavirustracer.com/' },
     { '@type': 'ListItem', position: 2, name: 'About', item: 'https://hantavirustracer.com/about' },
   ],
 };
@@ -25,14 +25,15 @@ export default function About() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
       <nav className="mb-4 font-mono text-[10.5px] uppercase tracking-[0.14em] text-text-muted">
-        <Link href="/" className="hover:text-text">Pathwatch</Link>
+        <Link href="/" className="hover:text-text">Hantavirus Tracker</Link>
         <span className="mx-2">›</span>
         <span>About</span>
       </nav>
-      <h1 className="mb-4 text-3xl font-bold text-text">About Pathwatch</h1>
+      <h1 className="mb-4 text-3xl font-bold text-text">About Hantavirus Tracker</h1>
       <p className="mb-3 leading-relaxed">
-        Pathwatch is a real-time disease outbreak tracker. V1 covers the 2026 MV Hondius hantavirus
+        Hantavirus Tracker is a real-time disease outbreak tracker covering the 2026 MV Hondius hantavirus
         cluster (Andes orthohantavirus, the only hantavirus with documented human-to-human transmission).
+        Built on the Pathwatch open-source intelligence platform.
       </p>
       <h2 className="mb-2 mt-6 text-xl font-semibold text-text">How the data works</h2>
       <p className="mb-3 leading-relaxed">

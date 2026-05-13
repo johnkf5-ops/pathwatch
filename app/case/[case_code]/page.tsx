@@ -44,10 +44,10 @@ export async function generateMetadata({
   params: { case_code: string };
 }): Promise<Metadata> {
   const { case_ } = await fetchCase(params.case_code);
-  if (!case_) return { title: 'Case not found — Pathwatch' };
+  if (!case_) return { title: 'Case not found — Hantavirus Tracker' };
   const label = caseLabel(case_);
   return {
-    title: `${label} — Pathwatch`,
+    title: `${label} — Hantavirus Tracker`,
     description: case_.dossier?.slice(0, 200) ?? `Case dossier for ${label}`,
   };
 }
@@ -63,8 +63,8 @@ export default async function CasePage({ params }: { params: { case_code: string
       '@type': 'Article',
       headline: `${label} — Hantavirus Case Dossier`,
       description: case_.dossier?.slice(0, 240) ?? `Case dossier for ${label}`,
-      author: { '@type': 'Organization', name: 'Pathwatch' },
-      publisher: { '@type': 'Organization', name: 'Pathwatch' },
+      author: { '@type': 'Organization', name: 'Hantavirus Tracker' },
+      publisher: { '@type': 'Organization', name: 'Hantavirus Tracker' },
       datePublished: case_.created_at,
       dateModified: case_.updated_at ?? case_.created_at,
       mainEntityOfPage: `https://hantavirustracer.com/case/${encodeURIComponent(case_.case_code)}`,
@@ -81,7 +81,7 @@ export default async function CasePage({ params }: { params: { case_code: string
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Pathwatch', item: 'https://hantavirustracer.com/' },
+        { '@type': 'ListItem', position: 1, name: 'Hantavirus Tracker', item: 'https://hantavirustracer.com/' },
         { '@type': 'ListItem', position: 2, name: 'Cases', item: 'https://hantavirustracer.com/' },
         {
           '@type': 'ListItem',

@@ -140,8 +140,8 @@ export default async function HantavirusPage() {
       headline: 'Hantavirus: Andes Virus (ANDV) Disease Overview',
       description:
         'Comprehensive guide to hantavirus and Andes orthohantavirus (ANDV) — symptoms, transmission, diagnosis, treatment, and the 2026 MV Hondius outbreak.',
-      author: { '@type': 'Organization', name: 'Pathwatch' },
-      publisher: { '@type': 'Organization', name: 'Pathwatch' },
+      author: { '@type': 'Organization', name: 'Hantavirus Tracker' },
+      publisher: { '@type': 'Organization', name: 'Hantavirus Tracker' },
       datePublished: '2026-05-10',
       dateModified: new Date().toISOString().slice(0, 10),
       mainEntityOfPage: 'https://hantavirustracer.com/hantavirus',
@@ -159,7 +159,7 @@ export default async function HantavirusPage() {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Pathwatch', item: 'https://hantavirustracer.com/' },
+        { '@type': 'ListItem', position: 1, name: 'Hantavirus Tracker', item: 'https://hantavirustracer.com/' },
         { '@type': 'ListItem', position: 2, name: 'Hantavirus', item: 'https://hantavirustracer.com/hantavirus' },
       ],
     },
@@ -174,7 +174,7 @@ export default async function HantavirusPage() {
       />
       <main className="mx-auto w-full max-w-[760px] px-6 py-10 text-text-secondary">
         <nav className="mb-4 font-mono text-[10.5px] uppercase tracking-[0.14em] text-text-muted">
-          <Link href="/" className="hover:text-text">Pathwatch</Link>
+          <Link href="/" className="hover:text-text">Hantavirus Tracker</Link>
           <span className="mx-2">›</span>
           <span>Hantavirus</span>
         </nav>

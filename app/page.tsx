@@ -82,12 +82,12 @@ export default async function Home() {
     {
       '@context': 'https://schema.org',
       '@type': 'WebSite',
-      name: 'Pathwatch',
-      alternateName: 'Hantavirus Tracker',
+      name: 'Hantavirus Tracker',
+      alternateName: 'Pathwatch',
       url: 'https://hantavirustracer.com',
       description:
         'Live tracking of the 2026 MV Hondius hantavirus outbreak (Andes virus, ANDV).',
-      publisher: { '@type': 'Organization', name: 'Pathwatch' },
+      publisher: { '@type': 'Organization', name: 'Hantavirus Tracker' },
     },
     {
       '@context': 'https://schema.org',
@@ -108,7 +108,7 @@ export default async function Home() {
       ],
       isAccessibleForFree: true,
       license: 'https://creativecommons.org/licenses/by/4.0/',
-      creator: { '@type': 'Organization', name: 'Pathwatch' },
+      creator: { '@type': 'Organization', name: 'Hantavirus Tracker' },
       temporalCoverage: '2026-04/..',
       spatialCoverage: snapshot?.countries_list?.length
         ? { '@type': 'Place', name: snapshot.countries_list.join(', ') }
@@ -160,7 +160,7 @@ export default async function Home() {
       audience: { '@type': 'Audience', audienceType: 'General Public' },
       publisher: {
         '@type': 'Organization',
-        name: 'Pathwatch',
+        name: 'Hantavirus Tracker',
         url: 'https://hantavirustracer.com',
       },
       about: {

@@ -8,8 +8,8 @@ const mono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', displ
 export const metadata: Metadata = {
   metadataBase: new URL('https://hantavirustracer.com'),
   title: {
-    default: 'Hantavirus Tracker: Live 2026 MV Hondius Outbreak | Pathwatch',
-    template: '%s | Pathwatch',
+    default: 'Hantavirus Tracker — Live 2026 MV Hondius Outbreak',
+    template: '%s | Hantavirus Tracker',
   },
   description:
     'Live tracking of the 2026 MV Hondius hantavirus outbreak (Andes virus, ANDV). Cases, deaths, travel timelines, country-level data, and pandemic threat assessment.',
@@ -28,17 +28,17 @@ export const metadata: Metadata = {
     'disease outbreak news',
     'hantavirus pulmonary syndrome',
   ],
-  authors: [{ name: 'Pathwatch' }],
+  authors: [{ name: 'Hantavirus Tracker' }],
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'Hantavirus Tracker: Live 2026 MV Hondius Outbreak | Pathwatch',
+    title: 'Hantavirus Tracker — Live 2026 MV Hondius Outbreak',
     description:
       'Live tracking of the 2026 MV Hondius hantavirus outbreak (Andes virus). Cases, deaths, travel timelines, country-level data, and pandemic threat assessment.',
     type: 'website',
     locale: 'en_US',
-    siteName: 'Pathwatch',
+    siteName: 'Hantavirus Tracker',
     url: 'https://hantavirustracer.com',
   },
   twitter: {

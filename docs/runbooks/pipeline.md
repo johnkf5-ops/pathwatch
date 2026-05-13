@@ -313,11 +313,12 @@ If you fix data or schema in the same write that touches a snapshot, the snapsho
 | What the country has | country_stats | Map color |
 |---|---|---|
 | At least one death (cases.status='deceased') | `deaths > 0` | **Red** |
-| At least one case (case_class IN confirmed/probable/suspected), no deaths | `cases > 0`, `deaths = 0` | **Orange** |
-| Only contacts/returnees (case_class IN contact/returnee), no case | `cases = 0`, `status = 'monitoring'` | **Teal** |
+| At least one confirmed or probable case, no deaths | `cases > 0`, `deaths = 0` | **Orange** |
+| Only suspected cases (no confirmed/probable yet) | `cases = 0`, `status = 'monitoring'` | **Teal** |
+| Only contacts/returnees (case_class IN contact/returnee) | `cases = 0`, `status = 'monitoring'` | **Teal** |
 | Nothing | absent or all zeros | no color |
 
-Deaths beat cases beat contacts. The map color logic is in `lib/map-colors.ts → countryBucket()` and mirrors this exactly. No heat-bucket scaling by case count — the user-facing distinction that matters is presence vs absence, not magnitude.
+Deaths beat confirmed/probable beat suspected beat contacts. **Suspected cases do NOT make a country orange** — they keep the country in monitoring (teal) until lab confirmation moves them to confirmed or probable. The map color logic is in `lib/map-colors.ts → countryBucket()` and mirrors this exactly. No heat-bucket scaling by case count — the user-facing distinction that matters is presence vs absence, not magnitude.
 
 **Recounting country_stats after a cases write:**
 
@@ -334,13 +335,15 @@ SET cases = c.case_count,
     deaths = c.death_count,
     status = CASE
       WHEN c.death_count > 0 THEN 'active'
-      WHEN c.case_count > 0 THEN 'active'
+      WHEN c.case_count > 0 THEN 'active'  -- confirmed or probable only
+      WHEN c.suspected_count > 0 THEN 'monitoring'  -- suspected stays teal
       ELSE cs.status
     END
 FROM (
   SELECT
     current_country AS country_code,
-    COUNT(*) FILTER (WHERE case_class IN ('confirmed_case','probable_case','suspected_case')) AS case_count,
+    COUNT(*) FILTER (WHERE case_class IN ('confirmed_case','probable_case')) AS case_count,
+    COUNT(*) FILTER (WHERE case_class = 'suspected_case') AS suspected_count,
     COUNT(*) FILTER (WHERE status = 'deceased') AS death_count
   FROM cases
   WHERE disease = 'hantavirus' AND current_country IS NOT NULL

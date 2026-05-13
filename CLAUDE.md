@@ -80,8 +80,11 @@ Grid: `lg:grid-cols-[540px_1fr_300px] lg:grid-rows-[1fr_180px]`. Each panel has 
 
 Tables in production Supabase, all with public-read RLS:
 - `events` — scraped news/intelligence items
-- `cases` + `case_locations` — outbreak cases and their travel timeline. **`cases.case_class`** disambiguates `confirmed_case` / `probable_case` / `suspected_case` / `contact` / `returnee` from the lifecycle `status` field. Counts toward "cases" only when `case_class IN ('confirmed_case','probable_case','suspected_case')`. Contacts and returnees count toward "contacts" only.
-- `country_stats` — per-country case/death totals + status. **Location-based**: `cases` and `deaths` derive from `cases.current_country` (where the patient physically is), not nationality. Map color rule: `deaths > 0` → red, `cases > 0` → orange, `status='monitoring'` with no cases/deaths → teal, nothing → no color. See `docs/runbooks/pipeline.md` "Country attribution: location-based counts" for the recount SQL and conventions. The `cases.nationality` column exists as metadata but does not drive country_stats.
+- `cases` + `case_locations` — outbreak cases and their travel timeline. **`cases.case_class`** disambiguates `confirmed_case` / `probable_case` / `suspected_case` / `contact` / `returnee` from the lifecycle `status` field.
+  - **Cases bucket** (drives the dashboard CASES count + the `country_stats.cases` per-country tally + map orange/red): only `confirmed_case` and `probable_case`. Lab confirmation or strong epi link required.
+  - **Suspected bucket**: `suspected_case` rows count toward MONITORING in their `current_country` until they confirm or clear. The country shows teal, not orange.
+  - **Contacts bucket**: `contact` and `returnee` count toward "contacts" only — never toward cases regardless of confirmation.
+- `country_stats` — per-country case/death totals + status. **Location-based**: `cases` and `deaths` derive from `cases.current_country` (where the patient physically is), not nationality. Map color rule: `deaths > 0` → red, `cases > 0` → orange (where `cases` = confirmed + probable only), `status='monitoring'` with no cases/deaths → teal (this is where suspected-only countries land), nothing → no color. See `docs/runbooks/pipeline.md` "Country attribution: location-based counts" for the recount SQL and conventions. The `cases.nationality` column exists as metadata but does not drive country_stats.
 - `snapshots` — outbreak snapshots (totals + ai_analysis paragraph + key_developments + `total_contacts` for the contacts-and-returnees count).
 - `threat_assessments` — pandemic_probability + threat_level + reasoning + Polymarket comparison + triggers
 - `facts` — verified facts with `key:*`-tagged subset surfaced in VirusProfile

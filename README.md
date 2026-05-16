@@ -59,4 +59,4 @@ For permission inquiries, contact the author via the email on the live site.
 
 Live in production. New outbreak clusters will be added in future releases.
 
-— John Knopf
+— CrashOverride LLC

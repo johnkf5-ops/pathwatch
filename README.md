@@ -1,122 +1,62 @@
 # Pathwatch
 
-Real-time disease outbreak tracker. V1 covers the 2026 MV Hondius hantavirus
-outbreak (Andes orthohantavirus / ANDV).
+Real-time public-health intelligence dashboard for active outbreak clusters.
 
-The dashboard is a Next.js 14 App Router app reading from Supabase via the anon
-key, with realtime subscriptions for live updates. Schema, dashboard core,
-map + charts, and event detail pages are all on `main`.
+**Live: [hantavirustracer.com](https://hantavirustracer.com)** ([mirror](https://pathwatch-phi.vercel.app))
 
-## Prerequisites
+V1 covers the 2026 MV Hondius hantavirus cluster (Andes orthohantavirus / ANDV)
+— the multi-country cruise-ship outbreak that began on the Dutch expedition
+vessel MV Hondius in April 2026.
 
-- Docker provider, running (Docker Desktop, Colima, or equivalent)
-- Node ≥ 20: `node --version`
-- Supabase CLI: `brew install supabase/tap/supabase-beta` (macOS)
-- PostgreSQL client tools (`psql`): `brew install libpq`
+## What it does
 
-## Local setup
+The dashboard tracks the outbreak across five surfaces, refreshed in real time
+from a curated database of WHO Disease Outbreak News, ECDC surveillance updates,
+CDC briefings, national health-ministry releases, and Cred-Tier-1-and-2 news
+reporting:
 
-```bash
-supabase start              # spin up local stack
-./scripts/reset-db.sh       # apply migrations + run seed.sql
-npm install                 # one-time: install Node deps
-cp .env.example .env.local  # then paste anon/publishable key from `supabase status`
-npm run dev                 # http://localhost:3000
-```
+- **Situation brief** — daily prose snapshot of what's changed, written for a
+  general public-health-literate reader (no jargon).
+- **World map** — country-by-country case, death, and monitoring counts on a
+  MapLibre + deck.gl basemap; click any case to see its travel timeline.
+- **Case dossiers** — anonymised per-patient pages with hospital, clinical
+  trajectory, contact-tracing history, and inline source citations.
+- **Threat assessment** — pandemic-probability estimate with explicit reasoning,
+  Polymarket comparison, and a triggers watch-list (R0, mutation, doubling
+  time, community transmission, etc.).
+- **Intelligence feed** — horizontal ticker of significance-ranked events from
+  the past few cycles, each with a verified primary source.
 
-Local URLs printed by `supabase start`:
-- Postgres:  `postgresql://postgres:postgres@127.0.0.1:54322/postgres`
-- API:       `http://127.0.0.1:54321`
-- Studio:    `http://127.0.0.1:54323`
+## Editorial standards
 
-## Development workflow
+- Every dossier addition cites its sources inline.
+- Demographics are reported as ranges only (e.g. "60–69") — never exact ages.
+- Anonymised cases retain anonymisation even when reporting reveals identities.
+- Case classifications follow WHO conventions (confirmed / probable / suspected
+  / contact / returnee). Suspected and inconclusive cases are tracked but do
+  not colour the country map orange or red.
 
-```bash
-npm run dev          # Next.js dev server
-npm run lint         # ESLint
-npm run typecheck    # tsc --noEmit
-npm run build        # production build
-npm run test:smoke   # reset DB + run Playwright smoke specs
-supabase test db     # run pgTAP tests in supabase/tests/database/
-```
+## Stack
 
-When you change the migration, re-run `./scripts/reset-db.sh` to drop and
-reapply it. pgTAP tests run inside transactions and roll back, so they don't
-pollute the seeded dataset.
+- Next.js 14 App Router (TypeScript)
+- Supabase (Postgres + Realtime + Row-Level Security)
+- MapLibre + deck.gl
+- Tailwind CSS
+- Hosted on Vercel
 
-## Schema overview
+## License
 
-Seven tables across three migrations:
+This repository is published for transparency. All rights are reserved.
+See [LICENSE](LICENSE) for the full terms.
 
-- `events` — atomic intelligence units with URL-hash dedup, CHECK-constraint
-  enums, and a partial index on the dashboard's hot read path.
-- `snapshots` — append-only situation rollups (LLM-generated narrative + aggregates).
-- `country_stats` — per-country state with `UNIQUE(disease, country_code)` for upsert.
-- `scrape_log` — pipeline observability, RLS-locked from anon.
-- `cases` + `case_locations` — individual infected persons (anonymized via
-  `case_code` like `MVH-001`) and their travel timelines.
-- `facts` — verified knowledge base; entries written by the pipeline with
-  `verification_status`, `confidence`, source attribution.
+In short: you are welcome to **read** the code here. You are **not** licensed
+to use, fork, clone, mirror, redeploy, or build upon it without prior written
+permission from the author.
 
-RLS lets the anon key SELECT from all tables except `scrape_log`; all writes
-require the service role. `scrape_log` is service-role-only.
+For permission inquiries, contact the author via the email on the live site.
 
-## Pipeline runbook
+## Status
 
-The Cowork session that operates the data pipeline reads
-`docs/runbooks/pipeline.md` at session start. That document codifies the
-scrape → dedupe → fact-check → write cycle, source credibility tiers,
-confidence-scoring rubric, and error handling.
+Live in production. New outbreak clusters will be added in future releases.
 
-## Notes for non-Docker-Desktop setups
-
-If you use Colima or another Docker alternative, the analytics service is
-already disabled in `supabase/config.toml` because the `supabase_vector`
-container fails to mount the Docker socket on virtiofs. Re-enable only if
-your Docker provider supports unix-socket bind-mounts.
-
-## Design
-
-Specs and plans for each sub-project live under `docs/superpowers/`.
-
-## Production deploy
-
-Deploy is GitHub-driven: push to `main` triggers a Vercel build. One-time setup:
-
-1. **Provision a Supabase project.** Sign in at supabase.com → "New project". Note the project ref (the part before `.supabase.co`), the API URL, and the publishable (anon) key from the API settings page.
-
-2. **Apply the migration to the prod project.** From this repo:
-   ```bash
-   supabase link --project-ref <your-project-ref>
-   supabase db push
-   ```
-
-3. **Optionally seed prod.** Open the prod project's Studio (Supabase web UI) → SQL editor → paste the contents of `supabase/seed.sql` → run. Skip if you want production to start empty (the data pipeline in sub-project 3 will fill it).
-
-4. **Authenticate `gh` and `vercel` locally** (one-time):
-   ```bash
-   gh auth login -h github.com -w
-   vercel login
-   ```
-
-5. **Create the GitHub repo and push:**
-   ```bash
-   gh repo create pathwatch --public --source=. --push
-   ```
-
-6. **Link this directory to a Vercel project:**
-   ```bash
-   vercel link
-   ```
-   Accept the defaults (link to current directory, framework: Next.js detected).
-
-7. **Set env vars in the Vercel project.** Either via CLI or the project's Settings → Environment Variables UI. Production scope:
-   - `NEXT_PUBLIC_SUPABASE_URL` — value from step 1
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — value from step 1
-
-8. **Trigger the first production deploy:**
-   ```bash
-   vercel --prod
-   ```
-
-After this, every push to `main` auto-deploys. Branch pushes get preview deployments.
+— John Knopf

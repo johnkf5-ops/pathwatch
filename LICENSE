@@ -1,0 +1,38 @@
+Copyright (c) 2026 John Knopf. All Rights Reserved.
+
+This source code, including all files in this repository (the "Software"),
+is the proprietary work of John Knopf ("the Author"). It is published
+publicly for transparency and reference purposes only.
+
+NO LICENSE IS GRANTED. No permission is given to any person to use, copy,
+modify, merge, publish, distribute, sublicense, sell, host, deploy, mirror,
+or create derivative works of the Software, in whole or in part, in source
+or compiled form, for any purpose — commercial or non-commercial — without
+prior written permission from the Author.
+
+In particular, and without limiting the foregoing:
+
+  1. You may not fork, clone, or download this repository for the purpose
+     of running, redistributing, or building upon the Software.
+
+  2. You may not use the Software, or any substantial portion of it, as
+     the basis for a competing or derivative service.
+
+  3. You may not remove or alter this license, the copyright notice, or
+     any attribution.
+
+  4. Public viewing of the repository on the hosting platform (e.g.
+     reading source files in a browser) is permitted; this does not
+     constitute a license to use the Software under any of the rights
+     enumerated above.
+
+Requests for permission to use any portion of the Software should be
+directed to the Author. Permission, if granted, will be in writing and
+will define the scope of the grant.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
